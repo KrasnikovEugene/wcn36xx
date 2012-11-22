@@ -42,6 +42,14 @@
 
 #define ENTER() pr_info(DRIVER_PREFIX "%s\n", __func__)
 
+static inline void buff_to_be(u32 *buf, size_t len)
+{
+	int i;
+	for (i = 0; i< len; i++)
+	{
+		buf[i] = cpu_to_be32(buf[i]);
+	}
+}
 struct nv_data {
    int    	is_valid;
    void 	*table;

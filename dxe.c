@@ -25,6 +25,7 @@
 #include <linux/vmalloc.h>
 #include <linux/interrupt.h>
 #include "dxe.h"
+#include "txrx.h"
 #include "wcn36xx.h"
 
 // Every DMA memory allocation must be preceded with wcn36xx_dxe_mem_info struct
@@ -363,8 +364,6 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		container_of(work, struct wcn36xx, rx_ready_work);
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
-	struct ieee80211_rx_status status;
-	struct ieee80211_hdr *hdr;
 	int intSrc;
 	int int_reason;
 
@@ -388,21 +387,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
 		cur_dxe_ctl->skb->len,
 		DMA_FROM_DEVICE );
-
-	skb_pull(cur_dxe_ctl->skb, 76);
-
-	status.mactime = 10;
-	status.band = IEEE80211_BAND_2GHZ;
-	status.freq = 2412;
-	status.signal = 1;
-	status.antenna = 1;
-	status.rate_idx = 1;
-	status.flag = 0;
-	status.rx_flags = 0;
-
-	memcpy(cur_dxe_ctl->skb->cb, &status, sizeof(struct ieee80211_rx_status));
-	hdr = (struct ieee80211_hdr *)cur_dxe_ctl->skb->data;
-	ieee80211_rx_ni(wcn->hw, cur_dxe_ctl->skb);
+	wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
 	wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 
 	enable_irq(wcn->rx_irq);

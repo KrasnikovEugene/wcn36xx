@@ -2,6 +2,7 @@ ifneq ($(KERNELRELEASE),)
 	wcn36xx-objs		+= \
 				main.o \
 				dxe.o \
+				txrx.o \
 				smd.o
 
 	obj-m := wcn36xx.o
