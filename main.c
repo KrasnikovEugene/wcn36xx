@@ -92,15 +92,23 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 			     struct cfg80211_scan_request *req)
 {
 	struct wcn36xx *wcn = hw->priv;
-
+	int ch;
+	int i;
 	ENTER();
-	wcn36xx_smd_init_scan(wcn);
-	wcn36xx_smd_start_scan(wcn, 1);
+	wcn36xx_smd_enter_imps(wcn);
+	wcn36xx_smd_update_scan_params(wcn);
+	wcn36xx_smd_exit_imps(wcn);
+	for(i = 0; i < req->n_channels; i++) {
+		wcn36xx_smd_init_scan(wcn);
+		ch = ieee80211_frequency_to_channel(req->channels[i]->center_freq);
+		wcn36xx_info("Scanning on channel %d", ch);
+		wcn36xx_smd_start_scan(wcn, ch);
+		// do this as timer
+		msleep(200);
+		wcn36xx_smd_end_scan(wcn, ch);
+		wcn36xx_smd_deinit_scan(wcn);
+	}
 
-	// do this as timer
-	msleep(500);
-
-	disable_irq_nosync(wcn->rx_irq);
 	ieee80211_sched_scan_results(wcn->hw);
 	ieee80211_scan_completed(wcn->hw, false);
 	return 0;
@@ -244,9 +252,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_smd_enter_imps(wcn);
 	wcn36xx_smd_exit_imps(wcn);
 	wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 1);
-	wcn36xx_smd_enter_imps(wcn);
-	wcn36xx_smd_update_scan_params(wcn);
-	wcn36xx_smd_exit_imps(wcn);
+
 	return 0;
 }
 static const struct ieee80211_ops wcn36xx_ops = {

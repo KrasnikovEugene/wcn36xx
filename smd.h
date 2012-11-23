@@ -42,6 +42,9 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_START_SCAN_RSP		= 7,
 	WCN36XX_FW_MSG_TYPE_END_SCAN_REQ		= 8,
 	WCN36XX_FW_MSG_TYPE_END_SCAN_RSP		= 9,
+	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ		= 10,
+	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP		= 11,
+
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ	= 151,
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP	= 152,
 
@@ -96,6 +99,7 @@ struct wcn36xx_fw_msg_status_rsp {
 #define wcn36xx_fw_msg_enter_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_exit_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_init_scan_rsp 		wcn36xx_fw_msg_status_rsp
+#define wcn36xx_fw_msg_end_scan_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_scan_params_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_ex_caps_rsp 		wcn36xx_fw_msg_ex_caps_req
 
@@ -136,7 +140,7 @@ struct wcn36xx_fw_msg_update_cfg_req {
 /* WCN36XX_FW_MSG_TYPE_INIT_SCAN_REQ */
 struct wcn36xx_fw_msg_init_scan_req {
 	u32 				scan_mode;
-	u8 				bssid[6];
+	u8 				bssid[ETH_ALEN];
 	u8				notify_bss;
 	u8				frame_type;
 	u8				frame_len;
@@ -153,6 +157,25 @@ struct wcn36xx_fw_msg_start_scan_rsp {
 	u32 	status;
 	u32	start_TSF[2];
 	u8	mgmt_power;
+} __packed;
+
+/* WCN36XX_FW_MSG_TYPE_END_SCAN_REQ */
+struct wcn36xx_fw_msg_end_scan_req {
+	u8	ch;
+} __packed;
+
+/* WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ */
+struct wcn36xx_fw_msg_deinit_scan_req {
+	u32 				scan_mode;
+	u8				cur_ch;
+	u32				bon_state;
+	u8 				bssid[ETH_ALEN];
+	u8				notify_bss;
+	u8				frame_type;
+	u8				frame_len;
+	struct ieee80211_hdr_3addr 	hdr;
+	u8				bssidx[2];
+	u8				active_bss;
 } __packed;
 
 /* WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ */
@@ -211,6 +234,8 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
 int wcn36xx_smd_start(struct wcn36xx *wcn);
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch);
+int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch);
+int wcn36xx_smd_deinit_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
 int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status);
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);

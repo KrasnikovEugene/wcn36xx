@@ -199,7 +199,32 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
 }
+int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch)
+{
+	struct wcn36xx_fw_msg_end_scan_req msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
 
+	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_END_SCAN_REQ)
+
+	msg_body.ch = ch;
+
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
+int wcn36xx_smd_deinit_scan(struct wcn36xx *wcn)
+{
+	struct wcn36xx_fw_msg_deinit_scan_req msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
+
+	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ)
+
+	msg_body.scan_mode = SMD_MSG_SCAN_MODE;
+
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 	struct wcn36xx_fw_msg_update_scan_params_req msg_body;
 	struct wcn36xx_fw_msg_header msg_header;
@@ -288,6 +313,8 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_ADD_STA_RSP:
 	case WCN36XX_FW_MSG_TYPE_INIT_SCAN_RSP:
 	case WCN36XX_FW_MSG_TYPE_START_SCAN_RSP:
+	case WCN36XX_FW_MSG_TYPE_END_SCAN_RSP:
+	case WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP:
 	case WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP:
 	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
