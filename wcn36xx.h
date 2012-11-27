@@ -68,6 +68,7 @@ struct wcn36xx {
 	struct device 		*dev;
 	const struct firmware 	*nv;
 	struct mac_address addresses[2];
+	u8 		ch;
 
 	// IRQs
 	int 			tx_irq; 	// TX complete irq

@@ -351,8 +351,8 @@ int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn) {
                            "wcnss_wlan", wcn)){
 		return -EIO;
 	}
-	// enable tx irq
-	enable_irq_wake(wcn->tx_irq);
+	// disable tx irq, not supported
+	disable_irq_nosync(wcn->tx_irq);
 
 	// enable rx irq
 	enable_irq_wake(wcn->rx_irq);
@@ -426,5 +426,46 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	memset(wcn->data_mem_pool.bitmap, 0,
 		(WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
 		sizeof(int));
+	return 0;
+}
+int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
+{
+	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
+	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
+
+	wcn36xx_prepare_tx_bd(wcn->mgmt_mem_pool.virt_addr, skb->len);
+	wcn36xx_fill_tx_bd(wcn->mgmt_mem_pool.virt_addr, broadcast);
+
+	cur_dxe_ctl = wcn->dxe_tx_h_ch.head_blk_ctl;
+	cur_dxe_desc = cur_dxe_ctl->desc;
+
+	// Let's not forget the frame we are sending
+	cur_dxe_ctl->frame = wcn->mgmt_mem_pool.virt_addr;
+
+	// Set source address of the BD we send
+
+	cur_dxe_desc->desc.src_addr_l = (int)wcn->mgmt_mem_pool.phy_addr;
+	// TODO fix me, if data then set it to WCN36XX_DXE_WQ_TX_L
+	cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
+	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_BD;
+
+	// Set source address of the SKB we send
+	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
+	cur_dxe_ctl->skb = skb;
+	cur_dxe_desc = cur_dxe_ctl->desc;
+	cur_dxe_desc->desc.src_addr_l = (int)dma_map_single(NULL,
+		cur_dxe_ctl->skb->data,
+		cur_dxe_ctl->skb->len,
+		DMA_TO_DEVICE );
+	cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+	cur_dxe_desc->fr_len = cur_dxe_ctl->skb->len;
+	// set it to VALID
+	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_SKB;
+
+	//indicate End Of Packet and generate interrupt on descriptor Done
+	wcn36xx_dxe_write_register(wcn,
+		WCN36XX_DXE_REG_CTL_TX_H,
+		WCN36XX_DXE_CH_DEFAULT_CTL_TX_H);
 	return 0;
 }

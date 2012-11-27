@@ -45,6 +45,9 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ		= 10,
 	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP		= 11,
 
+	WCN36XX_FW_MSG_TYPE_JOIN_REQ			= 20,
+	WCN36XX_FW_MSG_TYPE_JOIN_RSP			= 21,
+
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ	= 151,
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP	= 152,
 
@@ -199,7 +202,7 @@ struct wcn36xx_fw_msg_ex_capabilities_req {
 
 /* WCN36XX_FW_MSG_TYPE_ADD_STA_REQ */
 struct wcn36xx_fw_msg_add_sta_req {
-	u8	mac[6];
+	u8	mac[ETH_ALEN];
 	u32 	status;
 } __packed;
 struct wcn36xx_fw_msg_add_sta_rsp {
@@ -222,6 +225,23 @@ struct wcn36xx_fw_msg_add_bcn_filter_req {
 	u32	phy_ch_state;
 } __packed;
 
+
+/* WCN36XX_FW_MSG_TYPE_JOIN_REQ */
+struct wcn36xx_fw_msg_join_req {
+	u8	bssid[ETH_ALEN];
+	u8	ch;
+	u8	sta_mac[ETH_ALEN];
+	u8	power;
+	u32	chan_off;
+	u32	link_state;
+	u8	max_power;
+} __packed;
+
+struct wcn36xx_fw_msg_join_rsp {
+	u32	status;
+	u8	power;
+} __packed;
+
 struct wcn36xx_fw_msg_header {
 	enum wcn36xx_fw_msg_type	msg_type:16;
 	enum wcn36xx_fw_msg_ver		msg_ver:16;
@@ -240,7 +260,7 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
 int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status);
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_exit_imps(struct wcn36xx *wcn);
-
+int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch);
 // WCN36XX configuration parameters
 struct wcn36xx_fw_cfg {
 	u16		id;

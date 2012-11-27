@@ -40,6 +40,8 @@ RX_HIGH	= DMA3
 #define WCN36XX_DXE_CTRL_TX_H			0x32ce44
 #define WCN36XX_DXE_CTRL_RX_L			0x12ad2f
 #define WCN36XX_DXE_CTRL_RX_H			0x12d12f
+#define WCN36XX_DXE_CTRL_TX_H_BD		0x32ce45
+#define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
 
 // TODO This must calculated properly but not hardcoded
 #define WCN36XX_DXE_WQ_TX_L			0x17
@@ -51,7 +53,7 @@ RX_HIGH	= DMA3
 // DXE default control register values
 #define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L		0x847EAD2F
 #define WCN36XX_DXE_CH_DEFAULT_CTL_RX_H		0x84FED12F
-
+#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_H		0x853ECF4D
 // Common DXE registers
 #define WCN36XX_DXE_MEM_CSR          		WCN36XX_DXE_MEM_REG + 0x00
 #define WCN36XX_DXE_REG_CH_EN            	WCN36XX_DXE_MEM_REG + 0x08
@@ -92,6 +94,7 @@ RX_HIGH	= DMA3
 // DXE default control register
 #define WCN36XX_DXE_REG_CTL_RX_L		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_RX_LOW_OFFSET
 #define WCN36XX_DXE_REG_CTL_RX_H		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_RX_HIGH_OFFSET
+#define WCN36XX_DXE_REG_CTL_TX_H		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_TX_HIGH_OFFSET
 
 #define WCN36XX_SMSM_WLAN_TX_ENABLE 		0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY	0x00000200
@@ -211,4 +214,5 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn);
 int wcn36xx_dxe_init(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
 int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn);
+int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast);
 #endif	/* _DXE_H_ */

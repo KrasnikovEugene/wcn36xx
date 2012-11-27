@@ -279,7 +279,36 @@ int wcn36xx_smd_exit_imps(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
 }
+int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
+{
+	struct wcn36xx_fw_msg_join_req msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
 
+	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_JOIN_REQ)
+
+	memcpy(&msg_body.bssid, &bssid, ETH_ALEN);
+	memcpy(&msg_body.sta_mac, &vif, ETH_ALEN);
+	msg_body.ch = ch;
+	msg_body.link_state = 1;
+
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
+static int wcn36xx_smd_join_rsp(void *buf, size_t len)
+{
+	struct  wcn36xx_fw_msg_join_rsp * rsp;
+
+	if(wcn36xx_smd_rsp_status_check(buf, len))
+		return -EIO;
+
+	rsp = (struct wcn36xx_fw_msg_join_rsp *)
+		(buf + sizeof(struct wcn36xx_fw_msg_header));
+
+	wcn36xx_info("Join stattus=%d, Power ver=%d",
+		rsp->status, rsp->power);
+	return 0;
+}
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -320,6 +349,9 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
 		wcn36xx_smd_rsp_status_check(buf, len);
+		break;
+	case WCN36XX_FW_MSG_TYPE_JOIN_RSP:
+		wcn36xx_smd_join_rsp(buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT not supported");

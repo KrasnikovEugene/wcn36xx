@@ -45,3 +45,44 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	return 0;
 }
+void wcn36xx_prepare_tx_bd(void * pBd, u32 len)
+{
+	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
+	bd->pdu.mpdu_header_len = WCN36XX_802_11_HEADER_LEN;
+	bd->pdu.mpdu_header_off = sizeof(struct wcn36xx_tx_bd);
+	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
+		bd->pdu.mpdu_header_off;
+	bd->pdu.mpdu_len = len;
+}
+void wcn36xx_fill_tx_bd(void * pBd, u8 broadcast)
+{
+	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
+	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
+	bd->pdu.tid   = WCN36XX_TID;
+	bd->pdu.reserved3 = 0xd;
+
+	if ( broadcast ) {
+		// broadcast
+		bd->ub = 1;
+		bd->queue_id = WCN36XX_TX_B_WQ_ID;
+
+		// default rate for broadcast
+		bd->bd_rate = 0;
+
+		// No ack needed not unicast
+		bd->ack_policy = 1;
+	} else {
+		bd->queue_id = WCN36XX_TX_U_WQ_ID;
+		// default rate for unicast
+		bd->bd_rate = 2;
+		bd->ack_policy = 0;
+	}
+
+	bd->sta_index = 1;
+
+	// no encription
+	bd->dpu_ne = 1;
+
+	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
+	bd->tx_bd_sign = 0xbdbdbdbd;
+}

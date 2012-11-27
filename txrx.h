@@ -25,6 +25,11 @@
 
 // TODO describe all properties
 #define WCN36XX_802_11_HEADER_LEN 	24
+#define WCN36XX_BMU_WQ_TX		25
+#define WCN36XX_TID			7
+// broadcast wq ID
+#define WCN36XX_TX_B_WQ_ID		0xA
+#define WCN36XX_TX_U_WQ_ID		0x9
 struct wcn36xx_pdu {
 	u32	dpu_fb:8;
 	u32	adu_fb:8;
@@ -141,4 +146,6 @@ struct wcn36xx_tx_bd {
 	u32 	reserved7:6;*/
 };
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
+void wcn36xx_prepare_tx_bd(void * pBd, u32 len);
+void wcn36xx_fill_tx_bd(void * pBd, u8 broadcast);
 #endif	/* _TXRX_H_ */

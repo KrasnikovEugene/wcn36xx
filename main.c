@@ -21,6 +21,7 @@
 #include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
 #include <linux/vmalloc.h>
+#include <linux/etherdevice.h>
 #include "wcn36xx.h"
 #include "dxe.h"
 
@@ -50,7 +51,12 @@ static int wcn36xx_change_interface(struct ieee80211_hw *hw,
 }
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
+	struct wcn36xx *wcn = hw->priv;
 	ENTER();
+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+		wcn->ch = ieee80211_frequency_to_channel(hw->conf.channel->center_freq);
+	}
+
 	return 0;
 }
 static u64 wcn36xx_prepare_multicast(struct ieee80211_hw *hw,
@@ -76,7 +82,10 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 
 static void wcn36xx_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
 {
+	struct ieee80211_mgmt *mgmt;
 	ENTER();
+	mgmt = (struct ieee80211_mgmt *)skb->data;
+	wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da));
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
@@ -101,10 +110,10 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 	for(i = 0; i < req->n_channels; i++) {
 		wcn36xx_smd_init_scan(wcn);
 		ch = ieee80211_frequency_to_channel(req->channels[i]->center_freq);
-		wcn36xx_info("Scanning on channel %d", ch);
 		wcn36xx_smd_start_scan(wcn, ch);
 		// do this as timer
 		msleep(200);
+		//TODO send probereq
 		wcn36xx_smd_end_scan(wcn, ch);
 		wcn36xx_smd_deinit_scan(wcn);
 	}
@@ -136,7 +145,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				       struct ieee80211_bss_conf *bss_conf,
 				       u32 changed)
 {
+	struct wcn36xx *wcn = hw->priv;
 	ENTER();
+
+	if(changed & BSS_CHANGED_BSSID) {
+		wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
+	}
 }
 static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
 {
