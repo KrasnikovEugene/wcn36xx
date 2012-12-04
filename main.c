@@ -101,19 +101,31 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 			     struct cfg80211_scan_request *req)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct sk_buff *prb_req;
+	struct ieee80211_mgmt *mgmt;
+
 	int ch;
 	int i;
 	ENTER();
 	wcn36xx_smd_enter_imps(wcn);
 	wcn36xx_smd_update_scan_params(wcn);
 	wcn36xx_smd_exit_imps(wcn);
+	if (req->n_ssids > 0) {
+		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie, req->ie_len);
+	} else {
+		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie, req->ie_len);
+	}
 	for(i = 0; i < req->n_channels; i++) {
 		wcn36xx_smd_init_scan(wcn);
 		ch = ieee80211_frequency_to_channel(req->channels[i]->center_freq);
+		mgmt = (struct ieee80211_mgmt *)prb_req->data;
+
 		wcn36xx_smd_start_scan(wcn, ch);
 		// do this as timer
-		msleep(200);
-		//TODO send probereq
+		msleep(60);
+		wcn36xx_dxe_tx(hw->priv, prb_req, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da));
+		msleep(60);
+
 		wcn36xx_smd_end_scan(wcn, ch);
 		wcn36xx_smd_deinit_scan(wcn);
 	}
