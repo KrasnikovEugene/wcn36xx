@@ -40,6 +40,15 @@
 #define wcn36xx_info(fmt, arg...) \
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
 
+#define dynamic_hex_dump(prefix_str, buf, len)				\
+do {									\
+	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);		\
+	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))		\
+		print_hex_dump(KERN_DEBUG, prefix_str,			\
+			       DUMP_PREFIX_ADDRESS, 32, 1,		\
+			       buf, len, false);			\
+} while (0)
+
 #define ENTER() pr_info(DRIVER_PREFIX "%s\n", __func__)
 
 static inline void buff_to_be(u32 *buf, size_t len)
