@@ -55,12 +55,14 @@ static void * wcn36xx_dma_alloc(size_t size, void **paddr)
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wmb();
+	wcn36xx_debug("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
 	writel_relaxed(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 {
 	*data = readl_relaxed(wcn->mmio + addr);
+	wcn36xx_debug("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
 	wmb();
 }
 
@@ -450,6 +452,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
 	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_BD;
 
+	wcn36xx_debug("DXE TX");
+	dynamic_hex_dump("DESC1 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+	dynamic_hex_dump("BD   >>> ", (char*)wcn->mgmt_mem_pool.virt_addr, sizeof(struct wcn36xx_tx_bd));
 	// Set source address of the SKB we send
 	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
 	cur_dxe_ctl->skb = skb;
@@ -463,6 +468,8 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 	// set it to VALID
 	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_SKB;
 
+	dynamic_hex_dump("DESC2 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+	dynamic_hex_dump("SKB   >>> ", (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
 	//indicate End Of Packet and generate interrupt on descriptor Done
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_REG_CTL_TX_H,

@@ -40,6 +40,9 @@
 #define wcn36xx_info(fmt, arg...) \
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
 
+#define wcn36xx_debug(fmt, arg...) \
+	pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
+
 #define dynamic_hex_dump(prefix_str, buf, len)				\
 do {									\
 	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);		\
