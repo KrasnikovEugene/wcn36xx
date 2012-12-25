@@ -288,8 +288,8 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 
 	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_JOIN_REQ)
 
-	memcpy(&msg_body.bssid, &bssid, ETH_ALEN);
-	memcpy(&msg_body.sta_mac, &vif, ETH_ALEN);
+	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
+	memcpy(&msg_body.sta_mac, vif, ETH_ALEN);
 	msg_body.ch = ch;
 	msg_body.link_state = 1;
 

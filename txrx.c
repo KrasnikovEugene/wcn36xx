@@ -41,6 +41,8 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.flag = 0;
 	status.rx_flags = 0;
 	memcpy(skb2->cb, &status, sizeof(struct ieee80211_rx_status));
+	wcn36xx_debug("RX");
+	dynamic_hex_dump("SKB <<< ", (char*)skb2->data, skb2->len);
 	ieee80211_rx_ni(wcn->hw, skb2);
 
 	return 0;
@@ -48,6 +50,8 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 void wcn36xx_prepare_tx_bd(void * pBd, u32 len)
 {
 	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
+	// Must be clean every time because we can have some leftovers from the previous packet
+	memset(pBd, 0, (sizeof(struct wcn36xx_tx_bd)));
 	bd->pdu.mpdu_header_len = WCN36XX_802_11_HEADER_LEN;
 	bd->pdu.mpdu_header_off = sizeof(struct wcn36xx_tx_bd);
 	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
