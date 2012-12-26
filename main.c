@@ -277,7 +277,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
 	wcn36xx_smd_enter_imps(wcn);
 	wcn36xx_smd_exit_imps(wcn);
-	wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 1);
+	wcn36xx_smd_add_sta(wcn, wcn->addresses[1], 1);
 
 	return 0;
 }
