@@ -132,11 +132,6 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 	ieee80211_scan_completed(wcn->hw, false);
 	return 0;
 }
-static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
-				     struct ieee80211_vif *vif)
-{
-	ENTER();
-}
 static int wcn36xx_sched_scan_start(struct ieee80211_hw *hw,
 				      struct ieee80211_vif *vif,
 				      struct cfg80211_sched_scan_request *req,
@@ -172,15 +167,13 @@ static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 	ENTER();
 	return 0;
 }
-static int wcn36xx_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-			     u16 queue,
-			     const struct ieee80211_tx_queue_params *params)
+static int wcn36xx_conf_tx(struct ieee80211_hw *hw, u16 queue,
+                 const struct ieee80211_tx_queue_params *params)
 {
 	ENTER();
 	return 0;
 }
-static u64 wcn36xx_get_tsf(struct ieee80211_hw *hw,
-			     struct ieee80211_vif *vif)
+static u64 wcn36xx_get_tsf(struct ieee80211_hw *hw)
 {
 	ENTER();
 	return 0;
@@ -191,15 +184,7 @@ static int wcn36xx_get_survey(struct ieee80211_hw *hw, int idx,
 	ENTER();
 	return 0;
 }
-static int wcn36xx_sta_state(struct ieee80211_hw *hw,
-			       struct ieee80211_vif *vif,
-			       struct ieee80211_sta *sta,
-			       enum ieee80211_sta_state old_state,
-			       enum ieee80211_sta_state new_state)
-{
-	ENTER();
-	return 0;
-}
+
 static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 				  struct ieee80211_vif *vif,
 				  enum ieee80211_ampdu_mlme_action action,
@@ -295,7 +280,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.tx 			= wcn36xx_tx,
 	.set_key 		= wcn36xx_set_key,
 	.hw_scan 		= wcn36xx_hw_scan,
-	.cancel_hw_scan 	= wcn36xx_cancel_hw_scan,
 	.sched_scan_start 	= wcn36xx_sched_scan_start,
 	.sched_scan_stop 	= wcn36xx_sched_scan_stop,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
@@ -304,7 +288,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.conf_tx 		= wcn36xx_conf_tx,
 	.get_tsf 		= wcn36xx_get_tsf,
 	.get_survey 		= wcn36xx_get_survey,
-	.sta_state 		= wcn36xx_sta_state,
 	.ampdu_action 		= wcn36xx_ampdu_action,
 	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
 	.set_bitrate_mask 	= wcn36xx_set_bitrate_mask,
