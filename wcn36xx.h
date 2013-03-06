@@ -51,7 +51,7 @@
 		.flags =  _DPRINTK_FLAGS_DEFAULT,		\
 	}
 
-#define dynamic_hex_dump(prefix_str, buf, len)				\
+#define wcn36xx_dbg_dump(prefix_str, buf, len)			\
 do {									\
 	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);		\
 	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))		\

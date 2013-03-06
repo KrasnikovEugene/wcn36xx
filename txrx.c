@@ -39,7 +39,7 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.rx_flags = 0;
 	memcpy(skb2->cb, &status, sizeof(struct ieee80211_rx_status));
 	wcn36xx_dbg("RX");
-	dynamic_hex_dump("SKB <<< ", (char*)skb2->data, skb2->len);
+	wcn36xx_dbg_dump("SKB <<< ", (char*)skb2->data, skb2->len);
 	ieee80211_rx_ni(wcn->hw, skb2);
 
 	return 0;
