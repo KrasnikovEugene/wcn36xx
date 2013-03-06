@@ -403,9 +403,10 @@ static int __init wcn36xx_init(void)
 
 	wcn->dev = wcnss_wlan_get_device();
 	if (wcn->dev == NULL) {
-		//TODO error handling
-		wcn36xx_error("device");
+		wcn36xx_error("failed to get wcnss wlan device");
+		return -EINVAL;
 	}
+
 	wcn->wq = create_freezable_workqueue("wcn36xx_wq");
 	wcn->ctl_wq = create_freezable_workqueue("wcn36xx_ctl_wq");
 
