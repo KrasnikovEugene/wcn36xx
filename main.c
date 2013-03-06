@@ -217,10 +217,15 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 {
 
 	struct wcn36xx *wcn = hw->priv;
-	int ret = 0;
+	int ret;
 	ENTER();
+
 	// SMD initialization
-	wcn36xx_smd_open_chan(wcn);
+	ret = wcn36xx_smd_open_chan(wcn);
+	if (ret) {
+		wcn36xx_error("failed to open smd channel: %d", ret);
+		return ret;
+	}
 
 	// Not to receive INT untill the whole buf from SMD is read
 	smd_disable_read_intr(wcn->smd_ch);
