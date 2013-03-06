@@ -1,0 +1,9 @@
+*.o
+*~
+.*.ko.cmd
+.*.o.cmd
+/.tmp_versions
+/Module.symvers
+/modules.order
+/wcn36xx.ko
+/wcn36xx.mod.c
