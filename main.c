@@ -432,8 +432,8 @@ static int __init wcn36xx_init(void)
 
 	wcnss_memory = wcnss_wlan_get_memory_map(wcn->dev);
 	if (wcnss_memory == NULL) {
-		//TODO error handling
-		wcn36xx_error("wcnss_wlan_get_memory_map");
+		wcn36xx_error("failed to get wcnss wlan memory map");
+		return -EINVAL;
 	}
 
 	wcn->tx_irq = wcnss_wlan_get_dxe_tx_irq(wcn->dev);
@@ -441,9 +441,10 @@ static int __init wcn36xx_init(void)
 
 	wcn->mmio = ioremap(wcnss_memory->start, resource_size(wcnss_memory));
 	if (NULL == wcn->mmio) {
-		//TODO error handling
-		wcn36xx_error("mmio");
+		wcn36xx_error("failed to map io memory");
+		return -EINVAL;
 	}
+
 	return 0;
 }
 
