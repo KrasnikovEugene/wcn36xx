@@ -396,7 +396,8 @@ static void wcn36xx_smd_work(struct work_struct *work)
 		vfree(msg);
 	}
 }
-int wcn36xx_smd_open_chan(struct wcn36xx *wcn)
+
+int wcn36xx_smd_open(struct wcn36xx *wcn)
 {
 	int ret, left;
 
@@ -418,4 +419,9 @@ int wcn36xx_smd_open_chan(struct wcn36xx *wcn)
 	}
 
 	return 0;
+}
+
+void wcn36xx_smd_close(struct wcn36xx *wcn)
+{
+	smd_close(wcn->smd_ch);
 }

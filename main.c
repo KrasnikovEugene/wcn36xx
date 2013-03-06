@@ -46,6 +46,9 @@ static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	ENTER();
+
+	wcn36xx_smd_close(wcn);
+
 	vfree(wcn->smd_buf);
 }
 static int wcn36xx_change_interface(struct ieee80211_hw *hw,
@@ -229,7 +232,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	ENTER();
 
 	// SMD initialization
-	ret = wcn36xx_smd_open_chan(wcn);
+	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
 		wcn36xx_error("failed to open smd channel: %d", ret);
 		return ret;

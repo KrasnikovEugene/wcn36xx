@@ -247,7 +247,9 @@ struct wcn36xx_fw_msg_header {
 };
 struct wcn36xx;
 
-int wcn36xx_smd_open_chan(struct wcn36xx *wcn);
+int wcn36xx_smd_open(struct wcn36xx *wcn);
+void wcn36xx_smd_close(struct wcn36xx *wcn);
+
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
 int wcn36xx_smd_start(struct wcn36xx *wcn);
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
