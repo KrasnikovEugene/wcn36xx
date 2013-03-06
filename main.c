@@ -167,17 +167,7 @@ static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 	ENTER();
 	return 0;
 }
-static int wcn36xx_conf_tx(struct ieee80211_hw *hw, u16 queue,
-                 const struct ieee80211_tx_queue_params *params)
-{
-	ENTER();
-	return 0;
-}
-static u64 wcn36xx_get_tsf(struct ieee80211_hw *hw)
-{
-	ENTER();
-	return 0;
-}
+
 static int wcn36xx_get_survey(struct ieee80211_hw *hw, int idx,
 				struct survey_info *survey)
 {
@@ -285,8 +275,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
 	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
 	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
-	.conf_tx 		= wcn36xx_conf_tx,
-	.get_tsf 		= wcn36xx_get_tsf,
 	.get_survey 		= wcn36xx_get_survey,
 	.ampdu_action 		= wcn36xx_ampdu_action,
 	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
