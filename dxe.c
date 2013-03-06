@@ -52,14 +52,14 @@ static void * wcn36xx_dma_alloc(size_t size, void **paddr)
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wmb();
-	wcn36xx_debug("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
+	wcn36xx_dbg("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
 	writel_relaxed(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 {
 	*data = readl_relaxed(wcn->mmio + addr);
-	wcn36xx_debug("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
+	wcn36xx_dbg("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
 	wmb();
 }
 
@@ -449,7 +449,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
 	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_BD;
 
-	wcn36xx_debug("DXE TX");
+	wcn36xx_dbg("DXE TX");
 	dynamic_hex_dump("DESC1 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
 	dynamic_hex_dump("BD   >>> ", (char*)wcn->mgmt_mem_pool.virt_addr, sizeof(struct wcn36xx_tx_bd));
 	// Set source address of the SKB we send

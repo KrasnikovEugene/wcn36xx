@@ -37,7 +37,7 @@
 #define wcn36xx_info(fmt, arg...) \
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
 
-#define wcn36xx_debug(fmt, arg...) \
+#define wcn36xx_dbg(fmt, arg...) \
 	pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
 
 #define DEFINE_DYNAMIC_DEBUG_METADATA(name, fmt)		\
