@@ -405,6 +405,8 @@ static int __init wcn36xx_init(void)
 	struct resource *wcnss_memory;
 	int ret;
 
+	/* FIXME: the whole function needs proper error handling */
+
 	hw = wcn36xx_alloc_hw();
 	wcn = hw->priv;
 	wcn->hw = hw;
@@ -436,6 +438,8 @@ static int __init wcn36xx_init(void)
 
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
+
+	/* FIXME: register should be last */
 	ret = ieee80211_register_hw(wcn->hw);
 
 	wcnss_memory = wcnss_wlan_get_memory_map(wcn->dev);
@@ -465,6 +469,9 @@ static void __exit wcn36xx_exit(void)
 	struct ieee80211_hw *hw = private_hw;
 
 	ieee80211_unregister_hw(hw);
+
+	/* FIXME: iounmap */
+
 	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);
