@@ -398,23 +398,24 @@ static void wcn36xx_smd_work(struct work_struct *work)
 }
 int wcn36xx_smd_open_chan(struct wcn36xx *wcn)
 {
-	int ret = 0;
+	int ret, left;
 
 	INIT_WORK(&wcn->smd_work, wcn36xx_smd_work);
 	init_completion(&wcn->smd_compl);
 
 	ret = smd_named_open_on_edge("WLAN_CTRL", SMD_APPS_WCNSS,
-		&wcn->smd_ch, wcn, wcn36xx_smd_notify);
-	if (0 != ret) {
-		wcn36xx_error("smd_named_open_on_edge");
-		goto out;
+				     &wcn->smd_ch, wcn, wcn36xx_smd_notify);
+	if (ret) {
+		wcn36xx_error("smd_named_open_on_edge failed: %d", ret);
+		return ret;
 	}
-	ret = wait_for_completion_timeout(&wcn->smd_compl,
-		msecs_to_jiffies(SMD_MSG_TIMEOUT));
-	if (ret <= 0) {
-		wcn36xx_error("Cannot open SMD channel");
-		goto out;
+
+	left = wait_for_completion_interruptible_timeout(&wcn->smd_compl,
+							 msecs_to_jiffies(SMD_MSG_TIMEOUT));
+	if (left <= 0) {
+		wcn36xx_error("timeout waiting for smd open: %d", ret);
+		return left;
 	}
-out:
-	return ret;
+
+	return 0;
 }
