@@ -33,24 +33,67 @@ static struct ieee80211_hw *private_hw;
 
 static int wcn36xx_start(struct ieee80211_hw *hw)
 {
+	struct wcn36xx *wcn = hw->priv;
+	int ret;
+
 	ENTER();
+
+	// SMD initialization
+	ret = wcn36xx_smd_open(wcn);
+	if (ret) {
+		wcn36xx_error("failed to open smd channel: %d", ret);
+		return ret;
+	}
+
+	// Not to receive INT untill the whole buf from SMD is read
+	smd_disable_read_intr(wcn->smd_ch);
+
+	// Allocate memory pools for Mgmt BD headers and Data BD headers
+	wcn36xx_dxe_allocate_mem_pools(wcn);
+	wcn36xx_dxe_alloc_ctl_blks(wcn);
+
+	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
+
+	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
+	if (ret) {
+		//TODO error handling
+		wcn36xx_error("request FM %d", ret);
+	}
+	// maximu SMD message size is 4k
+	wcn->smd_buf = vmalloc(4096);
+
+	//TODO pass configuration to FW
+	wcn36xx_smd_load_nv(wcn);
+	wcn36xx_smd_start(wcn);
+
+	// DMA chanel initialization
+	wcn36xx_dxe_init(wcn);
+	wcn36xx_dxe_request_irqs(wcn);
+
+	wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
+	wcn36xx_smd_enter_imps(wcn);
+	wcn36xx_smd_exit_imps(wcn);
+	wcn36xx_smd_add_sta(wcn, wcn->addresses[1], 1);
+
 	return 0;
 }
 static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
-	ENTER();
-}
-
-static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif)
-{
 	struct wcn36xx *wcn = hw->priv;
+
 	ENTER();
 
 	wcn36xx_smd_close(wcn);
 
 	vfree(wcn->smd_buf);
 }
+
+static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
+				   struct ieee80211_vif *vif)
+{
+	ENTER();
+}
+
 static int wcn36xx_change_interface(struct ieee80211_hw *hw,
 				      struct ieee80211_vif *vif,
 				      enum nl80211_iftype new_type, bool p2p)
@@ -226,47 +269,7 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
 static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif)
 {
-
-	struct wcn36xx *wcn = hw->priv;
-	int ret;
 	ENTER();
-
-	// SMD initialization
-	ret = wcn36xx_smd_open(wcn);
-	if (ret) {
-		wcn36xx_error("failed to open smd channel: %d", ret);
-		return ret;
-	}
-
-	// Not to receive INT untill the whole buf from SMD is read
-	smd_disable_read_intr(wcn->smd_ch);
-
-	// Allocate memory pools for Mgmt BD headers and Data BD headers
-	wcn36xx_dxe_allocate_mem_pools(wcn);
-	wcn36xx_dxe_alloc_ctl_blks(wcn);
-
-	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
-
-	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
-	if (ret) {
-		//TODO error handling
-		wcn36xx_error("request FM %d", ret);
-	}
-	// maximu SMD message size is 4k
-	wcn->smd_buf = vmalloc(4096);
-
-	//TODO pass configuration to FW
-	wcn36xx_smd_load_nv(wcn);
-	wcn36xx_smd_start(wcn);
-
-	// DMA chanel initialization
-	wcn36xx_dxe_init(wcn);
-	wcn36xx_dxe_request_irqs(wcn);
-
-	wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
-	wcn36xx_smd_enter_imps(wcn);
-	wcn36xx_smd_exit_imps(wcn);
-	wcn36xx_smd_add_sta(wcn, wcn->addresses[1], 1);
 
 	return 0;
 }
