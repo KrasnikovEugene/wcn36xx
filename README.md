@@ -30,3 +30,14 @@ Build Instructions for CyanogenMod+Mako
 5) cd wcn36xx
 
 6) Run make (must happen in the same session where breakfast is run)
+
+Hardcoding makefile paths
+
+If you don't want to use Android build scripts to set the build
+environment variables you can hardcode them in the .config file:
+
+ANDROID_BUILD_TOP=/home/foo/mako/cm-10.1
+CM_BUILD=mako
+
+ARM_EABI_TOOLCHAIN=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin
+ANDROID_PRODUCT_OUT=$(ANDROID_BUILD_TOP)/out/target/product/$(CM_BUILD)
