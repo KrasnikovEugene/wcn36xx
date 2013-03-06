@@ -4,6 +4,7 @@
 .*.o.cmd
 /.tmp_versions
 /Module.symvers
+/cscope.out
 /modules.order
 /wcn36xx.ko
 /wcn36xx.mod.c
