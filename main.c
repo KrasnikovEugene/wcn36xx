@@ -23,6 +23,14 @@
 #include "wcn36xx.h"
 #include "dxe.h"
 
+
+/*
+ * provide hw to module exit function
+ *
+ * FIXME: implement this properly, maybe with platform device?
+ */
+static struct ieee80211_hw *private_hw;
+
 static int wcn36xx_start(struct ieee80211_hw *hw)
 {
 	ENTER();
@@ -445,6 +453,8 @@ static int __init wcn36xx_init(void)
 		return -EINVAL;
 	}
 
+	private_hw = hw;
+
 	return 0;
 }
 
@@ -452,8 +462,10 @@ module_init(wcn36xx_init);
 
 static void __exit wcn36xx_exit(void)
 {
-	ENTER();
+	struct ieee80211_hw *hw = private_hw;
 
+	ieee80211_unregister_hw(hw);
+	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);
 
