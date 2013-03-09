@@ -160,12 +160,15 @@ static int wcn36xx_smd_start_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_start_rsp * rsp;
 
-	if(wcn36xx_smd_rsp_status_check(buf, len))
+	if (len < sizeof(struct wcn36xx_fw_msg_header) +
+		sizeof(struct wcn36xx_fw_msg_status_rsp))
 		return -EIO;
 
 	rsp = (struct wcn36xx_fw_msg_start_rsp *)
 		(buf + sizeof(struct wcn36xx_fw_msg_header));
 
+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
+		return -EIO;
 	wcn36xx_info("WLAN ver=%s, CRM ver=%s",
 		rsp->wlan_ver, rsp->crm_ver);
 	return 0;
