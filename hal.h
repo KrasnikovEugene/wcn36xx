@@ -18,26 +18,17 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/*==========================================================================
- *
- *  @file:     wlan_hal_msg.h
- *
- *  @brief:    Exports and types for messages sent to HAL from WDI
- *
- *  @author:   Kumar Anand
- *
- *             Copyright (C) 2010, Qualcomm, Inc. 
- *             All rights reserved.
- *
- *=========================================================================*/
 
-#ifndef _WLAN_HAL_MSG_H_
-#define _WLAN_HAL_MSG_H_
+#ifndef _HAL_H_
+#define _HAL_H_
 
-#include "halLegacyPalTypes.h"
-#include "halCompiler.h"
-#include "wlan_qct_dev_defs.h"
-#include "wlan_nv.h"
+#include "hw.h"
+
+/* FIXME: remove these */
+#define PACKED_PRE
+#define PACKED_POST __packed
+#define __ani_attr_pre_packed
+#define __ani_attr_packed
 
 /*---------------------------------------------------------------------------
   API VERSIONING INFORMATION
@@ -72,8 +63,8 @@
 //The maximum value of access category
 #define WLAN_HAL_MAX_AC  4
 
-typedef tANI_U8 tSirMacAddr[6];
-typedef tANI_U8 tHalIpv4Addr[4];
+typedef u8 tSirMacAddr[6];
+typedef u8 tHalIpv4Addr[4];
 
 #define HAL_MAC_ADDR_LEN        6
 #define HAL_IPV4_ADDR_LEN       4
@@ -482,7 +473,7 @@ typedef enum eSirNwType
     eSIR_DONOT_USE_NW_TYPE = WLAN_HAL_MAX_ENUM_SIZE
 } tSirNwType;
 
-typedef tANI_U16 tSirMacBeaconInterval;
+typedef u16 tSirMacBeaconInterval;
 
 #define SIR_MAC_RATESET_EID_MAX            12
 
@@ -607,22 +598,22 @@ typedef enum
 /// Definition for HAL API Version.
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8                  revision;
-    tANI_U8                  version;
-    tANI_U8                  minor;
-    tANI_U8                  major;
+    u8                  revision;
+    u8                  version;
+    u8                  minor;
+    u8                  major;
 } tWcnssWlanVersion, *tpWcnssWlanVersion;
 
 /// Definition for Encryption Keys
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8                  keyId;
-    tANI_U8                  unicast;  // 0 for multicast
+    u8                  keyId;
+    u8                  unicast;  // 0 for multicast
     tAniKeyDirection         keyDirection;
-    tANI_U8                  keyRsc[WLAN_MAX_KEY_RSC_LEN];  // Usage is unknown
-    tANI_U8                  paeRole;  // =1 for authenticator,=0 for supplicant
-    tANI_U16                 keyLength;
-    tANI_U8                  key[SIR_MAC_MAX_KEY_LENGTH];
+    u8                  keyRsc[WLAN_MAX_KEY_RSC_LEN];  // Usage is unknown
+    u8                  paeRole;  // =1 for authenticator,=0 for supplicant
+    u16                 keyLength;
+    u8                  key[SIR_MAC_MAX_KEY_LENGTH];
 } tSirKeys, *tpSirKeys;
 
 
@@ -630,7 +621,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*STA Index*/
-    tANI_U16        staIdx;
+    u16        staIdx;
 
     /*Encryption Type used with peer*/
     tAniEdType      encType;
@@ -639,14 +630,14 @@ typedef PACKED_PRE struct PACKED_POST
     tAniWepType     wepType; 
 
     /*Default WEP key, valid only for static WEP, must between 0 and 3.*/
-    tANI_U8         defWEPIdx;
+    u8         defWEPIdx;
 
     /* valid only for non-static WEP encyrptions */
     tSirKeys        key[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];            
   
     /*Control for Replay Count, 1= Single TID based replay count on Tx
       0 = Per TID based replay count on TX */
-    tANI_U8         singleTidRc;
+    u8         singleTidRc;
 
 } tSetStaKeyParams, *tpSetStaKeyParams;
 
@@ -657,7 +648,7 @@ typedef PACKED_PRE struct PACKED_POST
 {
    tHalHostMsgType  msgType:16;
    tHalHostMsgVersion msgVersion:16;
-   tANI_U32         msgLen;
+   u32         msgLen;
 } tHalMsgHeader, *tpHalMsgHeader;
 
 /* Config format required by HAL for each CFG item*/
@@ -665,20 +656,20 @@ typedef PACKED_PRE struct PACKED_POST
 {
    /* Cfg Id. The Id required by HAL is exported by HAL
     * in shared header file between UMAC and HAL.*/
-   tANI_U16   uCfgId;
+   u16   uCfgId;
 
    /* Length of the Cfg. This parameter is used to go to next cfg 
     * in the TLV format.*/
-   tANI_U16   uCfgLen;
+   u16   uCfgLen;
 
    /* Padding bytes for unaligned address's */
-   tANI_U16   uCfgPadBytes;
+   u16   uCfgPadBytes;
 
    /* Reserve bytes for making cfgVal to align address */
-   tANI_U16   uCfgReserve;
+   u16   uCfgReserve;
 
    /* Following the uCfgLen field there should be a 'uCfgLen' bytes
-    * containing the uCfgValue ; tANI_U8 uCfgValue[uCfgLen] */
+    * containing the uCfgValue ; u8 uCfgValue[uCfgLen] */
 } tHalCfg, *tpHalCfg;
 
 /*---------------------------------------------------------------------------
@@ -691,7 +682,7 @@ typedef PACKED_PRE struct PACKED_POST sHalMacStartParameters
     tDriverType  driverType;
 
     /*Length of the config buffer*/
-    tANI_U32  uConfigBufferLen;
+    u32  uConfigBufferLen;
 
     /* Following this there is a TLV formatted buffer of length 
      * "uConfigBufferLen" bytes containing all config values. 
@@ -716,22 +707,22 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST sHalMacStartRspParameters
 {
    /*success or failure */
-   tANI_U16  status;
+   u16  status;
 
    /*Max number of STA supported by the device*/
-   tANI_U8     ucMaxStations;
+   u8     ucMaxStations;
 
    /*Max number of BSS supported by the device*/
-   tANI_U8     ucMaxBssids;
+   u8     ucMaxBssids;
 
    /*API Version */
    tWcnssWlanVersion wcnssWlanVersion;
 
    /*CRM build information */
-   tANI_U8     wcnssCrmVersionString[WLAN_HAL_VERSION_LENGTH];
+   u8     wcnssCrmVersionString[WLAN_HAL_VERSION_LENGTH];
 
    /*hardware/chipset/misc version information */
-   tANI_U8     wcnssWlanVersionString[WLAN_HAL_VERSION_LENGTH];
+   u8     wcnssWlanVersionString[WLAN_HAL_VERSION_LENGTH];
 
 } tHalMacStartRspParams, *tpHalMacStartRspParams;
 
@@ -765,7 +756,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 }tHalMacStopRspParams, *tpHalMacStopRspParams;
 
@@ -782,7 +773,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Length of the config buffer. Allows UMAC to update multiple CFGs */
-    tANI_U32  uConfigBufferLen;
+    u32  uConfigBufferLen;
 
     /* Following this there is a TLV formatted buffer of length 
      * "uConfigBufferLen" bytes containing all config values. 
@@ -807,7 +798,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /* success or failure */
-  tANI_U32   status;
+  u32   status;
 
 }tHalUpdateCfgRspParams, *tpHalUpdateCfgRspParams;
 
@@ -827,33 +818,33 @@ typedef  __ani_attr_pre_packed struct sSirMacFrameCtl
 
 #ifndef ANI_LITTLE_BIT_ENDIAN
 
-    tANI_U8 subType :4;
-    tANI_U8 type :2;
-    tANI_U8 protVer :2;
+    u8 subType :4;
+    u8 type :2;
+    u8 protVer :2;
 
-    tANI_U8 order :1;
-    tANI_U8 wep :1;
-    tANI_U8 moreData :1;
-    tANI_U8 powerMgmt :1;
-    tANI_U8 retry :1;
-    tANI_U8 moreFrag :1;
-    tANI_U8 fromDS :1;
-    tANI_U8 toDS :1;
+    u8 order :1;
+    u8 wep :1;
+    u8 moreData :1;
+    u8 powerMgmt :1;
+    u8 retry :1;
+    u8 moreFrag :1;
+    u8 fromDS :1;
+    u8 toDS :1;
 
 #else
 
-    tANI_U8 protVer :2;
-    tANI_U8 type :2;
-    tANI_U8 subType :4;
+    u8 protVer :2;
+    u8 type :2;
+    u8 subType :4;
 
-    tANI_U8 toDS :1;
-    tANI_U8 fromDS :1;
-    tANI_U8 moreFrag :1;
-    tANI_U8 retry :1;
-    tANI_U8 powerMgmt :1;
-    tANI_U8 moreData :1;
-    tANI_U8 wep :1;
-    tANI_U8 order :1;
+    u8 toDS :1;
+    u8 fromDS :1;
+    u8 moreFrag :1;
+    u8 retry :1;
+    u8 powerMgmt :1;
+    u8 moreData :1;
+    u8 wep :1;
+    u8 order :1;
 
 #endif
 
@@ -862,28 +853,28 @@ typedef  __ani_attr_pre_packed struct sSirMacFrameCtl
 /// Sequence control field
 typedef __ani_attr_pre_packed struct sSirMacSeqCtl
 {
-    tANI_U8 fragNum : 4;
-    tANI_U8 seqNumLo : 4;
-    tANI_U8 seqNumHi : 8;
+    u8 fragNum : 4;
+    u8 seqNumLo : 4;
+    u8 seqNumHi : 8;
 } __ani_attr_packed tSirMacSeqCtl, *tpSirMacSeqCtl;
 
 /// Management header format
 typedef __ani_attr_pre_packed struct sSirMacMgmtHdr
 {
     tSirMacFrameCtl fc;
-    tANI_U8           durationLo;
-    tANI_U8           durationHi;
-    tANI_U8              da[6];
-    tANI_U8              sa[6];
-    tANI_U8              bssId[6];
+    u8           durationLo;
+    u8           durationHi;
+    u8              da[6];
+    u8              sa[6];
+    u8              bssId[6];
     tSirMacSeqCtl   seqControl;
 } __ani_attr_packed tSirMacMgmtHdr, *tpSirMacMgmtHdr;
 
 /// Scan Entry to hold active BSS idx's
 typedef __ani_attr_pre_packed struct sSirScanEntry
 {
-    tANI_U8 bssIdx[HAL_NUM_BSSID];
-    tANI_U8 activeBSScnt;
+    u8 bssIdx[HAL_NUM_BSSID];
+    u8 activeBSScnt;
 }__ani_attr_packed tSirScanEntry, *ptSirScanEntry;
 
 typedef PACKED_PRE struct PACKED_POST {
@@ -896,17 +887,17 @@ typedef PACKED_PRE struct PACKED_POST {
     tSirMacAddr bssid;
 
     /*Whether BSS needs to be notified*/
-    tANI_U8 notifyBss;
+    u8 notifyBss;
 
     /*Kind of frame to be used for notifying the BSS (Data Null, QoS Null, or
       CTS to Self). Must always be a valid frame type.*/
-    tANI_U8 frameType;
+    u8 frameType;
 
     /*UMAC has the option of passing the MAC frame to be used for notifying
       the BSS. If non-zero, HAL will use the MAC frame buffer pointed to by
       macMgmtHdr. If zero, HAL will generate the appropriate MAC frame based on
       frameType.*/
-    tANI_U8 frameLength;
+    u8 frameLength;
 
     /* Following the framelength there is a MAC frame buffer if frameLength 
        is non-zero. */
@@ -933,17 +924,17 @@ typedef PACKED_PRE struct PACKED_POST {
     tSirMacAddr bssid;
 
     /*Whether BSS needs to be notified*/
-    tANI_U8 notifyBss;
+    u8 notifyBss;
 
     /*Kind of frame to be used for notifying the BSS (Data Null, QoS Null, or
       CTS to Self). Must always be a valid frame type.*/
-    tANI_U8 frameType;
+    u8 frameType;
 
     /*UMAC has the option of passing the MAC frame to be used for notifying
       the BSS. If non-zero, HAL will use the MAC frame buffer pointed to by
       macMgmtHdr. If zero, HAL will generate the appropriate MAC frame based on
       frameType.*/
-    tANI_U8 frameLength;
+    u8 frameLength;
 
     /* Following the framelength there is a MAC frame buffer if frameLength 
        is non-zero. */
@@ -953,10 +944,10 @@ typedef PACKED_PRE struct PACKED_POST {
     tSirScanEntry scanEntry;
 
     /* Single NoA usage in Scanning */
-    tANI_U8 useNoA;
+    u8 useNoA;
 
     /* Indicates the scan duration (in ms) */
-    tANI_U16 scanDuration;
+    u16 scanDuration;
 
 } tInitScanConParams, * tpInitScanConParams;
 
@@ -974,7 +965,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 }tHalInitScanRspParams, *tpHalInitScanRspParams;
 
@@ -991,7 +982,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST 
 {
    /*Indicates the channel to scan*/
-   tANI_U8 scanChannel;
+   u8 scanChannel;
 
  } tStartScanParams, * tpStartScanParams;
 
@@ -1008,10 +999,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
-  tANI_U32 startTSF[2];
-  tPowerdBm txMgmtPower;
+  u32 startTSF[2];
+  u8 txMgmtPower;
 
 }tHalStartScanRspParams, *tpHalStartScanRspParams;
 
@@ -1030,7 +1021,7 @@ typedef PACKED_PRE struct PACKED_POST
    /*Indicates the channel to stop scanning.  Not used really. But retained
     for symmetry with "start Scan" message. It can also help in error
     check if needed.*/
-    tANI_U8 scanChannel;
+    u8 scanChannel;
 
 } tEndScanParams, *tpEndScanParams;
 
@@ -1047,7 +1038,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 }tHalEndScanRspParams, *tpHalEndScanRspParams;
 
@@ -1068,7 +1059,7 @@ typedef PACKED_PRE struct PACKED_POST
     eHalSysMode scanMode;
 
     /*Operating channel to tune to.*/
-    tANI_U8 currentOperChannel;
+    u8 currentOperChannel;
 
     /*Channel Bonding state If 20/40 MHz is operational, this will indicate the
       40 MHz extension channel in combination with the control channel*/
@@ -1078,17 +1069,17 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr bssid;
 
     /*Whether BSS needs to be notified*/
-    tANI_U8 notifyBss;
+    u8 notifyBss;
 
     /*Kind of frame to be used for notifying the BSS (Data Null, QoS Null, or
      CTS to Self). Must always be a valid frame type.*/
-    tANI_U8 frameType;
+    u8 frameType;
 
     /*UMAC has the option of passing the MAC frame to be used for notifying
       the BSS. If non-zero, HAL will use the MAC frame buffer pointed to by
       macMgmtHdr. If zero, HAL will generate the appropriate MAC frame based on
       frameType.*/
-    tANI_U8 frameLength;
+    u8 frameLength;
     
     /*Following the framelength there is a MAC frame buffer if frameLength 
       is non-zero.*/    
@@ -1112,7 +1103,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 }tHalFinishScanRspParams, *tpHalFinishScanRspParams;
 
@@ -1141,21 +1132,21 @@ typedef PACKED_PRE struct PACKED_POST {
 
     tStaRateMode        opRateMode;
     // 11b, 11a and aniLegacyRates are IE rates which gives rate in unit of 500Kbps
-    tANI_U16             llbRates[SIR_NUM_11B_RATES];
-    tANI_U16             llaRates[SIR_NUM_11A_RATES];
-    tANI_U16             aniLegacyRates[SIR_NUM_POLARIS_RATES];
-    tANI_U16             reserved;
+    u16             llbRates[SIR_NUM_11B_RATES];
+    u16             llaRates[SIR_NUM_11A_RATES];
+    u16             aniLegacyRates[SIR_NUM_POLARIS_RATES];
+    u16             reserved;
 
     //Taurus only supports 26 Titan Rates(no ESF/concat Rates will be supported)
     //First 26 bits are reserved for those Titan rates and
     //the last 4 bits(bit28-31) for Taurus, 2(bit26-27) bits are reserved.
-    tANI_U32             aniEnhancedRateBitmap; //Titan and Taurus Rates
+    u32             aniEnhancedRateBitmap; //Titan and Taurus Rates
 
     /*
     * 0-76 bits used, remaining reserved
     * bits 0-15 and 32 should be set.
     */
-    tANI_U8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+    u8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
 
     /*
      * RX Highest Supported Data Rate defines the highest data
@@ -1163,7 +1154,7 @@ typedef PACKED_PRE struct PACKED_POST {
      * This value is derived from "Supported MCS Set field" inside
      * the HT capability element.
      */
-    tANI_U16 rxHighestDataRate;
+    u16 rxHighestDataRate;
 
 } tSirSupportedRates, *tpSirSupportedRates;
 
@@ -1173,102 +1164,102 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr bssId;
 
     /*ASSOC ID, as assigned by UMAC*/
-    tANI_U16 assocId;
+    u16 assocId;
 
     /* STA entry Type: 0 - Self, 1 - Other/Peer, 2 - BSSID, 3 - BCAST */
-    tANI_U8 staType;
+    u8 staType;
 
     /*Short Preamble Supported.*/
-    tANI_U8 shortPreambleSupported;
+    u8 shortPreambleSupported;
 
     /*MAC Address of STA*/
     tSirMacAddr staMac;
 
     /*Listen interval of the STA*/
-    tANI_U16 listenInterval;
+    u16 listenInterval;
 
     /*Support for 11e/WMM*/
-    tANI_U8 wmmEnabled;
+    u8 wmmEnabled;
 
     /*11n HT capable STA*/
-    tANI_U8 htCapable;
+    u8 htCapable;
 
     /*TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz*/
-    tANI_U8 txChannelWidthSet;
+    u8 txChannelWidthSet;
 
     /*RIFS mode 0 - NA, 1 - Allowed */
-    tANI_U8 rifsMode;
+    u8 rifsMode;
 
     /*L-SIG TXOP Protection mechanism 
       0 - No Support, 1 - Supported
       SG - there is global field */
-    tANI_U8 lsigTxopProtection;
+    u8 lsigTxopProtection;
 
     /*Max Ampdu Size supported by STA. TPE programming.
       0 : 8k , 1 : 16k, 2 : 32k, 3 : 64k */
-    tANI_U8 maxAmpduSize;
+    u8 maxAmpduSize;
 
     /*Max Ampdu density. Used by RA.  3 : 0~7 : 2^(11nAMPDUdensity -4)*/
-    tANI_U8 maxAmpduDensity;
+    u8 maxAmpduDensity;
 
     /*Max AMSDU size 1 : 3839 bytes, 0 : 7935 bytes*/
-    tANI_U8 maxAmsduSize;
+    u8 maxAmsduSize;
 
     /*Short GI support for 40Mhz packets*/
-    tANI_U8 fShortGI40Mhz;
+    u8 fShortGI40Mhz;
 
     /*Short GI support for 20Mhz packets*/
-    tANI_U8 fShortGI20Mhz;
+    u8 fShortGI20Mhz;
 
     /*Robust Management Frame (RMF) enabled/disabled*/
-    tANI_U8 rmfEnabled;
+    u8 rmfEnabled;
 
     /* The unicast encryption type in the association */
-    tANI_U32 encryptType;
+    u32 encryptType;
 
     /*HAL should update the existing STA entry, if this flag is set. UMAC
       will set this flag in case of RE-ASSOC, where we want to reuse the old
       STA ID. 0 = Add, 1 = Update*/
-    tANI_U8 action;
+    u8 action;
 
     /*U-APSD Flags: 1b per AC.  Encoded as follows:
        b7 b6 b5 b4 b3 b2 b1 b0 =
        X  X  X  X  BE BK VI VO */
-    tANI_U8 uAPSD;
+    u8 uAPSD;
 
     /*Max SP Length*/
-    tANI_U8 maxSPLen;
+    u8 maxSPLen;
 
     /*11n Green Field preamble support
       0 - Not supported, 1 - Supported */
-    tANI_U8 greenFieldCapable;
+    u8 greenFieldCapable;
 
     /*MIMO Power Save mode*/
     tSirMacHTMIMOPowerSaveState mimoPS;
 
     /*Delayed BA Support*/
-    tANI_U8 delayedBASupport;
+    u8 delayedBASupport;
 
     /*Max AMPDU duration in 32us*/
-    tANI_U8 us32MaxAmpduDuration;
+    u8 us32MaxAmpduDuration;
 
     /*HT STA should set it to 1 if it is enabled in BSS. HT STA should set
       it to 0 if AP does not support it. This indication is sent to HAL and
       HAL uses this flag to pickup up appropriate 40Mhz rates.*/
-    tANI_U8 fDsssCckMode40Mhz;
+    u8 fDsssCckMode40Mhz;
 
     /* Valid STA Idx when action=Update. Set to 0xFF when invalid!
        Retained for backward compalibity with existing HAL code*/
-    tANI_U8 staIdx;
+    u8 staIdx;
 
     /* BSSID of BSS to which station is associated. Set to 0xFF when invalid.
        Retained for backward compalibity with existing HAL code*/
-    tANI_U8 bssIdx;
+    u8 bssIdx;
 
-    tANI_U8  p2pCapableSta;
+    u8  p2pCapableSta;
 
     /*Reserved to align next field on a dword boundary*/
-    tANI_U8  reserved;
+    u8  reserved;
 
     /*These rates are the intersection of peer and self capabilities.*/
     tSirSupportedRates supportedRates;
@@ -1294,21 +1285,21 @@ typedef PACKED_PRE struct PACKED_POST {
 
     tStaRateMode        opRateMode;
     // 11b, 11a and aniLegacyRates are IE rates which gives rate in unit of 500Kbps
-    tANI_U16             llbRates[SIR_NUM_11B_RATES];
-    tANI_U16             llaRates[SIR_NUM_11A_RATES];
-    tANI_U16             aniLegacyRates[SIR_NUM_POLARIS_RATES];
-    tANI_U16             reserved;
+    u16             llbRates[SIR_NUM_11B_RATES];
+    u16             llaRates[SIR_NUM_11A_RATES];
+    u16             aniLegacyRates[SIR_NUM_POLARIS_RATES];
+    u16             reserved;
 
     //Taurus only supports 26 Titan Rates(no ESF/concat Rates will be supported)
     //First 26 bits are reserved for those Titan rates and
     //the last 4 bits(bit28-31) for Taurus, 2(bit26-27) bits are reserved.
-    tANI_U32             aniEnhancedRateBitmap; //Titan and Taurus Rates
+    u32             aniEnhancedRateBitmap; //Titan and Taurus Rates
 
     /*
     * 0-76 bits used, remaining reserved
     * bits 0-15 and 32 should be set.
     */
-    tANI_U8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+    u8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
 
     /*
      * RX Highest Supported Data Rate defines the highest data
@@ -1316,21 +1307,21 @@ typedef PACKED_PRE struct PACKED_POST {
      * This value is derived from "Supported MCS Set field" inside
      * the HT capability element.
      */
-    tANI_U16 rxHighestDataRate;
+    u16 rxHighestDataRate;
 
     /* Indicates the Maximum MCS that can be received for each number
         * of spacial streams */
-    tANI_U16 vhtRxMCSMap;
+    u16 vhtRxMCSMap;
 
     /*Indicate the highest VHT data rate that the STA is able to receive*/
-    tANI_U16 vhtRxHighestDataRate;
+    u16 vhtRxHighestDataRate;
 
     /* Indicates the Maximum MCS that can be transmitted  for each number
          * of spacial streams */
-    tANI_U16 vhtTxMCSMap;
+    u16 vhtTxMCSMap;
 
     /*Indicate the highest VHT data rate that the STA is able to transmit*/
-    tANI_U16 vhtTxHighestDataRate;
+    u16 vhtTxHighestDataRate;
 
 } tSirSupportedRates_V1, *tpSirSupportedRates_V1;
 
@@ -1340,111 +1331,111 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr bssId;
 
     /*ASSOC ID, as assigned by UMAC*/
-    tANI_U16 assocId;
+    u16 assocId;
 
     /* STA entry Type: 0 - Self, 1 - Other/Peer, 2 - BSSID, 3 - BCAST */
-    tANI_U8 staType;
+    u8 staType;
 
     /*Short Preamble Supported.*/
-    tANI_U8 shortPreambleSupported;
+    u8 shortPreambleSupported;
 
     /*MAC Address of STA*/
     tSirMacAddr staMac;
 
     /*Listen interval of the STA*/
-    tANI_U16 listenInterval;
+    u16 listenInterval;
 
     /*Support for 11e/WMM*/
-    tANI_U8 wmmEnabled;
+    u8 wmmEnabled;
 
     /*11n HT capable STA*/
-    tANI_U8 htCapable;
+    u8 htCapable;
 
     /*TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz*/
-    tANI_U8 txChannelWidthSet;
+    u8 txChannelWidthSet;
 
     /*RIFS mode 0 - NA, 1 - Allowed */
-    tANI_U8 rifsMode;
+    u8 rifsMode;
 
     /*L-SIG TXOP Protection mechanism
       0 - No Support, 1 - Supported
       SG - there is global field */
-    tANI_U8 lsigTxopProtection;
+    u8 lsigTxopProtection;
 
     /*Max Ampdu Size supported by STA. TPE programming.
       0 : 8k , 1 : 16k, 2 : 32k, 3 : 64k */
-    tANI_U8 maxAmpduSize;
+    u8 maxAmpduSize;
 
     /*Max Ampdu density. Used by RA.  3 : 0~7 : 2^(11nAMPDUdensity -4)*/
-    tANI_U8 maxAmpduDensity;
+    u8 maxAmpduDensity;
 
     /*Max AMSDU size 1 : 3839 bytes, 0 : 7935 bytes*/
-    tANI_U8 maxAmsduSize;
+    u8 maxAmsduSize;
 
     /*Short GI support for 40Mhz packets*/
-    tANI_U8 fShortGI40Mhz;
+    u8 fShortGI40Mhz;
 
     /*Short GI support for 20Mhz packets*/
-    tANI_U8 fShortGI20Mhz;
+    u8 fShortGI20Mhz;
 
     /*Robust Management Frame (RMF) enabled/disabled*/
-    tANI_U8 rmfEnabled;
+    u8 rmfEnabled;
 
     /* The unicast encryption type in the association */
-    tANI_U32 encryptType;
+    u32 encryptType;
     
     /*HAL should update the existing STA entry, if this flag is set. UMAC 
       will set this flag in case of RE-ASSOC, where we want to reuse the old
       STA ID. 0 = Add, 1 = Update*/
-    tANI_U8 action;
+    u8 action;
 
     /*U-APSD Flags: 1b per AC.  Encoded as follows:
        b7 b6 b5 b4 b3 b2 b1 b0 =
        X  X  X  X  BE BK VI VO */
-    tANI_U8 uAPSD;
+    u8 uAPSD;
 
     /*Max SP Length*/
-    tANI_U8 maxSPLen;
+    u8 maxSPLen;
 
     /*11n Green Field preamble support
       0 - Not supported, 1 - Supported */
-    tANI_U8 greenFieldCapable;
+    u8 greenFieldCapable;
 
     /*MIMO Power Save mode*/
     tSirMacHTMIMOPowerSaveState mimoPS;
 
     /*Delayed BA Support*/
-    tANI_U8 delayedBASupport;
+    u8 delayedBASupport;
     
     /*Max AMPDU duration in 32us*/
-    tANI_U8 us32MaxAmpduDuration;
+    u8 us32MaxAmpduDuration;
     
     /*HT STA should set it to 1 if it is enabled in BSS. HT STA should set
       it to 0 if AP does not support it. This indication is sent to HAL and
       HAL uses this flag to pickup up appropriate 40Mhz rates.*/
-    tANI_U8 fDsssCckMode40Mhz;
+    u8 fDsssCckMode40Mhz;
 
     /* Valid STA Idx when action=Update. Set to 0xFF when invalid!
        Retained for backward compalibity with existing HAL code*/
-    tANI_U8 staIdx;
+    u8 staIdx;
 
     /* BSSID of BSS to which station is associated. Set to 0xFF when invalid.
        Retained for backward compalibity with existing HAL code*/
-    tANI_U8 bssIdx;
+    u8 bssIdx;
 
-    tANI_U8  p2pCapableSta;
+    u8  p2pCapableSta;
 
     /*Reserved to align next field on a dword boundary*/
-    tANI_U8 htLdpcEnabled:1;
-    tANI_U8 vhtLdpcEnabled:1;
-    tANI_U8 vhtTxBFEnabled:1;
-    tANI_U8 reserved:5;
+    u8 htLdpcEnabled:1;
+    u8 vhtLdpcEnabled:1;
+    u8 vhtTxBFEnabled:1;
+    u8 reserved:5;
 
         /*These rates are the intersection of peer and self capabilities.*/
     tSirSupportedRates_V1 supportedRates;
 
-    tANI_U8  vhtCapable;
-    tANI_U8  vhtTxChannelWidthSet;
+    u8  vhtCapable;
+    u8  vhtTxChannelWidthSet;
 
 } tConfigStaParams_V1, *tpConfigStaParams_V1;
 
@@ -1464,33 +1455,33 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
   /* Station index; valid only when 'status' field value SUCCESS */
-  tANI_U8 staIdx;
+  u8 staIdx;
 
   /* BSSID Index of BSS to which the station is associated */
-  tANI_U8 bssIdx;
+  u8 bssIdx;
 
   /* DPU Index for PTK */
-  tANI_U8 dpuIndex;
+  u8 dpuIndex;
 
   /* DPU Index for GTK */  
-  tANI_U8 bcastDpuIndex;
+  u8 bcastDpuIndex;
 
   /*DPU Index for IGTK  */
-  tANI_U8 bcastMgmtDpuIdx;
+  u8 bcastMgmtDpuIdx;
 
   /*PTK DPU signature*/
-  tANI_U8 ucUcastSig;
+  u8 ucUcastSig;
 
   /*GTK DPU isignature*/
-  tANI_U8 ucBcastSig;
+  u8 ucBcastSig;
 
   /* IGTK DPU signature*/
-  tANI_U8 ucMgmtSig;
+  u8 ucMgmtSig;
 
-  tANI_U8  p2pCapableSta;
+  u8  p2pCapableSta;
 
 }tConfigStaRspParams, *tpConfigStaRspParams;
 
@@ -1508,7 +1499,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST 
 {
    /* Index of STA to delete */
-   tANI_U8    staIdx;
+   u8    staIdx;
 } tDeleteStaParams, *tpDeleteStaParams;
 
 /* Delete STA Request message*/
@@ -1526,10 +1517,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST 
 {
    /*success or failure */
-   tANI_U32   status;
+   u32   status;
 
    /* Index of STA deleted */
-   tANI_U8    staId;
+   u8    staId;
 } tDeleteStaRspParams, *tpDeleteStaRspParams;
 
 /* Delete STA Response message*/
@@ -1547,23 +1538,23 @@ typedef PACKED_PRE struct PACKED_POST
 //and extended rate set IEs. The parser assume this to be at least 12
 typedef __ani_attr_pre_packed struct sSirMacRateSet
 {
-    tANI_U8  numRates;
-    tANI_U8  rate[SIR_MAC_RATESET_EID_MAX];
+    u8  numRates;
+    u8  rate[SIR_MAC_RATESET_EID_MAX];
 } __ani_attr_packed tSirMacRateSet;
 
 // access category record
 typedef __ani_attr_pre_packed struct sSirMacAciAifsn
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
-    tANI_U8  rsvd  : 1;
-    tANI_U8  aci   : 2;
-    tANI_U8  acm   : 1;
-    tANI_U8  aifsn : 4;
+    u8  rsvd  : 1;
+    u8  aci   : 2;
+    u8  acm   : 1;
+    u8  aifsn : 4;
 #else
-    tANI_U8  aifsn : 4;
-    tANI_U8  acm   : 1;
-    tANI_U8  aci   : 2;
-    tANI_U8  rsvd  : 1;
+    u8  aifsn : 4;
+    u8  acm   : 1;
+    u8  aci   : 2;
+    u8  rsvd  : 1;
 #endif
 } __ani_attr_packed tSirMacAciAifsn;
 
@@ -1571,11 +1562,11 @@ typedef __ani_attr_pre_packed struct sSirMacAciAifsn
 typedef __ani_attr_pre_packed struct sSirMacCW
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
-    tANI_U8  max : 4;
-    tANI_U8  min : 4;
+    u8  max : 4;
+    u8  min : 4;
 #else
-    tANI_U8  min : 4;
-    tANI_U8  max : 4;
+    u8  min : 4;
+    u8  max : 4;
 #endif
 } __ani_attr_packed tSirMacCW;
 
@@ -1583,13 +1574,13 @@ typedef __ani_attr_pre_packed struct sSirMacEdcaParamRecord
 {
     tSirMacAciAifsn  aci;
     tSirMacCW        cw;
-    tANI_U16         txoplimit;
+    u16         txoplimit;
 } __ani_attr_packed tSirMacEdcaParamRecord;
 
 typedef __ani_attr_pre_packed struct sSirMacSSid
 {
-    tANI_U8        length;
-    tANI_U8        ssId[32];
+    u8        length;
+    u8        ssId[32];
 } __ani_attr_packed tSirMacSSid;
 
 // Concurrency role.  These are generic IDs that identify the various roles
@@ -1629,52 +1620,52 @@ typedef PACKED_PRE struct PACKED_POST
     tSirBssType bssType;
 
     /*Operational Mode: AP =0, STA = 1*/
-    tANI_U8 operMode;
+    u8 operMode;
 
     /*Network Type*/
     tSirNwType nwType;
 
     /*Used to classify PURE_11G/11G_MIXED to program MTU*/
-    tANI_U8 shortSlotTimeSupported;
+    u8 shortSlotTimeSupported;
 
     /*Co-exist with 11a STA*/
-    tANI_U8 llaCoexist;
+    u8 llaCoexist;
 
     /*Co-exist with 11b STA*/
-    tANI_U8 llbCoexist;
+    u8 llbCoexist;
 
     /*Co-exist with 11g STA*/
-    tANI_U8 llgCoexist;
+    u8 llgCoexist;
 
     /*Coexistence with 11n STA*/
-    tANI_U8 ht20Coexist;
+    u8 ht20Coexist;
 
     /*Non GF coexist flag*/
-    tANI_U8 llnNonGFCoexist;
+    u8 llnNonGFCoexist;
 
     /*TXOP protection support*/
-    tANI_U8 fLsigTXOPProtectionFullSupport;
+    u8 fLsigTXOPProtectionFullSupport;
 
     /*RIFS mode*/
-    tANI_U8 fRIFSMode;
+    u8 fRIFSMode;
 
     /*Beacon Interval in TU*/
     tSirMacBeaconInterval beaconInterval;
 
     /*DTIM period*/
-    tANI_U8 dtimPeriod;
+    u8 dtimPeriod;
 
     /*TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz*/
-    tANI_U8 txChannelWidthSet;
+    u8 txChannelWidthSet;
 
     /*Operating channel*/
-    tANI_U8 currentOperChannel;
+    u8 currentOperChannel;
 
     /*Extension channel for channel bonding*/
-    tANI_U8 currentExtChannel;
+    u8 currentExtChannel;
 
     /*Reserved to align next field on a dword boundary*/
-    tANI_U8 reserved;
+    u8 reserved;
 
     /*SSID of the BSS*/
     tSirMacSSid ssId;
@@ -1682,39 +1673,39 @@ typedef PACKED_PRE struct PACKED_POST
     /*HAL should update the existing BSS entry, if this flag is set.
       UMAC will set this flag in case of reassoc, where we want to resue the
       the old BSSID and still return success 0 = Add, 1 = Update*/
-    tANI_U8 action;
+    u8 action;
 
     /* MAC Rate Set */
     tSirMacRateSet rateSet;
 
     /*Enable/Disable HT capabilities of the BSS*/
-    tANI_U8 htCapable;
+    u8 htCapable;
 
     // Enable/Disable OBSS protection
-    tANI_U8 obssProtEnabled;
+    u8 obssProtEnabled;
 
     /*RMF enabled/disabled*/
-    tANI_U8 rmfEnabled;
+    u8 rmfEnabled;
 
     /*HT Operating Mode operating mode of the 802.11n STA*/
     tSirMacHTOperatingMode htOperMode;
 
     /*Dual CTS Protection: 0 - Unused, 1 - Used*/
-    tANI_U8 dualCTSProtection;
+    u8 dualCTSProtection;
 
     /* Probe Response Max retries */
-    tANI_U8   ucMaxProbeRespRetryLimit;
+    u8   ucMaxProbeRespRetryLimit;
 
     /* To Enable Hidden ssid */
-    tANI_U8   bHiddenSSIDEn;
+    u8   bHiddenSSIDEn;
 
     /* To Enable Disable FW Proxy Probe Resp */
-    tANI_U8   bProxyProbeRespEn;
+    u8   bProxyProbeRespEn;
 
     /* Boolean to indicate if EDCA params are valid. UMAC might not have valid
        EDCA params or might not desire to apply EDCA params during config BSS.
        0 implies Not Valid ; Non-Zero implies valid*/
-    tANI_U8   edcaParamsValid;
+    u8   edcaParamsValid;
 
     /*EDCA Parameters for Best Effort Access Category*/
     tSirMacEdcaParamRecord acbe;
@@ -1729,19 +1720,19 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacEdcaParamRecord acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
-    tANI_U8 extSetStaKeyParamValid; //Ext Bss Config Msg if set
+    u8 extSetStaKeyParamValid; //Ext Bss Config Msg if set
     tSetStaKeyParams extSetStaKeyParam;  //SetStaKeyParams for ext bss msg
 #endif
 
     /* Persona for the BSS can be STA,AP,GO,CLIENT value same as tHalConMode */
-    tANI_U8   halPersona;
+    u8   halPersona;
 
-    tANI_U8 bSpectrumMgtEnable;
+    u8 bSpectrumMgtEnable;
 
     /*HAL fills in the tx power used for mgmt frames in txMgmtPower*/
-    tANI_S8     txMgmtPower;
+    s8     txMgmtPower;
     /*maxTxPower has max power to be used after applying the power constraint if any */
-    tANI_S8     maxTxPower;
+    s8     maxTxPower;
     /*Context of the station being added in HW
       Add a STA entry for "itself" -
       On AP  - Add the AP itself in an "STA context"
@@ -1765,51 +1756,51 @@ typedef PACKED_PRE struct PACKED_POST
     tSirBssType bssType;
 
     /*Operational Mode: AP =0, STA = 1*/
-    tANI_U8 operMode;
+    u8 operMode;
 
     /*Network Type*/
     tSirNwType nwType;
 
     /*Used to classify PURE_11G/11G_MIXED to program MTU*/
-    tANI_U8 shortSlotTimeSupported;
+    u8 shortSlotTimeSupported;
 
     /*Co-exist with 11a STA*/
-    tANI_U8 llaCoexist;
+    u8 llaCoexist;
 
     /*Co-exist with 11b STA*/
-    tANI_U8 llbCoexist;
+    u8 llbCoexist;
 
     /*Co-exist with 11g STA*/
-    tANI_U8 llgCoexist;
+    u8 llgCoexist;
 
     /*Coexistence with 11n STA*/
-    tANI_U8 ht20Coexist;
+    u8 ht20Coexist;
 
     /*Non GF coexist flag*/
-    tANI_U8 llnNonGFCoexist;
+    u8 llnNonGFCoexist;
 
     /*TXOP protection support*/
-    tANI_U8 fLsigTXOPProtectionFullSupport;
+    u8 fLsigTXOPProtectionFullSupport;
     /*RIFS mode*/
-    tANI_U8 fRIFSMode;
+    u8 fRIFSMode;
 
     /*Beacon Interval in TU*/
     tSirMacBeaconInterval beaconInterval;
 
     /*DTIM period*/
-    tANI_U8 dtimPeriod;
+    u8 dtimPeriod;
 
     /*TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz*/
-    tANI_U8 txChannelWidthSet;
+    u8 txChannelWidthSet;
 
     /*Operating channel*/
-    tANI_U8 currentOperChannel;
+    u8 currentOperChannel;
 
     /*Extension channel for channel bonding*/
-    tANI_U8 currentExtChannel;
+    u8 currentExtChannel;
 
     /*Reserved to align next field on a dword boundary*/
-    tANI_U8 reserved;
+    u8 reserved;
 
     /*SSID of the BSS*/
     tSirMacSSid ssId;
@@ -1817,39 +1808,39 @@ typedef PACKED_PRE struct PACKED_POST
     /*HAL should update the existing BSS entry, if this flag is set.
       UMAC will set this flag in case of reassoc, where we want to resue the
       the old BSSID and still return success 0 = Add, 1 = Update*/
-    tANI_U8 action;
+    u8 action;
 
     /* MAC Rate Set */
     tSirMacRateSet rateSet;
 
     /*Enable/Disable HT capabilities of the BSS*/
-    tANI_U8 htCapable;
+    u8 htCapable;
 
     // Enable/Disable OBSS protection
-    tANI_U8 obssProtEnabled;
+    u8 obssProtEnabled;
 
     /*RMF enabled/disabled*/
-    tANI_U8 rmfEnabled;
+    u8 rmfEnabled;
 
     /*HT Operating Mode operating mode of the 802.11n STA*/
     tSirMacHTOperatingMode htOperMode;
 
     /*Dual CTS Protection: 0 - Unused, 1 - Used*/
-    tANI_U8 dualCTSProtection;
+    u8 dualCTSProtection;
 
     /* Probe Response Max retries */
-    tANI_U8   ucMaxProbeRespRetryLimit;
+    u8   ucMaxProbeRespRetryLimit;
 
     /* To Enable Hidden ssid */
-    tANI_U8   bHiddenSSIDEn;
+    u8   bHiddenSSIDEn;
 
     /* To Enable Disable FW Proxy Probe Resp */
-    tANI_U8   bProxyProbeRespEn;
+    u8   bProxyProbeRespEn;
 
     /* Boolean to indicate if EDCA params are valid. UMAC might not have valid 
        EDCA params or might not desire to apply EDCA params during config BSS. 
        0 implies Not Valid ; Non-Zero implies valid*/
-    tANI_U8   edcaParamsValid;
+    u8   edcaParamsValid;
 
     /*EDCA Parameters for Best Effort Access Category*/
     tSirMacEdcaParamRecord acbe;
@@ -1864,27 +1855,27 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacEdcaParamRecord acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
-    tANI_U8 extSetStaKeyParamValid; //Ext Bss Config Msg if set
+    u8 extSetStaKeyParamValid; //Ext Bss Config Msg if set
     tSetStaKeyParams extSetStaKeyParam;  //SetStaKeyParams for ext bss msg
 #endif
 
     /* Persona for the BSS can be STA,AP,GO,CLIENT value same as tHalConMode */    
-    tANI_U8   halPersona;
+    u8   halPersona;
    
-    tANI_U8 bSpectrumMgtEnable;
+    u8 bSpectrumMgtEnable;
 
     /*HAL fills in the tx power used for mgmt frames in txMgmtPower*/
-    tANI_S8     txMgmtPower;
+    s8     txMgmtPower;
     /*maxTxPower has max power to be used after applying the power constraint if any */
-    tANI_S8     maxTxPower;
+    s8     maxTxPower;
     /*Context of the station being added in HW
       Add a STA entry for "itself" -
       On AP  - Add the AP itself in an "STA context"
       On STA - Add the AP to which this STA is joining in an "STA context" */
     tConfigStaParams_V1 staContext;
   
-    tANI_U8   vhtCapable;
-    tANI_U8   vhtTxChannelWidthSet;
+    u8   vhtCapable;
+    u8   vhtTxChannelWidthSet;
 } tConfigBssParams_V1, * tpConfigBssParams_V1;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -1903,43 +1894,43 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Success or Failure */
-    tANI_U32   status;
+    u32   status;
 
     /* BSS index allocated by HAL */
-    tANI_U8    bssIdx;
+    u8    bssIdx;
 
     /* DPU descriptor index for PTK */
-    tANI_U8    dpuDescIndx;
+    u8    dpuDescIndx;
 
     /* PTK DPU signature */
-    tANI_U8    ucastDpuSignature;
+    u8    ucastDpuSignature;
 
     /* DPU descriptor index for GTK*/
-    tANI_U8    bcastDpuDescIndx;
+    u8    bcastDpuDescIndx;
 
     /* GTK DPU signature */
-    tANI_U8    bcastDpuSignature;
+    u8    bcastDpuSignature;
 
     /*DPU descriptor for IGTK*/
-    tANI_U8    mgmtDpuDescIndx;
+    u8    mgmtDpuDescIndx;
 
     /* IGTK DPU signature */
-    tANI_U8    mgmtDpuSignature;
+    u8    mgmtDpuSignature;
 
     /* Station Index for BSS entry*/
-    tANI_U8     bssStaIdx;
+    u8     bssStaIdx;
 
     /* Self station index for this BSS */
-    tANI_U8     bssSelfStaIdx;
+    u8     bssSelfStaIdx;
 
     /* Bcast station for buffering bcast frames in AP role */
-    tANI_U8     bssBcastStaIdx;
+    u8     bssBcastStaIdx;
 
     /*MAC Address of STA(PEER/SELF) in staContext of configBSSReq*/
     tSirMacAddr   staMac;
 
     /*HAL fills in the tx power used for mgmt frames in this field. */
-    tANI_S8     txMgmtPower;
+    s8     txMgmtPower;
 
 } tConfigBssRspParams, * tpConfigBssRspParams;
 
@@ -1956,7 +1947,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* BSS index to be deleted */
-    tANI_U8 bssIdx;
+    u8 bssIdx;
 
 } tDeleteBssParams, *tpDeleteBssParams;
 
@@ -1973,10 +1964,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Success or Failure */
-    tANI_U32   status;
+    u32   status;
 
     /* BSS index that has been deleted */
-    tANI_U8 bssIdx;
+    u8 bssIdx;
 
 } tDeleteBssRspParams, *tpDeleteBssRspParams;
 
@@ -1996,13 +1987,13 @@ typedef PACKED_PRE struct PACKED_POST
   tSirMacAddr     bssId; 
 
   /*Indicates the channel to switch to.*/
-  tANI_U8         ucChannel;
+  u8         ucChannel;
 
   /* Self STA MAC */
   tSirMacAddr selfStaMacAddr;
      
   /*Local power constraint*/
-  tANI_U8         ucLocalPowerConstraint;
+  u8         ucLocalPowerConstraint;
 
   /*Secondary channel offset */
   ePhyChanBondState  secondaryChannelOffset;
@@ -2011,7 +2002,7 @@ typedef PACKED_PRE struct PACKED_POST
   tSirLinkState   linkState;
 
   /* Max TX power */
-  tANI_S8 maxTxPower;
+  s8 maxTxPower;
 
 } tHalJoinReqParams, *tpHalJoinReqParams;
 
@@ -2028,10 +2019,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
   /* HAL fills in the tx power used for mgmt frames in this field */
-  tPowerdBm txMgmtPower;
+  u8 txMgmtPower;
 
 }tHalJoinRspParams, *tpHalJoinRspParams;
 
@@ -2083,20 +2074,20 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*BSS Index of the BSS*/
-    tANI_U8         bssIdx;
+    u8         bssIdx;
 
     /*Encryption Type used with peer*/
     tAniEdType      encType;
 
     /*Number of keys*/
-    tANI_U8         numKeys;
+    u8         numKeys;
 
     /*Array of keys.*/
     tSirKeys        key[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
   
     /*Control for Replay Count, 1= Single TID based replay count on Tx
     0 = Per TID based replay count on TX */
-    tANI_U8         singleTidRc;
+    u8         singleTidRc;
 } tSetBssKeyParams, *tpSetBssKeyParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2109,7 +2100,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    tSetBssKeyReqMsg  Msg;
-   uint32            Tag;
+   u32            Tag;
 } tSetBssKeyReqMsgTagged;
 
 /*---------------------------------------------------------------------------
@@ -2118,7 +2109,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 } tSetBssKeyRspParams, *tpSetBssKeyRspParams;
 
@@ -2151,7 +2142,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 } tSetStaKeyRspParams, *tpSetStaKeyRspParams;
 
@@ -2171,13 +2162,13 @@ typedef PACKED_PRE struct PACKED_POST
 
 {
     /*BSS Index of the BSS*/
-    tANI_U8         bssIdx;
+    u8         bssIdx;
     
     /*Encryption Type used with peer*/
     tAniEdType      encType;
 
     /*Key Id*/
-    tANI_U8         keyId;
+    u8         keyId;
 
     /*STATIC/DYNAMIC. Used in Nullifying in Key Descriptors for Static/Dynamic keys*/
     tAniWepType    wepType;
@@ -2196,7 +2187,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
 } tRemoveBssKeyRspParams, *tpRemoveBssKeyRspParams;
 
@@ -2215,17 +2206,17 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*STA Index*/
-    tANI_U16         staIdx;
+    u16         staIdx;
 
     /*Encryption Type used with peer*/
     tAniEdType      encType;
 
     /*Key Id*/
-    tANI_U8           keyId;
+    u8           keyId;
 
     /*Whether to invalidate the Broadcast key or Unicast key. In case of WEP,
       the same key is used for both broadcast and unicast.*/
-    tANI_BOOLEAN    unicast;
+    u8    unicast;
 
 } tRemoveStaKeyParams, *tpRemoveStaKeyParams;
 
@@ -2241,7 +2232,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 } tRemoveStaKeyRspParams, *tpRemoveStaKeyRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2265,9 +2256,9 @@ WLAN_HAL_START_OEM_DATA_REQ
 --------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32                 status;
+    u32                 status;
     tSirMacAddr              selfMacAddr;
-    tANI_U8                 oemDataReq[OEM_DATA_REQ_SIZE];
+    u8                 oemDataReq[OEM_DATA_REQ_SIZE];
 } tStartOemDataReqParams, *tpStartOemDataReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2282,7 +2273,7 @@ WLAN_HAL_START_OEM_DATA_RSP
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8                   oemDataRsp[OEM_DATA_RSP_SIZE];
+   u8                   oemDataRsp[OEM_DATA_RSP_SIZE];
 } tStartOemDataRspParams, *tpStartOemDataRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2302,19 +2293,19 @@ WLAN_HAL_CH_SWITCH_REQ
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Channel number */
-    tANI_U8 channelNumber;
+    u8 channelNumber;
 
     /* Local power constraint */
-    tANI_U8 localPowerConstraint;
+    u8 localPowerConstraint;
 
     /*Secondary channel offset */
     ePhyChanBondState secondaryChannelOffset;
 
     //HAL fills in the tx power used for mgmt frames in this field.
-    tPowerdBm txMgmtPower;
+    u8 txMgmtPower;
 
     /* Max TX power */
-    tPowerdBm maxTxPower;
+    u8 maxTxPower;
     
     /* Self STA MAC */
     tSirMacAddr selfStaMacAddr;
@@ -2343,13 +2334,13 @@ WLAN_HAL_CH_SWITCH_RSP
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Status */
-    tANI_U32 status;
+    u32 status;
 
     /* Channel number - same as in request*/
-    tANI_U8 channelNumber;
+    u8 channelNumber;
 
     /* HAL fills in the tx power used for mgmt frames in this field */
-    tPowerdBm txMgmtPower;
+    u8 txMgmtPower;
 
     /* BSSID needed to identify session - same as in request*/
     tSirMacAddr bssId;
@@ -2369,7 +2360,7 @@ WLAN_HAL_UPD_EDCA_PARAMS_REQ
 typedef PACKED_PRE struct PACKED_POST
 {
    /*BSS Index*/
-   tANI_U16 bssIdx;
+   u16 bssIdx;
 
    /* Best Effort */
    tSirMacEdcaParamRecord acbe; 
@@ -2397,7 +2388,7 @@ WLAN_HAL_UPD_EDCA_PARAMS_RSP
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 } tEdcaRspParams, *tpEdcaRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2415,33 +2406,33 @@ typedef PACKED_PRE struct PACKED_POST
 
 {
     /* Index of STA to which the statistics */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* Encryption mode */
-    tANI_U8 encMode;
+    u8 encMode;
     
     /* status */
-    tANI_U32  status;
+    u32  status;
     
     /* Statistics */
-    tANI_U32  sendBlocks;
-    tANI_U32  recvBlocks;
-    tANI_U32  replays;
-    tANI_U8   micErrorCnt;
-    tANI_U32  protExclCnt;
-    tANI_U16  formatErrCnt;
-    tANI_U16  unDecryptableCnt;
-    tANI_U32  decryptErrCnt;
-    tANI_U32  decryptOkCnt;
+    u32  sendBlocks;
+    u32  recvBlocks;
+    u32  replays;
+    u8   micErrorCnt;
+    u32  protExclCnt;
+    u16  formatErrCnt;
+    u16  unDecryptableCnt;
+    u32  decryptErrCnt;
+    u32  decryptOkCnt;
 } tDpuStatsParams, * tpDpuStatsParams;
 
 typedef PACKED_PRE struct PACKED_POST
 {
    /* Valid STA Idx for per STA stats request */
-   tANI_U32    staId;
+   u32    staId;
 
    /* Categories of stats requested as specified in eHalStatsMask*/
-   tANI_U32    statsMask;
+   u32    statsMask;
 }tHalStatsReqParams, *tpHalStatsReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2456,23 +2447,23 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 retry_cnt[4];          //Total number of packets(per AC) that were successfully transmitted with retries
-    tANI_U32 multiple_retry_cnt[4]; //The number of MSDU packets and MMPDU frames per AC that the 802.11
+    u32 retry_cnt[4];          //Total number of packets(per AC) that were successfully transmitted with retries
+    u32 multiple_retry_cnt[4]; //The number of MSDU packets and MMPDU frames per AC that the 802.11
                                     // station successfully transmitted after more than one retransmission attempt
 
-    tANI_U32 tx_frm_cnt[4];         //Total number of packets(per AC) that were successfully transmitted 
+    u32 tx_frm_cnt[4];         //Total number of packets(per AC) that were successfully transmitted 
                                     //(with and without retries, including multi-cast, broadcast)     
-    tANI_U32 rx_frm_cnt;            //Total number of packets that were successfully received 
+    u32 rx_frm_cnt;            //Total number of packets that were successfully received 
                                     //(after appropriate filter rules including multi-cast, broadcast)    
-    tANI_U32 frm_dup_cnt;           //Total number of duplicate frames received successfully
-    tANI_U32 fail_cnt[4];           //Total number packets(per AC) failed to transmit
-    tANI_U32 rts_fail_cnt;          //Total number of RTS/CTS sequence failures for transmission of a packet
-    tANI_U32 ack_fail_cnt;          //Total number packets failed transmit because of no ACK from the remote entity
-    tANI_U32 rts_succ_cnt;          //Total number of RTS/CTS sequence success for transmission of a packet 
-    tANI_U32 rx_discard_cnt;        //The sum of the receive error count and dropped-receive-buffer error count. 
+    u32 frm_dup_cnt;           //Total number of duplicate frames received successfully
+    u32 fail_cnt[4];           //Total number packets(per AC) failed to transmit
+    u32 rts_fail_cnt;          //Total number of RTS/CTS sequence failures for transmission of a packet
+    u32 ack_fail_cnt;          //Total number packets failed transmit because of no ACK from the remote entity
+    u32 rts_succ_cnt;          //Total number of RTS/CTS sequence success for transmission of a packet 
+    u32 rx_discard_cnt;        //The sum of the receive error count and dropped-receive-buffer error count. 
                                     //HAL will provide this as a sum of (FCS error) + (Fail get BD/PDU in HW)
-    tANI_U32 rx_error_cnt;          //The receive error count. HAL will provide the RxP FCS error global counter.
-    tANI_U32 tx_byte_cnt;           //The sum of the transmit-directed byte count, transmit-multicast byte count 
+    u32 rx_error_cnt;          //The receive error count. HAL will provide the RxP FCS error global counter.
+    u32 tx_byte_cnt;           //The sum of the transmit-directed byte count, transmit-multicast byte count 
                                     //and transmit-broadcast byte count. HAL will sum TPE UC/MC/BCAST global counters 
                                     //to provide this.
 }tAniSummaryStatsInfo, *tpAniSummaryStatsInfo;
@@ -2491,47 +2482,47 @@ typedef enum eTxRateInfo
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 rx_frag_cnt;              //The number of MPDU frames received by the 802.11 station for MSDU packets 
+    u32 rx_frag_cnt;              //The number of MPDU frames received by the 802.11 station for MSDU packets 
                                        //or MMPDU frames
-    tANI_U32 promiscuous_rx_frag_cnt;  //The number of MPDU frames received by the 802.11 station for MSDU packets 
+    u32 promiscuous_rx_frag_cnt;  //The number of MPDU frames received by the 802.11 station for MSDU packets 
                                        //or MMPDU frames when a promiscuous packet filter was enabled
-    tANI_U32 rx_input_sensitivity;     //The receiver input sensitivity referenced to a FER of 8% at an MPDU length 
+    u32 rx_input_sensitivity;     //The receiver input sensitivity referenced to a FER of 8% at an MPDU length 
                                        //of 1024 bytes at the antenna connector. Each element of the array shall correspond 
                                        //to a supported rate and the order shall be the same as the supporteRates parameter.
-    tANI_U32 max_pwr;                  //The maximum transmit power in dBm upto one decimal. 
+    u32 max_pwr;                  //The maximum transmit power in dBm upto one decimal. 
                                        //for eg: if it is 10.5dBm, the value would be 105 
-    tANI_U32 sync_fail_cnt;            //Number of times the receiver failed to synchronize with the incoming signal 
+    u32 sync_fail_cnt;            //Number of times the receiver failed to synchronize with the incoming signal 
                                        //after detecting the sync in the preamble of the transmitted PLCP protocol data unit. 
 
-    tANI_U32 tx_rate;                  //Legacy transmit rate, in units of 500 kbit/sec, for the most 
+    u32 tx_rate;                  //Legacy transmit rate, in units of 500 kbit/sec, for the most 
                                        //recently transmitted frame    
-    tANI_U32  mcs_index;               //mcs index for HT20 and HT40 rates
-    tANI_U32  tx_rate_flags;           //to differentiate between HT20 and 
+    u32  mcs_index;               //mcs index for HT20 and HT40 rates
+    u32  tx_rate_flags;           //to differentiate between HT20 and 
                                        //HT40 rates;  short and long guard interval  
 }tAniGlobalClassAStatsInfo, *tpAniGlobalClassAStatsInfo;
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 rx_wep_unencrypted_frm_cnt;  //The number of unencrypted received MPDU frames that the MAC layer discarded when 
+    u32 rx_wep_unencrypted_frm_cnt;  //The number of unencrypted received MPDU frames that the MAC layer discarded when 
                                           //the IEEE 802.11 dot11ExcludeUnencrypted management information base (MIB) object 
                                           //is enabled
-    tANI_U32 rx_mic_fail_cnt;             //The number of received MSDU packets that that the 802.11 station discarded 
+    u32 rx_mic_fail_cnt;             //The number of received MSDU packets that that the 802.11 station discarded 
                                           //because of MIC failures
-    tANI_U32 tkip_icv_err;                //The number of encrypted MPDU frames that the 802.11 station failed to decrypt 
+    u32 tkip_icv_err;                //The number of encrypted MPDU frames that the 802.11 station failed to decrypt 
                                           //because of a TKIP ICV error
-    tANI_U32 aes_ccmp_format_err;         //The number of received MPDU frames that the 802.11 discarded because of an 
+    u32 aes_ccmp_format_err;         //The number of received MPDU frames that the 802.11 discarded because of an 
                                           //invalid AES-CCMP format
-    tANI_U32 aes_ccmp_replay_cnt;         //The number of received MPDU frames that the 802.11 station discarded because of 
+    u32 aes_ccmp_replay_cnt;         //The number of received MPDU frames that the 802.11 station discarded because of 
                                           //the AES-CCMP replay protection procedure
-    tANI_U32 aes_ccmp_decrpt_err;         //The number of received MPDU frames that the 802.11 station discarded because of 
+    u32 aes_ccmp_decrpt_err;         //The number of received MPDU frames that the 802.11 station discarded because of 
                                           //errors detected by the AES-CCMP decryption algorithm
-    tANI_U32 wep_undecryptable_cnt;       //The number of encrypted MPDU frames received for which a WEP decryption key was 
+    u32 wep_undecryptable_cnt;       //The number of encrypted MPDU frames received for which a WEP decryption key was 
                                           //not available on the 802.11 station
-    tANI_U32 wep_icv_err;                 //The number of encrypted MPDU frames that the 802.11 station failed to decrypt 
+    u32 wep_icv_err;                 //The number of encrypted MPDU frames that the 802.11 station failed to decrypt 
                                           //because of a WEP ICV error
-    tANI_U32 rx_decrypt_succ_cnt;         //The number of received encrypted packets that the 802.11 station successfully 
+    u32 rx_decrypt_succ_cnt;         //The number of received encrypted packets that the 802.11 station successfully 
                                           //decrypted
-    tANI_U32 rx_decrypt_fail_cnt;         //The number of encrypted packets that the 802.11 station failed to decrypt
+    u32 rx_decrypt_fail_cnt;         //The number of encrypted packets that the 802.11 station failed to decrypt
 
 }tAniGlobalSecurityStats, *tpAniGlobalSecurityStats;
    
@@ -2543,45 +2534,45 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 rx_amsdu_cnt;             //This counter shall be incremented for a received A-MSDU frame with the stations 
+    u32 rx_amsdu_cnt;             //This counter shall be incremented for a received A-MSDU frame with the stations 
                                        //MAC address in the address 1 field or an A-MSDU frame with a group address in the 
                                        //address 1 field
-    tANI_U32 rx_ampdu_cnt;             //This counter shall be incremented when the MAC receives an AMPDU from the PHY
-    tANI_U32 tx_20_frm_cnt;            //This counter shall be incremented when a Frame is transmitted only on the 
+    u32 rx_ampdu_cnt;             //This counter shall be incremented when the MAC receives an AMPDU from the PHY
+    u32 tx_20_frm_cnt;            //This counter shall be incremented when a Frame is transmitted only on the 
                                        //primary channel
-    tANI_U32 rx_20_frm_cnt;            //This counter shall be incremented when a Frame is received only on the primary channel
-    tANI_U32 rx_mpdu_in_ampdu_cnt;     //This counter shall be incremented by the number of MPDUs received in the A-MPDU 
+    u32 rx_20_frm_cnt;            //This counter shall be incremented when a Frame is received only on the primary channel
+    u32 rx_mpdu_in_ampdu_cnt;     //This counter shall be incremented by the number of MPDUs received in the A-MPDU 
                                        //when an A-MPDU is received
-    tANI_U32 ampdu_delimiter_crc_err;  //This counter shall be incremented when an MPDU delimiter has a CRC error when this 
+    u32 ampdu_delimiter_crc_err;  //This counter shall be incremented when an MPDU delimiter has a CRC error when this 
                                        //is the first CRC error in the received AMPDU or when the previous delimiter has been 
                                        //decoded correctly
 }tAniGlobalClassCStatsInfo, *tpAniGlobalClassCStatsInfo;
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 tx_frag_cnt[4];        //The number of MPDU frames that the 802.11 station transmitted and acknowledged 
+    u32 tx_frag_cnt[4];        //The number of MPDU frames that the 802.11 station transmitted and acknowledged 
                                     //through a received 802.11 ACK frame
-    tANI_U32 tx_ampdu_cnt;          //This counter shall be incremented when an A-MPDU is transmitted 
-    tANI_U32 tx_mpdu_in_ampdu_cnt;  //This counter shall increment by the number of MPDUs in the AMPDU when an A-MPDU 
+    u32 tx_ampdu_cnt;          //This counter shall be incremented when an A-MPDU is transmitted 
+    u32 tx_mpdu_in_ampdu_cnt;  //This counter shall increment by the number of MPDUs in the AMPDU when an A-MPDU 
                                     //is transmitted
 }tAniPerStaStatsInfo, *tpAniPerStaStatsInfo;
 
 typedef PACKED_PRE struct PACKED_POST
 {
    /* Success or Failure */
-   tANI_U32 status;
+   u32 status;
 
    /* STA Idx */
-   tANI_U32 staId;
+   u32 staId;
 
    /* Categories of STATS being returned as per eHalStatsMask*/
-   tANI_U32 statsMask;
+   u32 statsMask;
 
    /* message type is same as the request type */
-   tANI_U16 msgType;
+   u16 msgType;
 
    /* length of the entire request, includes the pStatsBuf length too */
-   tANI_U16 msgLen;  
+   u16 msgLen;  
 
 } tHalStatsRspParams, *tpHalStatsRspParams;
 
@@ -2616,7 +2607,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 } tLinkStateRspParams, *tpLinkStateRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2633,23 +2624,23 @@ typedef PACKED_PRE struct PACKED_POST
 typedef __ani_attr_pre_packed struct sSirMacTSInfoTfc
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
-    tANI_U16       ackPolicy : 2;
-    tANI_U16       userPrio : 3;
-    tANI_U16       psb : 1;
-    tANI_U16       aggregation : 1;
-    tANI_U16       accessPolicy : 2;
-    tANI_U16       direction : 2;
-    tANI_U16       tsid : 4;
-    tANI_U16       trafficType : 1;
+    u16       ackPolicy : 2;
+    u16       userPrio : 3;
+    u16       psb : 1;
+    u16       aggregation : 1;
+    u16       accessPolicy : 2;
+    u16       direction : 2;
+    u16       tsid : 4;
+    u16       trafficType : 1;
 #else
-    tANI_U16       trafficType : 1;
-    tANI_U16       tsid : 4;
-    tANI_U16       direction : 2;
-    tANI_U16       accessPolicy : 2;
-    tANI_U16       aggregation : 1;
-    tANI_U16       psb : 1;
-    tANI_U16       userPrio : 3;
-    tANI_U16       ackPolicy : 2;
+    u16       trafficType : 1;
+    u16       tsid : 4;
+    u16       direction : 2;
+    u16       accessPolicy : 2;
+    u16       aggregation : 1;
+    u16       psb : 1;
+    u16       userPrio : 3;
+    u16       ackPolicy : 2;
 #endif
 } __ani_attr_packed tSirMacTSInfoTfc;
 
@@ -2657,11 +2648,11 @@ typedef __ani_attr_pre_packed struct sSirMacTSInfoTfc
 typedef __ani_attr_pre_packed struct sSirMacTSInfoSch
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
-    tANI_U8        rsvd : 7;
-    tANI_U8        schedule : 1;
+    u8        rsvd : 7;
+    u8        schedule : 1;
 #else
-    tANI_U8        schedule : 1;
-    tANI_U8        rsvd : 7;
+    u8        schedule : 1;
+    u8        rsvd : 7;
 #endif
 } __ani_attr_packed tSirMacTSInfoSch;
 
@@ -2675,33 +2666,33 @@ typedef __ani_attr_pre_packed struct sSirMacTSInfo
 /* Information elements */
 typedef __ani_attr_pre_packed struct sSirMacTspecIE
 {
-    tANI_U8             type;
-    tANI_U8             length;
+    u8             type;
+    u8             length;
     tSirMacTSInfo       tsinfo;
-    tANI_U16            nomMsduSz;
-    tANI_U16            maxMsduSz;
-    tANI_U32            minSvcInterval;
-    tANI_U32            maxSvcInterval;
-    tANI_U32            inactInterval;
-    tANI_U32            suspendInterval;
-    tANI_U32            svcStartTime;
-    tANI_U32            minDataRate;
-    tANI_U32            meanDataRate;
-    tANI_U32            peakDataRate;
-    tANI_U32            maxBurstSz;
-    tANI_U32            delayBound;
-    tANI_U32            minPhyRate;
-    tANI_U16            surplusBw;
-    tANI_U16            mediumTime;
+    u16            nomMsduSz;
+    u16            maxMsduSz;
+    u32            minSvcInterval;
+    u32            maxSvcInterval;
+    u32            inactInterval;
+    u32            suspendInterval;
+    u32            svcStartTime;
+    u32            minDataRate;
+    u32            meanDataRate;
+    u32            peakDataRate;
+    u32            maxBurstSz;
+    u32            delayBound;
+    u32            minPhyRate;
+    u16            surplusBw;
+    u16            mediumTime;
 }__ani_attr_packed tSirMacTspecIE;
 
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Station Index */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* TSPEC handler uniquely identifying a TSPEC for a STA in a BSS */
-    tANI_U16 tspecIdx;
+    u16 tspecIdx;
 
     /* To program TPE with required parameters */
     tSirMacTspecIE   tspec;
@@ -2709,12 +2700,12 @@ typedef PACKED_PRE struct PACKED_POST
     /* U-APSD Flags: 1b per AC.  Encoded as follows:
      b7 b6 b5 b4 b3 b2 b1 b0 =
      X  X  X  X  BE BK VI VO */
-    tANI_U8 uAPSD;
+    u8 uAPSD;
 
     /* These parameters are for all the access categories */
-    tANI_U32 srvInterval[WLAN_HAL_MAX_AC];   // Service Interval
-    tANI_U32 susInterval[WLAN_HAL_MAX_AC];   // Suspend Interval
-    tANI_U32 delayInterval[WLAN_HAL_MAX_AC]; // Delay Interval
+    u32 srvInterval[WLAN_HAL_MAX_AC];   // Service Interval
+    u32 susInterval[WLAN_HAL_MAX_AC];   // Suspend Interval
+    u32 delayInterval[WLAN_HAL_MAX_AC]; // Delay Interval
            
 } tAddTsParams, *tpAddTsParams;
 
@@ -2731,7 +2722,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*success or failure */
-    tANI_U32   status;
+    u32   status;
 } tAddTsRspParams, *tpAddTsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2748,10 +2739,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Station Index */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* TSPEC identifier uniquely identifying a TSPEC for a STA in a BSS */
-    tANI_U16 tspecIdx;
+    u16 tspecIdx;
 
     /* To lookup station id using the mac address */
     tSirMacAddr bssId; 
@@ -2771,7 +2762,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*success or failure */
-    tANI_U32   status;
+    u32   status;
 } tDelTsRspParams, *tpDelTsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2791,22 +2782,22 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Station Index */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* Peer MAC Address */
     tSirMacAddr peerMacAddr;
 
     /* ADDBA Action Frame dialog token
        HAL will not interpret this object */
-    tANI_U8 baDialogToken;
+    u8 baDialogToken;
 
     /* TID for which the BA is being setup
        This identifies the TC or TS of interest */
-    tANI_U8 baTID;
+    u8 baTID;
 
     /* 0 - Delayed BA (Not supported)
        1 - Immediate BA */
-    tANI_U8 baPolicy;
+    u8 baPolicy;
 
     /* Indicates the number of buffers for this TID (baTID)
        NOTE - This is the requested buffer size. When this
@@ -2814,20 +2805,20 @@ typedef PACKED_PRE struct PACKED_POST
        possible that HDD may change this buffer size. Any
        change in the buffer size should be noted by PE and
        advertized appropriately in the ADDBA response */
-    tANI_U16 baBufferSize;
+    u16 baBufferSize;
 
     /* BA timeout in TU's 0 means no timeout will occur */
-    tANI_U16 baTimeout;
+    u16 baTimeout;
 
     /* b0..b3 - Fragment Number - Always set to 0
        b4..b15 - Starting Sequence Number of first MSDU
        for which this BA is setup */
-    tANI_U16 baSSN;
+    u16 baSSN;
 
     /* ADDBA direction
        1 - Originator
        0 - Recipient */
-    tANI_U8 baDirection;
+    u8 baDirection;
 } tAddBASessionParams, *tpAddBASessionParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2843,27 +2834,27 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*success or failure */
-    tANI_U32   status;
+    u32   status;
 
     /* Dialog token */
-    tANI_U8 baDialogToken;
+    u8 baDialogToken;
 
     /* TID for which the BA session has been setup */
-    tANI_U8 baTID;
+    u8 baTID;
 
     /* BA Buffer Size allocated for the current BA session */
-    tANI_U8 baBufferSize;
+    u8 baBufferSize;
 
-    tANI_U8 baSessionID;
+    u8 baSessionID;
 
     /* Reordering Window buffer */
-    tANI_U8 winSize;
+    u8 winSize;
     
     /*Station Index to id the sta */
-    tANI_U8 STAID;
+    u8 STAID;
     
     /* Starting Sequence Number */
-    tANI_U16 SSN;
+    u16 SSN;
 } tAddBASessionRspParams, *tpAddBASessionRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -2879,13 +2870,13 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Session Id */
-    tANI_U8 baSessionID;
+    u8 baSessionID;
 
     /* Reorder Window Size */
-    tANI_U8 winSize;
+    u8 winSize;
 
 #ifdef FEATURE_ON_CHIP_REORDERING
-    tANI_BOOLEAN isReorderingDoneOnChip;
+    u8 isReorderingDoneOnChip;
 #endif
 } tAddBAParams, *tpAddBAParams;
 
@@ -2903,10 +2894,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*success or failure */
-    tANI_U32   status;
+    u32   status;
 
     /* Dialog token */
-    tANI_U8 baDialogToken;
+    u8 baDialogToken;
  
 } tAddBARspParams, *tpAddBARspParams;
 
@@ -2924,9 +2915,9 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef struct sAddBaInfo
 {
-    tANI_U16 fBaEnable : 1;
-    tANI_U16 startingSeqNum: 12;
-    tANI_U16 reserved : 3;
+    u16 fBaEnable : 1;
+    u16 startingSeqNum: 12;
+    u16 reserved : 3;
 }tAddBaInfo, *tpAddBaInfo;
 
 typedef struct sTriggerBaRspCandidate
@@ -2937,19 +2928,19 @@ typedef struct sTriggerBaRspCandidate
 
 typedef struct sTriggerBaCandidate
 {
-    tANI_U8  staIdx;
-    tANI_U8 tidBitmap;
+    u8  staIdx;
+    u8 tidBitmap;
 }tTriggerBaReqCandidate, *tptTriggerBaReqCandidate;
 
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Session Id */
-    tANI_U8 baSessionID;
+    u8 baSessionID;
 
     /* baCandidateCnt is followed by trigger BA 
      * Candidate List(tTriggerBaCandidate)
      */
-    tANI_U16 baCandidateCnt;
+    u16 baCandidateCnt;
     
 } tTriggerBAParams, *tpTriggerBAParams;
 
@@ -2971,12 +2962,12 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr  bssId; 
 
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 
     /* baCandidateCnt is followed by trigger BA 
      * Rsp Candidate List(tTriggerRspBaCandidate)
      */
-    tANI_U16 baCandidateCnt;
+    u16 baCandidateCnt;
     
 
 } tTriggerBARspParams, *tpTriggerBARspParams;
@@ -2994,15 +2985,15 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Station Index */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* TID for which the BA session is being deleted */
-    tANI_U8 baTID;
+    u8 baTID;
 
     /* DELBA direction
        1 - Originator
        0 - Recipient */
-    tANI_U8 baDirection;  
+    u8 baDirection;  
 } tDelBAParams, *tpDelBAParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3018,7 +3009,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tDelBARspParams, *tpDelBARspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3036,7 +3027,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Traffic Id */
-    tANI_U8 tsmTID;
+    u8 tsmTID;
 
     tSirMacAddr bssId;
 } tTsmStatsParams, *tpTsmStatsParams;
@@ -3054,28 +3045,28 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*success or failure */
-    tANI_U32   status;
+    u32   status;
 
     /* Uplink Packet Queue delay */ 
-    tANI_U16      UplinkPktQueueDly;
+    u16      UplinkPktQueueDly;
 
     /* Uplink Packet Queue delay histogram */ 
-    tANI_U16      UplinkPktQueueDlyHist[4];
+    u16      UplinkPktQueueDlyHist[4];
 
     /* Uplink Packet Transmit delay */ 
-    tANI_U32      UplinkPktTxDly;
+    u32      UplinkPktTxDly;
 
     /* Uplink Packet loss */ 
-    tANI_U16      UplinkPktLoss;
+    u16      UplinkPktLoss;
 
     /* Uplink Packet count */ 
-    tANI_U16      UplinkPktCount;
+    u16      UplinkPktCount;
 
     /* Roaming count */ 
-    tANI_U8       RoamingCount;
+    u8       RoamingCount;
 
     /* Roaming Delay */ 
-    tANI_U16      RoamingDly;
+    u16      RoamingDly;
 } tTsmStatsRspParams, *tpTsmStatsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3094,8 +3085,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*bssid of the keys */
-  tANI_U8   bssidx;
-  tANI_U8   encType;
+  u8   bssidx;
+  u8   encType;
 } tSetKeyDoneParams, *tpSetKeyDoneParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3115,19 +3106,19 @@ typedef PACKED_PRE struct PACKED_POST
      * seqeunce number 0, 1, 2 etc. The last fragment MUST be indicated by 
      * marking the isLastFragment field to 1. Note that all the NV blobs would be
      * concatenated together by HAL without any padding bytes in between.*/
-    tANI_U16 fragNumber;
+    u16 fragNumber;
 
     /* Is this the last fragment? When set to 1 it indicates that no more fragments
      * will be sent by UMAC and HAL can concatenate all the NV blobs rcvd & proceed 
      * with the parsing. HAL would generate a WLAN_HAL_DOWNLOAD_NV_RSP to the
      * WLAN_HAL_DOWNLOAD_NV_REQ after it receives each fragment */
-    tANI_U16 isLastFragment;
+    u16 isLastFragment;
 
     /* NV Image size (number of bytes) */
-    tANI_U32 nvImgBufferSize;
+    u32 nvImgBufferSize;
 
     /* Following the 'nvImageBufferSize', there should be nvImageBufferSize
-     * bytes of NV Image i.e. uint8[nvImageBufferSize] */
+     * bytes of NV Image i.e. u8[nvImageBufferSize] */
 } tHalNvImgDownloadReqParams, *tpHalNvImgDownloadReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3145,7 +3136,7 @@ typedef PACKED_PRE struct PACKED_POST
 {
     /* Success or Failure. HAL would generate a WLAN_HAL_DOWNLOAD_NV_RSP
      * after each fragment */
-    tANI_U32   status;
+    u32   status;
 } tHalNvImgDownloadRspParams, *tpHalNvImgDownloadRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3160,13 +3151,13 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* NV Item */
-    eNvTable tableID;
+    u32 tableID;
 
     /* Size of NV Blob */
-    tANI_U32 nvBlobSize;
+    u32 nvBlobSize;
 
     /* Following the 'nvBlobSize', there should be nvBlobSize bytes of 
-     * NV blob i.e. uint8[nvBlobSize] */
+     * NV blob i.e. u8[nvBlobSize] */
 } tHalNvStoreParams, *tpHalNvStoreParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3190,10 +3181,10 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr  srcMacAddr;     //address used to compute MIC 
     tSirMacAddr  taMacAddr;      //transmitter address
     tSirMacAddr  dstMacAddr;
-    tANI_U8      multicast;             
-    tANI_U8      IV1;            // first byte of IV
-    tANI_U8      keyId;          // second byte of IV
-    tANI_U8      TSC[SIR_CIPHER_SEQ_CTR_SIZE]; // sequence number
+    u8      multicast;             
+    u8      IV1;            // first byte of IV
+    u8      keyId;          // second byte of IV
+    u8      TSC[SIR_CIPHER_SEQ_CTR_SIZE]; // sequence number
     tSirMacAddr  rxMacAddr;      // receive address
 } tSirMicFailureInfo, *tpSirMicFailureInfo;
 
@@ -3214,8 +3205,8 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U16  opMode;
-   tANI_U16  staId;
+   u16  opMode;
+   u16  staId;
 }tUpdateVHTOpMode, *tpUpdateVHTOpMode; 
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3226,7 +3217,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   status;
+    u32   status;
 } tUpdateVhtOpModeParamsRsp, *tpUpdateVhtOpModeParamsRsp;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3241,25 +3232,25 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
 
-    tANI_U8  bssIdx;
+    u8  bssIdx;
 
     //shortPreamble mode. HAL should update all the STA rates when it
     //receives this message
-    tANI_U8 fShortPreamble;
+    u8 fShortPreamble;
     //short Slot time.
-    tANI_U8 fShortSlotTime;
+    u8 fShortSlotTime;
     //Beacon Interval
-    tANI_U16 beaconInterval;
+    u16 beaconInterval;
     //Protection related
-    tANI_U8 llaCoexist;
-    tANI_U8 llbCoexist;
-    tANI_U8 llgCoexist;
-    tANI_U8 ht20MhzCoexist;
-    tANI_U8 llnNonGFCoexist;
-    tANI_U8 fLsigTXOPProtectionFullSupport;
-    tANI_U8 fRIFSMode;
+    u8 llaCoexist;
+    u8 llbCoexist;
+    u8 llgCoexist;
+    u8 ht20MhzCoexist;
+    u8 llnNonGFCoexist;
+    u8 fLsigTXOPProtectionFullSupport;
+    u8 fRIFSMode;
 
-    tANI_U16 paramChangeBitmap;
+    u16 paramChangeBitmap;
 }tUpdateBeaconParams, *tpUpdateBeaconParams;
 
 
@@ -3274,7 +3265,7 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   status;
+    u32   status;
 } tUpdateBeaconRspParams, *tpUpdateBeaconRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3288,11 +3279,11 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 beaconLength; //length of the template.
-    tANI_U8 beacon[BEACON_TEMPLATE_SIZE];     // Beacon data.
+    u32 beaconLength; //length of the template.
+    u8 beacon[BEACON_TEMPLATE_SIZE];     // Beacon data.
     tSirMacAddr bssId;
-    tANI_U32 timIeOffset; //TIM IE offset from the beginning of the template.
-    tANI_U16 p2pIeOffset; //P2P IE offset from the begining of the template
+    u32 timIeOffset; //TIM IE offset from the beginning of the template.
+    u16 p2pIeOffset; //P2P IE offset from the begining of the template
 }tSendBeaconParams, *tpSendBeaconParams;
 
 
@@ -3307,7 +3298,7 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   status;
+    u32   status;
 } tSendBeaconRspParams, *tpSendBeaconRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3324,7 +3315,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     tSirMacAddr BSSID;
-    tANI_U8   channel; 
+    u8   channel; 
 }tSirEnableRadarInfoType, *tptSirEnableRadarInfoType;
 
 
@@ -3349,7 +3340,7 @@ typedef PACKED_PRE struct PACKED_POST
     /* Link Parameters */
     tSirMacAddr BSSID;
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tEnableRadarRspParams, *tpEnableRadarRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3364,7 +3355,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8 radarDetChannel;
+    u8 radarDetChannel;
 }tRadarDetectIntrIndParams, *tpRadarDetectIntrIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3379,13 +3370,13 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*channel number in which the RADAR detected*/
-    tANI_U8          channelNumber;
+    u8          channelNumber;
 
     /*RADAR pulse width*/
-    tANI_U16         radarPulseWidth; // in usecond
+    u16         radarPulseWidth; // in usecond
 
     /*Number of RADAR pulses */
-    tANI_U16         numRadarPulse;
+    u16         numRadarPulse;
 }tRadarDetectIndParams,*tpRadarDetectIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3401,8 +3392,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    tSirMacAddr sta;
-   tANI_U8     dialogToken;
-   tANI_U8     txpower;
+   u8     dialogToken;
+   u8     txpower;
 }tSirGetTpcReportReqParams, *tpSirGetTpcReportReqParams;
 
 
@@ -3419,7 +3410,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSirGetTpcReportRspParams, *tpSirGetTpcReportRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3435,9 +3426,9 @@ typedef PACKED_PRE struct PACKED_POST
  *-------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8      pProbeRespTemplate[BEACON_TEMPLATE_SIZE];
-    tANI_U32     probeRespTemplateLen;
-    tANI_U32     ucProxyProbeReqValidIEBmap[8];
+    u8      pProbeRespTemplate[BEACON_TEMPLATE_SIZE];
+    u32     probeRespTemplateLen;
+    u32     ucProxyProbeReqValidIEBmap[8];
     tSirMacAddr  bssId;
 
 }tSendProbeRespReqParams, *tpSendProbeRespReqParams;
@@ -3455,7 +3446,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSendProbeRespRspParams, *tpSendProbeRespRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3472,7 +3463,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSendUnkownFrameRxIndParams, *tpSendUnkownFrameRxIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3487,12 +3478,12 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U16    assocId;
-    tANI_U16    staId;
+    u16    assocId;
+    u16    staId;
     tSirMacAddr bssId; // TO SUPPORT BT-AMP
                        // HAL copies bssid from the sta table.
     tSirMacAddr addr2;        //
-    tANI_U16    reasonCode;   // To unify the keepalive / unknown A2 / tim-based disa                                                                        
+    u16    reasonCode;   // To unify the keepalive / unknown A2 / tim-based disa                                                                        
 
 }tDeleteStaContextParams, *tpDeleteStaContextParams;
 
@@ -3506,11 +3497,11 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    tHalMsgHeader header;
-   tANI_U8  assocId;
-   tANI_U8  staIdx;
-   tANI_U8  bssIdx;
-   tANI_U8  uReasonCode;
-   tANI_U32  uStatus;
+   u8  assocId;
+   u8  staIdx;
+   u8  bssIdx;
+   u8  uReasonCode;
+   u32  uStatus;
 } tIndicateDelSta, *tpIndicateDelSta;
 
 /*---------------------------------------------------------------------------
@@ -3538,7 +3529,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tBtAmpEventRspParams, *tpBtAmpEventRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3555,10 +3546,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    // Station Index. originates from HAL
-    tANI_U8  ucSTAId;
+    u8  ucSTAId;
 
     // TID for which the transmit queue is being flushed
-    tANI_U8   ucTid;
+    u8   ucTid;
 
 }tTlHalFlushAcParams, *tpTlHalFlushAcParams;
 
@@ -3576,13 +3567,13 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     // Station Index. originates from HAL
-    tANI_U8  ucSTAId;
+    u8  ucSTAId;
 
     // TID for which the transmit queue is being flushed
-    tANI_U8   ucTid;
+    u8   ucTid;
 
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tTlHalFlushAcRspParams, *tpTlHalFlushAcRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3613,20 +3604,20 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8         bssIdx;
+   u8         bssIdx;
    //TBTT value derived from the last beacon
 #ifndef BUILD_QWPTTSTATIC
-   tANI_U64 tbtt;
+   u64 tbtt;
 #endif
-   tANI_U8 dtimCount;
+   u8 dtimCount;
    //DTIM period given to HAL during association may not be valid,
    //if association is based on ProbeRsp instead of beacon.
-   tANI_U8 dtimPeriod;
+   u8 dtimPeriod;
 
    // For CCX and 11R Roaming
-   tANI_U32 rssiFilterPeriod;
-   tANI_U32 numBeaconPerRssiAverage;
-   tANI_U8  bRssiFilterEnable;
+   u32 rssiFilterPeriod;
+   u32 numBeaconPerRssiAverage;
+   u8  bRssiFilterEnable;
 
 } tHalEnterBmpsReqParams, *tpHalEnterBmpsReqParams;
 
@@ -3642,8 +3633,8 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8     sendDataNull;
-   tANI_U8     bssIdx;
+   u8     sendDataNull;
+   u8     bssIdx;
 } tHalExitBmpsReqParams, *tpHalExitBmpsReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3657,7 +3648,7 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8     bssIdx;
+   u8     bssIdx;
 } tHalMissedBeaconIndParams, *tpHalMissedBeaconIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3672,27 +3663,27 @@ typedef PACKED_PRE struct PACKED_POST
 /* Beacon Filtering data structures */
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8     offset;
-    tANI_U8     value;
-    tANI_U8     bitMask;
-    tANI_U8     ref;
+    u8     offset;
+    u8     value;
+    u8     bitMask;
+    u8     ref;
 } tEidByteInfo, *tpEidByteInfo;
 
 typedef PACKED_PRE struct PACKED_POST 
 {
-    tANI_U16    capabilityInfo;
-    tANI_U16    capabilityMask;
-    tANI_U16    beaconInterval;
-    tANI_U16    ieNum;
-    tANI_U8     bssIdx;
-    tANI_U8     reserved;
+    u16    capabilityInfo;
+    u16    capabilityMask;
+    u16    beaconInterval;
+    u16    ieNum;
+    u8     bssIdx;
+    u8     reserved;
 } tBeaconFilterMsg, *tpBeaconFilterMsg;
 
 /* The above structure would be followed by multiple of below mentioned structure */
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8         elementId;
-    tANI_U8         checkIePresence;
+    u8         elementId;
+    u8         checkIePresence;
     tEidByteInfo    byte;
 } tBeaconFilterIe, *tpBeaconFilterIe;
 
@@ -3707,8 +3698,8 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST 
 {
-    tANI_U8  ucIeCount;
-    tANI_U8  ucRemIeId[1];
+    u8  ucIeCount;
+    u8  ucRemIeId[1];
 } tRemBeaconFilterMsg, *tpRemBeaconFilterMsg;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3732,29 +3723,29 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST _tHalNSOffloadParams
 {
-   tANI_U8 srcIPv6Addr[HAL_IPV6_ADDR_LEN];
-   tANI_U8 selfIPv6Addr[HAL_IPV6_ADDR_LEN];
+   u8 srcIPv6Addr[HAL_IPV6_ADDR_LEN];
+   u8 selfIPv6Addr[HAL_IPV6_ADDR_LEN];
    //Only support 2 possible Network Advertisement IPv6 address
-   tANI_U8 targetIPv6Addr1[HAL_IPV6_ADDR_LEN];
-   tANI_U8 targetIPv6Addr2[HAL_IPV6_ADDR_LEN];
-   tANI_U8 selfMacAddr[HAL_MAC_ADDR_LEN];
-   tANI_U8 srcIPv6AddrValid : 1;
-   tANI_U8 targetIPv6Addr1Valid : 1;
-   tANI_U8 targetIPv6Addr2Valid : 1;
-   tANI_U8 reserved1 : 5;
-   tANI_U8 reserved2;   //make it DWORD aligned
-   tANI_U32 slotIndex; // slot index for this offload
-   tANI_U8 bssIdx;
+   u8 targetIPv6Addr1[HAL_IPV6_ADDR_LEN];
+   u8 targetIPv6Addr2[HAL_IPV6_ADDR_LEN];
+   u8 selfMacAddr[HAL_MAC_ADDR_LEN];
+   u8 srcIPv6AddrValid : 1;
+   u8 targetIPv6Addr1Valid : 1;
+   u8 targetIPv6Addr2Valid : 1;
+   u8 reserved1 : 5;
+   u8 reserved2;   //make it DWORD aligned
+   u32 slotIndex; // slot index for this offload
+   u8 bssIdx;
 } tHalNSOffloadParams;
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8 offloadType;
-    tANI_U8 enableOrDisable;
+    u8 offloadType;
+    u8 enableOrDisable;
     PACKED_PRE union PACKED_POST
     {
-        tANI_U8 hostIpv4Addr [4];
-        tANI_U8 hostIpv6Addr [HAL_IPV6_ADDR_LEN];
+        u8 hostIpv4Addr [4];
+        u8 hostIpv6Addr [HAL_IPV6_ADDR_LEN];
     } params;
 } tHalHostOffloadReq, *tpHalHostOffloadReq;
 
@@ -3779,12 +3770,12 @@ typedef PACKED_PRE struct PACKED_POST
 /* Keep Alive request. */
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8          packetType;
-    tANI_U32         timePeriod;
+    u8          packetType;
+    u32         timePeriod;
     tHalIpv4Addr     hostIpv4Addr; 
     tHalIpv4Addr     destIpv4Addr;
     tSirMacAddr      destMacAddr;
-    tANI_U8          bssIdx;
+    u8          bssIdx;
 } tHalKeepAliveReq, *tpHalKeepAliveReq;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3798,16 +3789,16 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_S8   ucRssiThreshold1     : 8;
-    tANI_S8   ucRssiThreshold2     : 8;
-    tANI_S8   ucRssiThreshold3     : 8;
-    tANI_U8   bRssiThres1PosNotify : 1;
-    tANI_U8   bRssiThres1NegNotify : 1;
-    tANI_U8   bRssiThres2PosNotify : 1;
-    tANI_U8   bRssiThres2NegNotify : 1;
-    tANI_U8   bRssiThres3PosNotify : 1;
-    tANI_U8   bRssiThres3NegNotify : 1;
-    tANI_U8   bReserved10          : 2;
+    s8   ucRssiThreshold1     : 8;
+    s8   ucRssiThreshold2     : 8;
+    s8   ucRssiThreshold3     : 8;
+    u8   bRssiThres1PosNotify : 1;
+    u8   bRssiThres1NegNotify : 1;
+    u8   bRssiThres2PosNotify : 1;
+    u8   bRssiThres2NegNotify : 1;
+    u8   bRssiThres3PosNotify : 1;
+    u8   bRssiThres3NegNotify : 1;
+    u8   bReserved10          : 2;
 } tHalRSSIThresholds, *tpHalRSSIThresholds;
     
 typedef PACKED_PRE struct PACKED_POST
@@ -3821,15 +3812,15 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8     bkDeliveryEnabled:1;
-    tANI_U8     beDeliveryEnabled:1;
-    tANI_U8     viDeliveryEnabled:1;
-    tANI_U8     voDeliveryEnabled:1;
-    tANI_U8     bkTriggerEnabled:1;
-    tANI_U8     beTriggerEnabled:1;
-    tANI_U8     viTriggerEnabled:1;
-    tANI_U8     voTriggerEnabled:1;
-    tANI_U8     bssIdx;
+    u8     bkDeliveryEnabled:1;
+    u8     beDeliveryEnabled:1;
+    u8     viDeliveryEnabled:1;
+    u8     voDeliveryEnabled:1;
+    u8     bkTriggerEnabled:1;
+    u8     beTriggerEnabled:1;
+    u8     viTriggerEnabled:1;
+    u8     voTriggerEnabled:1;
+    u8     bssIdx;
 } tUapsdReqParams, *tpUapsdReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3844,7 +3835,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    tHalMsgHeader header;
-   tANI_U8       bssIdx;
+   u8       bssIdx;
 }  tHalExitUapsdReqMsg, *tpHalExitUapsdReqMsg;
 
 /*---------------------------------------------------------------------------
@@ -3855,17 +3846,17 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8  ucPatternId;           // Pattern ID
+    u8  ucPatternId;           // Pattern ID
     // Pattern byte offset from beginning of the 802.11 packet to start of the
     // wake-up pattern
-    tANI_U8  ucPatternByteOffset;   
-    tANI_U8  ucPatternSize;         // Non-Zero Pattern size
-    tANI_U8  ucPattern[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Pattern
-    tANI_U8  ucPatternMaskSize;     // Non-zero pattern mask size
-    tANI_U8  ucPatternMask[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Pattern mask
-    tANI_U8  ucPatternExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Extra pattern
-    tANI_U8  ucPatternMaskExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Extra pattern mask
-    tANI_U8  bssIdx;
+    u8  ucPatternByteOffset;   
+    u8  ucPatternSize;         // Non-Zero Pattern size
+    u8  ucPattern[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Pattern
+    u8  ucPatternMaskSize;     // Non-zero pattern mask size
+    u8  ucPatternMask[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Pattern mask
+    u8  ucPatternExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Extra pattern
+    u8  ucPatternMaskExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE]; // Extra pattern mask
+    u8  bssIdx;
 } tHalWowlAddBcastPtrn, *tpHalWowlAddBcastPtrn;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3882,8 +3873,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Pattern ID of the wakeup pattern to be deleted */
-    tANI_U8  ucPatternId;
-    tANI_U8  bssIdx;
+    u8  ucPatternId;
+    u8  bssIdx;
 } tHalWowlDelBcastPtrn, *tpHalWowlDelBcastPtrn;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -3898,7 +3889,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Enables/disables magic packet filtering */
-    tANI_U8   ucMagicPktEnable; 
+    u8   ucMagicPktEnable; 
 
     /* Magic pattern */
     tSirMacAddr magicPtrn;
@@ -3909,7 +3900,7 @@ typedef PACKED_PRE struct PACKED_POST
        ucUcastPatternFilteringEnable flag must be set tot true 
        as well 
     */
-    tANI_U8   ucPatternFilteringEnable;
+    u8   ucPatternFilteringEnable;
 
     /* Enables/disables unicast packet pattern filtering. 
        This flag specifies whether we want to do pattern match 
@@ -3917,63 +3908,63 @@ typedef PACKED_PRE struct PACKED_POST
        This flag has no effect if the ucPatternFilteringEnable 
        (main controlling flag) is set to false
     */
-    tANI_U8   ucUcastPatternFilteringEnable;                     
+    u8   ucUcastPatternFilteringEnable;                     
 
     /* This configuration is valid only when magicPktEnable=1. 
      * It requests hardware to wake up when it receives the 
      * Channel Switch Action Frame.
      */
-    tANI_U8   ucWowChnlSwitchRcv;
+    u8   ucWowChnlSwitchRcv;
 
     /* This configuration is valid only when magicPktEnable=1. 
      * It requests hardware to wake up when it receives the 
      * Deauthentication Frame. 
      */
-    tANI_U8   ucWowDeauthRcv;
+    u8   ucWowDeauthRcv;
 
     /* This configuration is valid only when magicPktEnable=1. 
      * It requests hardware to wake up when it receives the 
      * Disassociation Frame. 
      */
-    tANI_U8   ucWowDisassocRcv;
+    u8   ucWowDisassocRcv;
 
     /* This configuration is valid only when magicPktEnable=1. 
      * It requests hardware to wake up when it has missed
      * consecutive beacons. This is a hardware register
      * configuration (NOT a firmware configuration). 
      */
-    tANI_U8   ucWowMaxMissedBeacons;
+    u8   ucWowMaxMissedBeacons;
 
     /* This configuration is valid only when magicPktEnable=1. 
      * This is a timeout value in units of microsec. It requests
      * hardware to unconditionally wake up after it has stayed
      * in WoWLAN mode for some time. Set 0 to disable this feature.      
      */
-    tANI_U8   ucWowMaxSleepUsec;
+    u8   ucWowMaxSleepUsec;
     
     /* This configuration directs the WoW packet filtering to look for EAP-ID
      * requests embedded in EAPOL frames and use this as a wake source.
      */
-    tANI_U8   ucWoWEAPIDRequestEnable;
+    u8   ucWoWEAPIDRequestEnable;
 
     /* This configuration directs the WoW packet filtering to look for EAPOL-4WAY
      * requests and use this as a wake source.
      */
-    tANI_U8   ucWoWEAPOL4WayEnable;
+    u8   ucWoWEAPOL4WayEnable;
 
     /* This configuration allows a host wakeup on an network scan offload match.
      */
-    tANI_U8   ucWowNetScanOffloadMatch;
+    u8   ucWowNetScanOffloadMatch;
 
     /* This configuration allows a host wakeup on any GTK rekeying error.
      */
-    tANI_U8   ucWowGTKRekeyError;
+    u8   ucWowGTKRekeyError;
 
     /* This configuration allows a host wakeup on BSS connection loss.
      */
-    tANI_U8   ucWoWBSSConnLoss;
+    u8   ucWoWBSSConnLoss;
 
-    tANI_U8   bssIdx;
+    u8   bssIdx;
 
 } tHalWowlEnterParams, *tpHalWowlEnterParams;
 
@@ -3989,7 +3980,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8   bssIdx;
+    u8   bssIdx;
 
 } tHalWowlExitParams, *tpHalWowlExitParams;
 
@@ -4010,7 +4001,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    /* Valid STA Idx for per STA stats request */
-   tANI_U32    staId;
+   u32    staId;
 
 }tHalRoamRssiReqParams, *tpHalRoamRssiReqParams;
 
@@ -4029,12 +4020,12 @@ typedef PACKED_PRE struct PACKED_POST
  * WLAN_HAL_SET_UAPSD_AC_PARAMS_REQ
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST {
-    tANI_U8  staidx;        // STA index
-    tANI_U8  ac;            // Access Category
-    tANI_U8  up;            // User Priority
-    tANI_U32 srvInterval;   // Service Interval
-    tANI_U32 susInterval;   // Suspend Interval
-    tANI_U32 delayInterval; // Delay Interval
+    u8  staidx;        // STA index
+    u8  ac;            // Access Category
+    u8  up;            // User Priority
+    u32 srvInterval;   // Service Interval
+    u32 susInterval;   // Suspend Interval
+    u32 delayInterval; // Delay Interval
 } tUapsdInfo, tpUapsdInfo;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4047,8 +4038,8 @@ typedef PACKED_PRE struct PACKED_POST
  * WLAN_HAL_CONFIGURE_RXP_FILTER_REQ
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST {
-    tANI_U8 setMcstBcstFilterSetting;
-    tANI_U8 setMcstBcstFilter;
+    u8 setMcstBcstFilterSetting;
+    u8 setMcstBcstFilter;
 } tHalConfigureRxpFilterReqParams, tpHalConfigureRxpFilterReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4063,7 +4054,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalEnterImpsRspParams, *tpHalEnterImpsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4078,7 +4069,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalExitImpsRspParams, *tpHalExitImpsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4093,8 +4084,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
-    tANI_U8    bssIdx;
+    u32   status;
+    u8    bssIdx;
 } tHalEnterBmpsRspParams, *tpHalEnterBmpsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4109,8 +4100,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
-    tANI_U8    bssIdx;
+    u32   status;
+    u8    bssIdx;
 } tHalExitBmpsRspParams, *tpHalExitBmpsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4125,8 +4116,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32    status;
-    tANI_U8     bssIdx;
+    u32    status;
+    u8     bssIdx;
 }tUapsdRspParams, *tpUapsdRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4141,8 +4132,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
-    tANI_U8    bssIdx;
+    u32   status;
+    u8    bssIdx;
 } tHalExitUapsdRspParams, *tpHalExitUapsdRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4156,14 +4147,14 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32             bRssiThres1PosCross : 1;
-    tANI_U32             bRssiThres1NegCross : 1;
-    tANI_U32             bRssiThres2PosCross : 1;
-    tANI_U32             bRssiThres2NegCross : 1;
-    tANI_U32             bRssiThres3PosCross : 1;
-    tANI_U32             bRssiThres3NegCross : 1;
-    tANI_U32             avgRssi             : 8;
-    tANI_U32             bReserved           : 18;
+    u32             bRssiThres1PosCross : 1;
+    u32             bRssiThres1NegCross : 1;
+    u32             bRssiThres2PosCross : 1;
+    u32             bRssiThres2NegCross : 1;
+    u32             bRssiThres3PosCross : 1;
+    u32             bRssiThres3NegCross : 1;
+    u32             avgRssi             : 8;
+    u32             bReserved           : 18;
 } tHalRSSINotification, *tpHalRSSINotification;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4178,8 +4169,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
-    tANI_S8    rssi;
+    u32   status;
+    s8    rssi;
 } tHalGetRssiParams, *tpHalGetRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4194,10 +4185,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 
-    tANI_U8    staId;
-    tANI_S8    rssi;
+    u8    staId;
+    s8    rssi;
 } tHalGetRoamRssiParams, *tpHalGetRoamRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4212,8 +4203,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-   tANI_U32   status;
-   tANI_U8    bssIdx;
+   u32   status;
+   u8    bssIdx;
 } tHalEnterWowlRspParams, *tpHalEnterWowlRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4228,8 +4219,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-   tANI_U32   status;
-   tANI_U8    bssIdx;
+   u32   status;
+   u8    bssIdx;
 } tHalExitWowlRspParams, *tpHalExitWowlRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4244,7 +4235,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalAddBcnFilterRspParams, *tpHalAddBcnFilterRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4259,7 +4250,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalRemBcnFilterRspParams, *tpHalRemBcnFilterRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4274,8 +4265,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-   tANI_U32   status;
-   tANI_U8    bssIdx;
+   u32   status;
+   u8    bssIdx;
 } tHalAddWowlBcastPtrnRspParams, *tpHalAddWowlBcastPtrnRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4290,8 +4281,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-   tANI_U32   status;
-   tANI_U8    bssIdx;
+   u32   status;
+   u8    bssIdx;
 } tHalDelWowlBcastPtrnRspParams, *tpHalDelWowlBcastPtrnRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4306,7 +4297,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalHostOffloadRspParams, *tpHalHostOffloadRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4321,7 +4312,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalKeepAliveRspParams, *tpHalKeepAliveRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4336,7 +4327,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalSetRssiThreshRspParams, *tpHalSetRssiThreshRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4351,7 +4342,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalSetUapsdAcParamsRspParams, *tpHalSetUapsdAcParamsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4366,7 +4357,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalConfigureRxpFilterRspParams, *tpHalConfigureRxpFilterRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4386,7 +4377,7 @@ typedef PACKED_PRE struct PACKED_POST
     tSirMacAddr selfStaMacAddr;
     //In request,
     //power == MaxTx power to be used.
-    tPowerdBm  power;
+    u8  power;
 
 }tSetMaxTxPwrParams, *tpSetMaxTxPwrParams;
 
@@ -4404,10 +4395,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     //power == tx power used for management frames.
-    tPowerdBm  power;
+    u8  power;
 
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSetMaxTxPwrRspParams, *tpSetMaxTxPwrRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4423,8 +4414,8 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* TX Power in milli watts */
-    tANI_U32  txPower;
-    tANI_U8   bssIdx;
+    u32  txPower;
+    u8   bssIdx;
 }tSetTxPwrReqParams, *tpSetTxPwrReqParams;
 
 
@@ -4441,7 +4432,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSetTxPwrRspParams, *tpSetTxPwrRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4456,7 +4447,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8  staId;
+    u8  staId;
 }tGetTxPwrReqParams, *tpGetTxPwrReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4472,10 +4463,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 
     /* TX Power in milli watts */
-    tANI_U32   txPower;
+    u32   txPower;
 }tGetTxPwrRspParams, *tpGetTxPwrRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4491,13 +4482,13 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-  tANI_U8   opp_ps;
-  tANI_U32  ctWindow;
-  tANI_U8   count; 
-  tANI_U32  duration;
-  tANI_U32  interval;
-  tANI_U32  single_noa_duration;
-  tANI_U8   psSelection;
+  u8   opp_ps;
+  u32  ctWindow;
+  u8   count; 
+  u32  duration;
+  u32  interval;
+  u32  single_noa_duration;
+  u8   psSelection;
 }tSetP2PGONOAParams, *tpSetP2PGONOAParams;
 
 
@@ -4514,7 +4505,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 }tSetP2PGONOARspParams, *tpSetP2PGONOARspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4531,7 +4522,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   tSirMacAddr selfMacAddr;
-  tANI_U32    status;
+  u32    status;
 }tAddStaSelfParams, *tpAddStaSelfParams;
 
 
@@ -4548,16 +4539,16 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 
    /*Self STA Index */
-   tANI_U8    selfStaIdx;
+   u8    selfStaIdx;
 
    /* DPU Index (IGTK, PTK, GTK all same) */
-   tANI_U8 dpuIdx;
+   u8 dpuIdx;
 
    /* DPU Signature */
-   tANI_U8 dpuSignature;
+   u8 dpuSignature;
    
 }tAddStaSelfRspParams, *tpAddStaSelfRspParams;
 
@@ -4592,7 +4583,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*success or failure */
-  tANI_U32   status;
+  u32   status;
 
   tSirMacAddr selfMacAddr;
 }tDelStaSelfRspParams, *tpDelStaSelfRspParams;
@@ -4613,11 +4604,11 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* Station Index */
-    tANI_U16 staIdx;
+    u16 staIdx;
 
     /* TSPEC handler uniquely identifying a TSPEC for a STA in a BSS */
     /* This will carry the bitmap with the bit positions representing different AC.s*/
-    tANI_U16 tspecIdx;
+    u16 tspecIdx;
 
     /*  Tspec info per AC To program TPE with required parameters */
     tSirMacTspecIE   tspec[WLAN_HAL_MAX_AC];
@@ -4625,12 +4616,12 @@ typedef PACKED_PRE struct PACKED_POST
     /* U-APSD Flags: 1b per AC.  Encoded as follows:
      b7 b6 b5 b4 b3 b2 b1 b0 =
      X  X  X  X  BE BK VI VO */
-    tANI_U8 uAPSD;
+    u8 uAPSD;
 
     /* These parameters are for all the access categories */
-    tANI_U32 srvInterval[WLAN_HAL_MAX_AC];   // Service Interval
-    tANI_U32 susInterval[WLAN_HAL_MAX_AC];   // Suspend Interval
-    tANI_U32 delayInterval[WLAN_HAL_MAX_AC]; // Delay Interval
+    u32 srvInterval[WLAN_HAL_MAX_AC];   // Service Interval
+    u32 susInterval[WLAN_HAL_MAX_AC];   // Suspend Interval
+    u32 delayInterval[WLAN_HAL_MAX_AC]; // Delay Interval
 
 }tAggrAddTsParams, *tpAggrAddTsParams;
 
@@ -4648,9 +4639,9 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status0;
+    u32   status0;
     /* FIXME PRIMA for future use for 11R */
-    tANI_U32   status1;
+    u32   status1;
 }tAggrAddTsRspParams, *tpAggrAddTsRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4666,7 +4657,7 @@ typedef PACKED_PRE struct PACKED_POST
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8   isAppsCpuAwake;
+   u8   isAppsCpuAwake;
 } tHalConfigureAppsCpuWakeupStateReqParams, *tpHalConfigureAppsCpuWakeupStatReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4681,7 +4672,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalConfigureAppsCpuWakeupStateRspParams, *tpHalConfigureAppsCpuWakeupStateRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4695,11 +4686,11 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U32    argument1;
-   tANI_U32    argument2;
-   tANI_U32    argument3;
-   tANI_U32    argument4;
-   tANI_U32    argument5;
+   u32    argument1;
+   u32    argument2;
+   u32    argument3;
+   u32    argument4;
+   u32    argument5;
 
 }tHalDumpCmdReqParams,*tpHalDumpCmdReqParams;
 
@@ -4716,11 +4707,11 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
     /*Length of the responce message*/
-    tANI_U32   rspLength;
+    u32   rspLength;
     /*FiXME: Currently considering the  the responce will be less than 100bytes */
-    tANI_U8    rspBuffer[DUMPCMD_RSP_BUFFER];
+    u8    rspBuffer[DUMPCMD_RSP_BUFFER];
     
 } tHalDumpCmdRspParams, *tpHalDumpCmdRspParams;
 
@@ -4740,10 +4731,10 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /*Coex Indication Type*/
-    tANI_U32   coexIndType;
+    u32   coexIndType;
 
     /*Coex Indication Data*/
-    tANI_U32   coexIndData[WLAN_COEX_IND_DATA_SIZE];
+    u32   coexIndData[WLAN_COEX_IND_DATA_SIZE];
 }tCoexIndParams,*tpCoexIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4759,7 +4750,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    /*Tx Complete Indication Success or Failure*/
-   tANI_U32   status;
+   u32   status;
 }tTxComplParams,*tpTxComplParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4774,8 +4765,8 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32 configuredMcstBcstFilterSetting;
-    tANI_U32 activeSessionCount; 
+    u32 configuredMcstBcstFilterSetting;
+    u32 activeSessionCount; 
 }tHalWlanHostSuspendIndParam,*tpHalWlanHostSuspendIndParam;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4790,7 +4781,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_BOOLEAN bDot11ExcludeUnencrypted;
+    u8 bDot11ExcludeUnencrypted;
     tSirMacAddr bssId; 
 }tHalWlanExcludeUnEncryptedIndParam,*tpHalWlanExcludeUnEncryptedIndParam;
 
@@ -4807,23 +4798,23 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8      index ;
-   tANI_U8      oppPsFlag ;
-   tANI_U16     ctWin  ;
+   u8      index ;
+   u8      oppPsFlag ;
+   u16     ctWin  ;
 
-   tANI_U16      uNoa1IntervalCnt;
-   tANI_U16      bssIdx;
-   tANI_U32      uNoa1Duration;
-   tANI_U32      uNoa1Interval;
-   tANI_U32      uNoa1StartTime;
+   u16      uNoa1IntervalCnt;
+   u16      bssIdx;
+   u32      uNoa1Duration;
+   u32      uNoa1Interval;
+   u32      uNoa1StartTime;
 
-   tANI_U16      uNoa2IntervalCnt;
-   tANI_U16      rsvd2;
-   tANI_U32      uNoa2Duration;
-   tANI_U32      uNoa2Interval;
-   tANI_U32      uNoa2StartTime;
+   u16      uNoa2IntervalCnt;
+   u16      rsvd2;
+   u32      uNoa2Duration;
+   u32      uNoa2Interval;
+   u32      uNoa2StartTime;
 
-   tANI_U32   status;
+   u32   status;
 }tNoaAttrIndParams, *tpNoaAttrIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4838,8 +4829,8 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32             status;
-    tANI_U32             bssIdx;
+    u32             status;
+    u32             bssIdx;
 }tNoaStartIndParams, *tpNoaStartIndParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4855,7 +4846,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8 configuredMcstBcstFilterSetting;
+    u8 configuredMcstBcstFilterSetting;
 }tHalWlanHostResumeReqParam,*tpHalWlanHostResumeReqParam;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4870,7 +4861,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalHostResumeRspParams, *tpHalHostResumeRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -4881,16 +4872,16 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-	tANI_U16 staIdx;
+	u16 staIdx;
 	// Peer MAC Address, whose BA session has timed out
 	tSirMacAddr peerMacAddr;
 	// TID for which a BA session timeout is being triggered
-	tANI_U8 baTID;
+	u8 baTID;
 	// DELBA direction
 	// 1 - Originator
 	// 0 - Recipient
-	tANI_U8 baDirection;
-	tANI_U32 reasonCode;
+	u8 baDirection;
+	u32 reasonCode;
 	tSirMacAddr  bssId; // TO SUPPORT BT-AMP
 } tHalWlanDelBaIndMsg, *tpHalWlanDelBaIndMsg;
 
@@ -4991,21 +4982,21 @@ typedef PACKED_PRE struct PACKED_POST
 
   /*Indicate the channel on which the Network can be found 
     0 - if all channels */
-  tANI_U8     ucChannelCount;
-  tANI_U8     aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS];
+  u8     ucChannelCount;
+  u8     aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS];
 
   /*Indicates the RSSI threshold for the network to be considered*/
-  tANI_U8     rssiThreshold;
+  u8     rssiThreshold;
 }tNetworkType; 
 
 typedef PACKED_PRE struct PACKED_POST
 {
   /*How much it should wait */
-  tANI_U32    uTimerValue; 
+  u32    uTimerValue; 
 
   /*How many times it should repeat that wait value 
     0 - keep using this timer until PNO is disabled*/
-  tANI_U32    uTimerRepeat; 
+  u32    uTimerRepeat; 
 
   /*e.g:   2 3 
            4 0 
@@ -5019,7 +5010,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
   /*set to 0 if you wish for PNO to use its default telescopic timer*/
-  tANI_U8     ucScanTimersCount; 
+  u8     ucScanTimersCount; 
 
   /*A set value represents the amount of time that PNO will wait between 
     two consecutive scan procedures
@@ -5035,13 +5026,13 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST {
 
     /*Enable PNO*/
-    tANI_U32          enable;
+    u32          enable;
 
     /*Immediate,  On Suspend,   On Resume*/
     ePNOMode         modePNO;
     
     /*Number of networks sent for PNO*/
-    tANI_U32          ucNetworksCount;
+    u32          ucNetworksCount;
 
     /*The networks that PNO needs to look for*/
     tNetworkType     aNetworks[WLAN_HAL_PNO_MAX_SUPP_NETWORKS];
@@ -5050,12 +5041,12 @@ typedef PACKED_PRE struct PACKED_POST {
     tScanTimersType  scanTimers; 
 
     /*Probe template for 2.4GHz band*/
-    tANI_U16         us24GProbeSize; 
-    tANI_U8          a24GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
+    u16         us24GProbeSize; 
+    u8          a24GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
 
     /*Probe template for 5GHz band*/
-    tANI_U16         us5GProbeSize; 
-    tANI_U8          a5GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
+    u16         us5GProbeSize; 
+    u8          a5GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
 
 } tPrefNetwListParams, * tpPrefNetwListParams;
 
@@ -5088,23 +5079,23 @@ typedef PACKED_PRE struct PACKED_POST
 
   /*Indicate the channel on which the Network can be found 
     0 - if all channels */
-  tANI_U8     ucChannelCount;
-  tANI_U8     aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS];
+  u8     ucChannelCount;
+  u8     aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS];
 
   /*Indicates the RSSI threshold for the network to be considered*/
-  tANI_U8     rssiThreshold;
+  u8     rssiThreshold;
 }tNetworkTypeNew; 
 
 typedef PACKED_PRE struct PACKED_POST {
 
     /*Enable PNO*/
-    tANI_U32          enable;
+    u32          enable;
 
     /*Immediate,  On Suspend,   On Resume*/
     ePNOMode         modePNO;
     
     /*Number of networks sent for PNO*/
-    tANI_U32         ucNetworksCount; 
+    u32         ucNetworksCount; 
 
     /*The networks that PNO needs to look for*/
     tNetworkTypeNew  aNetworks[WLAN_HAL_PNO_MAX_SUPP_NETWORKS];
@@ -5113,12 +5104,12 @@ typedef PACKED_PRE struct PACKED_POST {
     tScanTimersType  scanTimers; 
 
     /*Probe template for 2.4GHz band*/
-    tANI_U16         us24GProbeSize; 
-    tANI_U8          a24GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
+    u16         us24GProbeSize; 
+    u8          a24GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
 
     /*Probe template for 5GHz band*/
-    tANI_U16         us5GProbeSize; 
-    tANI_U8          a5GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
+    u16         us5GProbeSize; 
+    u8          a5GProbeTemplate[WLAN_HAL_PNO_MAX_PROBE_SIZE];
 
 } tPrefNetwListParamsNew, * tpPrefNetwListParamsNew;
 
@@ -5140,7 +5131,7 @@ typedef PACKED_PRE struct PACKED_POST
 
    /*status of the request - just to indicate that PNO has acknowledged 
      the request and will start scanning*/
-   tANI_U32   status;
+   u32   status;
 }  tSetPrefNetwListResp, *tpSetPrefNetwListResp;
 
 /*
@@ -5152,7 +5143,7 @@ typedef PACKED_PRE struct PACKED_POST {
   tSirMacSSid ssId;
   
   /*Indicates the RSSI */
-  tANI_U8     rssi;
+  u8     rssi;
 
 } tPrefNetwFoundParams, * tpPrefNetwFoundParams;
 
@@ -5169,7 +5160,7 @@ typedef PACKED_PRE struct PACKED_POST {
 typedef PACKED_PRE struct PACKED_POST {
 
   /*RSSI Threshold*/
-  tANI_U8          ucRssiThreshold;
+  u8          ucRssiThreshold;
 
 } tRssiFilterParams, * tpRssiFilterParams;
 
@@ -5188,7 +5179,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST{
    tHalMsgHeader header;
    /*status of the request */
-   tANI_U32   status;
+   u32   status;
 }  tSetRssiFilterResp, *tpSetRssiFilterResp;
 /*
   Update scan params 
@@ -5197,26 +5188,26 @@ typedef PACKED_PRE struct PACKED_POST
 {
 
   /*Host setting for 11d*/
-  tANI_U8   b11dEnabled; 
+  u8   b11dEnabled; 
 
   /*Lets PNO know that host has determined the regulatory domain*/
-  tANI_U8   b11dResolved;
+  u8   b11dResolved;
 
   /*Channels on which PNO is allowed to scan*/
-  tANI_U8   ucChannelCount; 
-  tANI_U8   aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS]; 
+  u8   ucChannelCount; 
+  u8   aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS]; 
 
   /*Minimum channel time*/
-  tANI_U16  usActiveMinChTime; 
+  u16  usActiveMinChTime; 
 
   /*Maximum channel time*/
-  tANI_U16  usActiveMaxChTime; 
+  u16  usActiveMaxChTime; 
 
   /*Minimum channel time*/
-  tANI_U16  usPassiveMinChTime; 
+  u16  usPassiveMinChTime; 
 
   /*Maximum channel time*/
-  tANI_U16  usPassiveMaxChTime; 
+  u16  usPassiveMaxChTime; 
 
   /*Cb State*/
   ePhyChanBondState cbState;
@@ -5230,26 +5221,26 @@ typedef PACKED_PRE struct PACKED_POST
 {
 
   /*Host setting for 11d*/
-  tANI_U8   b11dEnabled; 
+  u8   b11dEnabled; 
 
   /*Lets PNO know that host has determined the regulatory domain*/
-  tANI_U8   b11dResolved;
+  u8   b11dResolved;
 
   /*Channels on which PNO is allowed to scan*/
-  tANI_U8   ucChannelCount; 
-  tANI_U8   aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS_EX]; 
+  u8   ucChannelCount; 
+  u8   aChannels[WLAN_HAL_PNO_MAX_NETW_CHANNELS_EX]; 
 
   /*Minimum channel time*/
-  tANI_U16  usActiveMinChTime; 
+  u16  usActiveMinChTime; 
 
   /*Maximum channel time*/
-  tANI_U16  usActiveMaxChTime; 
+  u16  usActiveMaxChTime; 
 
   /*Minimum channel time*/
-  tANI_U16  usPassiveMinChTime; 
+  u16  usPassiveMinChTime; 
 
   /*Maximum channel time*/
-  tANI_U16  usPassiveMaxChTime; 
+  u16  usPassiveMaxChTime; 
 
   /*Cb State*/
   ePhyChanBondState cbState;
@@ -5285,7 +5276,7 @@ typedef PACKED_PRE struct PACKED_POST{
    tHalMsgHeader header;
 
    /*status of the request */
-   tANI_U32   status;
+   u32   status;
 
 }  tUpdateScanParamsResp, *tpUpdateScanParamsResp;
 
@@ -5294,10 +5285,10 @@ typedef PACKED_PRE struct PACKED_POST{
  *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8  ucTxPerTrackingEnable;           /* 0: disable, 1:enable */
-    tANI_U8  ucTxPerTrackingPeriod;           /* Check period, unit is sec. */
-    tANI_U8  ucTxPerTrackingRatio;            /* (Fail TX packet)/(Total TX packet) ratio, the unit is 10%. */
-    tANI_U32 uTxPerTrackingWatermark;         /* A watermark of check number, once the tx packet exceed this number, we do the check, default is 5 */
+    u8  ucTxPerTrackingEnable;           /* 0: disable, 1:enable */
+    u8  ucTxPerTrackingPeriod;           /* Check period, unit is sec. */
+    u8  ucTxPerTrackingRatio;            /* (Fail TX packet)/(Total TX packet) ratio, the unit is 10%. */
+    u32 uTxPerTrackingWatermark;         /* A watermark of check number, once the tx packet exceed this number, we do the check, default is 5 */
 } tHalTxPerTrackingReqParam, *tpHalTxPerTrackingReqParam;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5312,7 +5303,7 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
+    u32   status;
 } tHalTxPerTrackingRspParams, *tpHalTxPerTrackingRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5367,31 +5358,31 @@ typedef enum
 
 typedef PACKED_PRE struct PACKED_POST 
 {
-    tANI_U8                          protocolLayer;
-    tANI_U8                          cmpFlag;
-    tANI_U16                         dataLength; /* Length of the data to compare */
-    tANI_U8                          dataOffset; /* from start of the respective frame header */
-    tANI_U8                          reserved; /* Reserved field */
-    tANI_U8                          compareData[HAL_PROTOCOL_DATA_LEN];  /* Data to compare */
-    tANI_U8                          dataMask[HAL_PROTOCOL_DATA_LEN];   /* Mask to be applied on the received packet data before compare */
+    u8                          protocolLayer;
+    u8                          cmpFlag;
+    u16                         dataLength; /* Length of the data to compare */
+    u8                          dataOffset; /* from start of the respective frame header */
+    u8                          reserved; /* Reserved field */
+    u8                          compareData[HAL_PROTOCOL_DATA_LEN];  /* Data to compare */
+    u8                          dataMask[HAL_PROTOCOL_DATA_LEN];   /* Mask to be applied on the received packet data before compare */
 }tHalRcvPktFilterParams, *tpHalRcvPktFilterParams;
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8                         filterId;
-    tANI_U8                         filterType;
-    tANI_U8                         numParams; 
-    tANI_U32                        coalesceTime;
+    u8                         filterId;
+    u8                         filterType;
+    u8                         numParams; 
+    u32                        coalesceTime;
     tHalRcvPktFilterParams          paramsData[1];
 }tHalRcvPktFilterCfgType, *tpHalRcvPktFilterCfgType;
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8                         filterId;
-    tANI_U8                         filterType;
-    tANI_U8                         numParams; 
-    tANI_U32                        coleasceTime; 
-    tANI_U8                         bssIdx;
+    u8                         filterId;
+    u8                         filterType;
+    u8                         numParams; 
+    u32                        coleasceTime; 
+    u8                         bssIdx;
     tHalRcvPktFilterParams          paramsData[1];
 }tHalSessionizedRcvPktFilterCfgType, *tpHalSessionizedRcvPktFilterCfgType;
 
@@ -5403,17 +5394,17 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U8         dataOffset; /* from start of the respective frame header */
-    tANI_U32       cMulticastAddr;
+    u8         dataOffset; /* from start of the respective frame header */
+    u32       cMulticastAddr;
     tSirMacAddr    multicastAddr[HAL_MAX_NUM_MULTICAST_ADDRESS];
-    tANI_U8        bssIdx;
+    u8        bssIdx;
 } tHalRcvFltMcAddrListType, *tpHalRcvFltMcAddrListType;
 
 typedef PACKED_PRE struct PACKED_POST
 {
     /* success or failure */
-    tANI_U32   status;
-    tANI_U8    bssIdx;
+    u32   status;
+    u8    bssIdx;
 } tHalSetPktFilterRspParams, *tpHalSetPktFilterRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5424,7 +5415,7 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8    bssIdx;
+   u8    bssIdx;
 } tHalRcvFltPktMatchCntReqParams, *tpHalRcvFltPktMatchCntReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5436,16 +5427,16 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8    filterId;
-   tANI_U32   matchCnt;
+   u8    filterId;
+   u32   matchCnt;
 } tHalRcvFltPktMatchCnt;
 typedef PACKED_PRE struct PACKED_POST
 {
    /* Success or Failure */
-   tANI_U32                 status;
-   tANI_U32                 matchCnt;   
+   u32                 status;
+   u32                 matchCnt;   
    tHalRcvFltPktMatchCnt    filterMatchCnt[HAL_MAX_NUM_FILTERS]; 
-   tANI_U8                  bssIdx;
+   u8                  bssIdx;
 } tHalRcvFltPktMatchRspParams, *tptHalRcvFltPktMatchRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5456,9 +5447,9 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   status;  /* only valid for response message */
-    tANI_U8    filterId;
-    tANI_U8    bssIdx;
+    u32   status;  /* only valid for response message */
+    u8    filterId;
+    u8    bssIdx;
 }tHalRcvFltPktClearParam, *tpHalRcvFltPktClearParam;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5475,8 +5466,8 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   status;  
-    tANI_U8    bssIdx;
+    u32   status;  
+    u8    bssIdx;
 }tHalRcvFltPktSetMcListRspType, *tpHalRcvFltPktSetMcListRspType;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5499,22 +5490,22 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    /*  Ignore DTIM */
-  tANI_U32 uIgnoreDTIM;
+  u32 uIgnoreDTIM;
 
   /*DTIM Period*/
-  tANI_U32 uDTIMPeriod; 
+  u32 uDTIMPeriod; 
 
   /* Listen Interval */
-  tANI_U32 uListenInterval;
+  u32 uListenInterval;
 
   /* Broadcast Multicast Filter  */
-  tANI_U32 uBcastMcastFilter;
+  u32 uBcastMcastFilter;
 
   /* Beacon Early Termination */
-  tANI_U32 uEnableBET;
+  u32 uEnableBET;
 
   /* Beacon Early Termination Interval */
-  tANI_U32 uBETInterval; 
+  u32 uBETInterval; 
 }tSetPowerParamsType, *tpSetPowerParamsType;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5528,7 +5519,7 @@ typedef PACKED_PRE struct PACKED_POST{
    tHalMsgHeader header;
 
    /*status of the request */
-   tANI_U32   status;
+   u32   status;
 
 }  tSetPowerParamsResp, *tpSetPowerParamsResp;
 
@@ -5565,7 +5556,7 @@ typedef enum {
 
 typedef PACKED_PRE struct PACKED_POST{
 
-   tANI_U32 featCaps[4];
+   u32 featCaps[4];
 }  tWlanFeatCaps, *tpWlanFeatCaps;
 
 typedef PACKED_PRE struct PACKED_POST{
@@ -5580,23 +5571,23 @@ typedef PACKED_PRE struct PACKED_POST{
 #define IS_FEATURE_SUPPORTED_BY_HOST(featEnumValue) (!!halMsg_GetHostWlanFeatCaps(featEnumValue))
 #define IS_WLANACTIVE_OFFLOAD_SUPPORTED_BY_HOST (!!(halMsg_GetHostWlanFeatCaps(WLANACTIVE_OFFLOAD)))
 
-tANI_U8 halMsg_GetHostWlanFeatCaps(tANI_U8 feat_enum_value);
+u8 halMsg_GetHostWlanFeatCaps(u8 feat_enum_value);
 
-#define setFeatCaps(a,b)   {  tANI_U32 arr_index, bit_index; \
+#define setFeatCaps(a,b)   {  u32 arr_index, bit_index; \
                               if ((b)<=127) { \
                                 arr_index = (b)/32; \
                                 bit_index = (b)%32; \
                                 (a)->featCaps[arr_index] |= (1<<bit_index); \
                               } \
                            }
-#define getFeatCaps(a,b,c) {  tANI_U32 arr_index, bit_index; \
+#define getFeatCaps(a,b,c) {  u32 arr_index, bit_index; \
                               if ((b)<=127) { \
                                 arr_index = (b)/32; \
                                 bit_index = (b)%32; \
                                 (c) = ((a)->featCaps[arr_index] & (1<<bit_index))?1:0; \
                               } \
                            }
-#define clearFeatCaps(a,b) {  tANI_U32 arr_index, bit_index; \
+#define clearFeatCaps(a,b) {  u32 arr_index, bit_index; \
                               if ((b)<=127) { \
                                 arr_index = (b)/32; \
                                 bit_index = (b)%32; \
@@ -5657,13 +5648,13 @@ typedef enum
 */
 typedef PACKED_PRE struct PACKED_POST
 {
-    uint32  ulReason;        /* see tWakeReasonType */
-    uint32  ulReasonArg;     /* argument specific to the reason type */
-    uint32  ulStoredDataLen; /* length of optional data stored in this message, in case
+    u32  ulReason;        /* see tWakeReasonType */
+    u32  ulReasonArg;     /* argument specific to the reason type */
+    u32  ulStoredDataLen; /* length of optional data stored in this message, in case
                               HAL truncates the data (i.e. data packets) this length
                               will be less than the actual length */
-    uint32  ulActualDataLen; /* actual length of data */
-    uint8   aDataStart[1];   /* variable length start of data (length == storedDataLen)
+    u32  ulActualDataLen; /* actual length of data */
+    u8   aDataStart[1];   /* variable length start of data (length == storedDataLen)
                              see specific wake type */
 } tWakeReasonParams, *tpWakeReasonParams;
 
@@ -5674,8 +5665,8 @@ typedef PACKED_PRE struct PACKED_POST
 {
     tHalMsgHeader       header;
     tWakeReasonParams   wakeReasonParams;
-    tANI_U32            uBssIdx : 8;
-    tANI_U32            bReserved : 24;
+    u32            uBssIdx : 8;
+    u32            bReserved : 24;
 } tHalWakeReasonInd, *tpHalWakeReasonInd;
 
 /*---------------------------------------------------------------------------
@@ -5691,11 +5682,11 @@ typedef PACKED_PRE struct PACKED_POST
 
 typedef PACKED_PRE struct PACKED_POST
 {
-  tANI_U32     ulFlags;             /* optional flags */
-  tANI_U8      aKCK[HAL_GTK_KCK_BYTES];  /* Key confirmation key */ 
-  tANI_U8      aKEK[HAL_GTK_KEK_BYTES];  /* key encryption key */
-  tANI_U64     ullKeyReplayCounter; /* replay counter */
-  tANI_U8      bssIdx;
+  u32     ulFlags;             /* optional flags */
+  u8      aKCK[HAL_GTK_KCK_BYTES];  /* Key confirmation key */ 
+  u8      aKEK[HAL_GTK_KEK_BYTES];  /* key encryption key */
+  u64     ullKeyReplayCounter; /* replay counter */
+  u8      bssIdx;
 } tHalGtkOffloadReqParams, *tpHalGtkOffloadReqParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5709,8 +5700,8 @@ typedef PACKED_PRE struct PACKED_POST
 *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-    tANI_U32   ulStatus;   /* success or failure */
-    tANI_U8    bssIdx;
+    u32   ulStatus;   /* success or failure */
+    u8    bssIdx;
 } tHalGtkOffloadRspParams, *tpHalGtkOffloadRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5725,7 +5716,7 @@ typedef PACKED_PRE struct PACKED_POST
 *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U8    bssIdx;
+   u8    bssIdx;
 
 } tHalGtkOffloadGetInfoReqParams, *tptHalGtkOffloadGetInfoReqParams;
 
@@ -5740,13 +5731,13 @@ typedef PACKED_PRE struct PACKED_POST
 *--------------------------------------------------------------------------*/
 typedef PACKED_PRE struct PACKED_POST
 {
-   tANI_U32   ulStatus;             /* success or failure */
-   tANI_U32   ulLastRekeyStatus;    /* last rekey status when the rekey was offloaded */
-   tANI_U64   ullKeyReplayCounter;  /* current replay counter value */
-   tANI_U32   ulTotalRekeyCount;    /* total rekey attempts */
-   tANI_U32   ulGTKRekeyCount;      /* successful GTK rekeys */
-   tANI_U32   ulIGTKRekeyCount;     /* successful iGTK rekeys */
-   tANI_U8    bssIdx;
+   u32   ulStatus;             /* success or failure */
+   u32   ulLastRekeyStatus;    /* last rekey status when the rekey was offloaded */
+   u64   ullKeyReplayCounter;  /* current replay counter value */
+   u32   ulTotalRekeyCount;    /* total rekey attempts */
+   u32   ulGTKRekeyCount;      /* successful GTK rekeys */
+   u32   ulIGTKRekeyCount;     /* successful iGTK rekeys */
+   u8    bssIdx;
 } tHalGtkOffloadGetInfoRspParams, *tptHalGtkOffloadGetInfoRspParams;
 
 typedef PACKED_PRE struct PACKED_POST
@@ -5761,14 +5752,14 @@ typedef PACKED_PRE struct PACKED_POST
 typedef PACKED_PRE struct PACKED_POST
 {
    /*Indicates the device mode which indicates about the DHCP activity */
-    tANI_U8 device_mode;
+    u8 device_mode;
     tSirMacAddr macAddr;
 } tDHCPInfo, *tpDHCPInfo;
 
 typedef PACKED_PRE struct PACKED_POST
 {
    tHalMsgHeader  header;
-   tANI_U32       status;  /* success or failure */
+   u32       status;  /* success or failure */
 } tDHCPIndStatus, *tpDHCPIndstatus;
 
 /*
@@ -5834,7 +5825,7 @@ typedef PACKED_PRE struct PACKED_POST{
    tHalMsgHeader header;
 
    /*status of the request */
-   tANI_U32   status;
+   u32   status;
 
 }  tSetThermalMitigationResp, *tpSetThermalMitigationResp;
 
@@ -5842,19 +5833,19 @@ typedef PACKED_PRE struct PACKED_POST{
 provided to FW from Host via periodic messages */
 typedef PACKED_PRE struct PACKED_POST {
    /* TX stats */
-   uint32 txBytesPushed;
-   uint32 txPacketsPushed;
+   u32 txBytesPushed;
+   u32 txPacketsPushed;
 
    /* RX stats */
-   uint32 rxBytesRcvd;
-   uint32 rxPacketsRcvd;
-   uint32 rxTimeTotal;
+   u32 rxBytesRcvd;
+   u32 rxPacketsRcvd;
+   u32 rxTimeTotal;
 } tStaStatsClassB, *tpStaStatsClassB;
 
 typedef PACKED_PRE struct PACKED_POST {
 
    /* Duration over which this stats was collected */
-   tANI_U32 duration;
+   u32 duration;
 
    /* Per STA Stats */
    tStaStatsClassB staStatsClassB[HAL_NUM_STA];
