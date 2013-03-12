@@ -24,12 +24,6 @@
 
 #include "hw.h"
 
-/* FIXME: remove these */
-#define PACKED_PRE
-#define PACKED_POST
-#define __ani_attr_pre_packed
-#define __ani_attr_packed
-
 /*---------------------------------------------------------------------------
   API VERSIONING INFORMATION
 
@@ -804,7 +798,7 @@ struct hal_update_cfg_rsp_msg
 ---------------------------------------------------------------------------*/
 
 /// Frame control field format (2 bytes)
-typedef  __ani_attr_pre_packed struct sSirMacFrameCtl
+typedef  struct sSirMacFrameCtl
 {
 
 #ifndef ANI_LITTLE_BIT_ENDIAN
@@ -839,18 +833,18 @@ typedef  __ani_attr_pre_packed struct sSirMacFrameCtl
 
 #endif
 
-} __ani_attr_packed  tSirMacFrameCtl, *tpSirMacFrameCtl;
+} tSirMacFrameCtl, *tpSirMacFrameCtl;
 
 /// Sequence control field
-typedef __ani_attr_pre_packed struct sSirMacSeqCtl
+typedef struct sSirMacSeqCtl
 {
     u8 fragNum : 4;
     u8 seqNumLo : 4;
     u8 seqNumHi : 8;
-} __ani_attr_packed tSirMacSeqCtl, *tpSirMacSeqCtl;
+} tSirMacSeqCtl, *tpSirMacSeqCtl;
 
 /// Management header format
-typedef __ani_attr_pre_packed struct sSirMacMgmtHdr
+typedef struct sSirMacMgmtHdr
 {
     tSirMacFrameCtl fc;
     u8           durationLo;
@@ -859,14 +853,14 @@ typedef __ani_attr_pre_packed struct sSirMacMgmtHdr
     u8              sa[6];
     u8              bssId[6];
     tSirMacSeqCtl   seqControl;
-} __ani_attr_packed tSirMacMgmtHdr, *tpSirMacMgmtHdr;
+} tSirMacMgmtHdr, *tpSirMacMgmtHdr;
 
 /// Scan Entry to hold active BSS idx's
-typedef __ani_attr_pre_packed struct sSirScanEntry
+typedef struct sSirScanEntry
 {
     u8 bssIdx[HAL_NUM_BSSID];
     u8 activeBSScnt;
-}__ani_attr_packed tSirScanEntry, *ptSirScanEntry;
+}tSirScanEntry, *ptSirScanEntry;
 
 struct hal_init_scan_req_msg
 {
@@ -1395,7 +1389,7 @@ struct config_sta_params_v1
 struct config_sta_req_msg
 {
    struct hal_msg_header header;
-   PACKED_PRE union {
+   union {
    struct config_sta_params configStaParams;
    struct config_sta_params_v1 configStaParams_V1;
    } uStaParams;
@@ -1480,14 +1474,14 @@ struct delete_sta_rsp_msg
 
 //12 Bytes long because this structure can be used to represent rate
 //and extended rate set IEs. The parser assume this to be at least 12
-typedef __ani_attr_pre_packed struct sSirMacRateSet
+typedef struct sSirMacRateSet
 {
     u8  numRates;
     u8  rate[SIR_MAC_RATESET_EID_MAX];
-} __ani_attr_packed tSirMacRateSet;
+} tSirMacRateSet;
 
 // access category record
-typedef __ani_attr_pre_packed struct sSirMacAciAifsn
+typedef struct sSirMacAciAifsn
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
     u8  rsvd  : 1;
@@ -1500,10 +1494,10 @@ typedef __ani_attr_pre_packed struct sSirMacAciAifsn
     u8  aci   : 2;
     u8  rsvd  : 1;
 #endif
-} __ani_attr_packed tSirMacAciAifsn;
+} tSirMacAciAifsn;
 
 // contention window size
-typedef __ani_attr_pre_packed struct sSirMacCW
+typedef struct sSirMacCW
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
     u8  max : 4;
@@ -1512,20 +1506,20 @@ typedef __ani_attr_pre_packed struct sSirMacCW
     u8  min : 4;
     u8  max : 4;
 #endif
-} __ani_attr_packed tSirMacCW;
+} tSirMacCW;
 
-typedef __ani_attr_pre_packed struct sSirMacEdcaParamRecord
+typedef struct sSirMacEdcaParamRecord
 {
     tSirMacAciAifsn  aci;
     tSirMacCW        cw;
     u16         txoplimit;
-} __ani_attr_packed tSirMacEdcaParamRecord;
+} tSirMacEdcaParamRecord;
 
-typedef __ani_attr_pre_packed struct sSirMacSSid
+typedef struct sSirMacSSid
 {
     u8        length;
     u8        ssId[32];
-} __ani_attr_packed tSirMacSSid;
+} tSirMacSSid;
 
 // Concurrency role.  These are generic IDs that identify the various roles
 // in the software system.
@@ -1825,7 +1819,7 @@ struct config_bss_params_v1
 struct config_bss_req_msg
 {
    struct hal_msg_header header;
-   PACKED_PRE union {
+   union {
    struct config_bss_params configBssParams;
    struct config_bss_params_v1 configBssParams_V1;
    }uBssParams;
@@ -2464,7 +2458,7 @@ struct set_link_state_rsp_msg
  *--------------------------------------------------------------------------*/
 
 /* TSPEC Params */
-typedef __ani_attr_pre_packed struct sSirMacTSInfoTfc
+typedef struct sSirMacTSInfoTfc
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
     u16       ackPolicy : 2;
@@ -2485,10 +2479,10 @@ typedef __ani_attr_pre_packed struct sSirMacTSInfoTfc
     u16       userPrio : 3;
     u16       ackPolicy : 2;
 #endif
-} __ani_attr_packed tSirMacTSInfoTfc;
+} tSirMacTSInfoTfc;
 
 /* Flag to schedule the traffic type */
-typedef __ani_attr_pre_packed struct sSirMacTSInfoSch
+typedef struct sSirMacTSInfoSch
 {
 #ifndef ANI_LITTLE_BIT_ENDIAN
     u8        rsvd : 7;
@@ -2497,17 +2491,17 @@ typedef __ani_attr_pre_packed struct sSirMacTSInfoSch
     u8        schedule : 1;
     u8        rsvd : 7;
 #endif
-} __ani_attr_packed tSirMacTSInfoSch;
+} tSirMacTSInfoSch;
 
 /* Traffic and scheduling info */
-typedef __ani_attr_pre_packed struct sSirMacTSInfo
+typedef struct sSirMacTSInfo
 {
     tSirMacTSInfoTfc traffic;
     tSirMacTSInfoSch schedule;
-} __ani_attr_packed tSirMacTSInfo;
+} tSirMacTSInfo;
 
 /* Information elements */
-typedef __ani_attr_pre_packed struct sSirMacTspecIE
+typedef struct sSirMacTspecIE
 {
     u8             type;
     u8             length;
@@ -2527,7 +2521,7 @@ typedef __ani_attr_pre_packed struct sSirMacTspecIE
     u32            minPhyRate;
     u16            surplusBw;
     u16            mediumTime;
-}__ani_attr_packed tSirMacTspecIE;
+}tSirMacTspecIE;
 
 struct add_ts_req_msg
 {
@@ -3381,7 +3375,7 @@ struct hal_host_offload_req
 {
     u8 offloadType;
     u8 enableOrDisable;
-    PACKED_PRE union
+    union
     {
         u8 hostIpv4Addr [4];
         u8 hostIpv6Addr [HAL_IPV6_ADDR_LEN];
