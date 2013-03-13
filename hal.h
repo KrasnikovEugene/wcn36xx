@@ -96,7 +96,7 @@ typedef u8 tHalIpv4Addr[4];
 #define WCN36XX_HAL_VERSION_LENGTH  64
 
 /* message types for messages exchanged between WDI and HAL */
-typedef enum {
+enum hal_host_msg_type {
 	/* Init/De-Init */
 	WCN36XX_HAL_START_REQ = 0,
 	WCN36XX_HAL_START_RSP = 1,
@@ -356,40 +356,31 @@ typedef enum {
 	WCN36XX_HAL_DHCP_STOP_IND = 190,
 
 	WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
-} tHalHostMsgType;
+};
 
 /* Enumeration for Version */
-typedef enum {
+enum hal_host_msg_version {
 	WCN36XX_HAL_MSG_VERSION0 = 0,
 	WCN36XX_HAL_MSG_VERSION1 = 1,
 	WCN36XX_HAL_MSG_WCNSS_CTRL_VERSION = 0x7FFF,	/*define as 2 bytes data */
 	WCN36XX_HAL_MSG_VERSION_MAX_FIELD = WCN36XX_HAL_MSG_WCNSS_CTRL_VERSION
-} tHalHostMsgVersion;
+};
 
-/* Enumeration for Boolean - False/True, On/Off */
-typedef enum tagAniBoolean {
-	eANI_BOOLEAN_FALSE = 0,
-	eANI_BOOLEAN_TRUE,
-	eANI_BOOLEAN_OFF = 0,
-	eANI_BOOLEAN_ON = 1,
-	eANI_BOOLEAN_MAX_FIELD = 0x7FFFFFFF	/* define as 4 bytes data */
-} eAniBoolean;
-
-typedef enum {
+enum driver_type {
 	eDRIVER_TYPE_PRODUCTION = 0,
 	eDRIVER_TYPE_MFG = 1,
 	eDRIVER_TYPE_DVT = 2,
 	eDRIVER_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tDriverType;
+};
 
-typedef enum {
+enum hal_stop_type {
 	HAL_STOP_TYPE_SYS_RESET,
 	HAL_STOP_TYPE_SYS_DEEP_SLEEP,
 	HAL_STOP_TYPE_RF_KILL,
 	HAL_STOP_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tHalStopType;
+};
 
-typedef enum {
+enum hal_sys_mode {
 	eHAL_SYS_MODE_NORMAL,
 	eHAL_SYS_MODE_LEARN,
 	eHAL_SYS_MODE_SCAN,
@@ -398,9 +389,9 @@ typedef enum {
 	eHAL_SYS_MODE_ROAM_SCAN,
 	eHAL_SYS_MODE_ROAM_SUSPEND_LINK,
 	eHAL_SYS_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} eHalSysMode;
+};
 
-typedef enum {
+enum phy_chan_bond_state {
 	/* 20MHz IF bandwidth centered on IF carrier */
 	PHY_SINGLE_CHANNEL_CENTERED = 0,
 
@@ -435,10 +426,10 @@ typedef enum {
 	PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH = 10,
 
 	PHY_CHANNEL_BONDING_STATE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} ePhyChanBondState;
+};
 
 /* Spatial Multiplexing(SM) Power Save mode */
-typedef enum eSirMacHTMIMOPowerSaveState {
+enum sir_ht_mimo_state {
 	/* Static SM Power Save mode */
 	eSIR_HT_MIMO_PS_STATIC = 0,
 
@@ -452,10 +443,10 @@ typedef enum eSirMacHTMIMOPowerSaveState {
 	eSIR_HT_MIMO_PS_NO_LIMIT = 3,
 
 	eSIR_HT_MIMO_PS_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSirMacHTMIMOPowerSaveState;
+};
 
 /* each station added has a rate mode which specifies the sta attributes */
-typedef enum eStaRateMode {
+enum sta_rate_mode {
 	eSTA_TAURUS = 0,
 	eSTA_TITAN,
 	eSTA_POLARIS,
@@ -465,7 +456,7 @@ typedef enum eStaRateMode {
 	eSTA_11n,
 	eSTA_11ac,
 	eSTA_INVALID_RATE_MODE = WCN36XX_HAL_MAX_ENUM_SIZE
-} tStaRateMode, *tpStaRateMode;
+};
 
 /* 1,2,5.5,11 */
 #define SIR_NUM_11B_RATES           4
@@ -478,7 +469,7 @@ typedef enum eStaRateMode {
 
 #define SIR_MAC_MAX_SUPPORTED_MCS_SET    16
 
-typedef enum eSirBssType {
+enum sir_bss_type {
 	eSIR_INFRASTRUCTURE_MODE,
 
 	/* Added for softAP support */
@@ -495,21 +486,19 @@ typedef enum eSirBssType {
 	eSIR_AUTO_MODE,
 
 	eSIR_DONOT_USE_BSS_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSirBssType;
+};
 
-typedef enum eSirNwType {
+enum sir_nw_type {
 	eSIR_11A_NW_TYPE,
 	eSIR_11B_NW_TYPE,
 	eSIR_11G_NW_TYPE,
 	eSIR_11N_NW_TYPE,
 	eSIR_DONOT_USE_NW_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSirNwType;
-
-typedef u16 tSirMacBeaconInterval;
+};
 
 #define SIR_MAC_RATESET_EID_MAX            12
 
-typedef enum eSirMacHTOperatingMode {
+enum sir_ht_operating_mode {
 	/* No Protection */
 	eSIR_HT_OP_MODE_PURE,
 
@@ -523,10 +512,10 @@ typedef enum eSirMacHTOperatingMode {
 	eSIR_HT_OP_MODE_MIXED,
 
 	eSIR_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSirMacHTOperatingMode;
+};
 
 /* Encryption type enum used with peer */
-typedef enum eAniEdType {
+enum ani_ed_type {
 	eSIR_ED_NONE,
 	eSIR_ED_WEP40,
 	eSIR_ED_WEP104,
@@ -535,7 +524,7 @@ typedef enum eAniEdType {
 	eSIR_ED_WPI,
 	eSIR_ED_AES_128_CMAC,
 	eSIR_ED_NOT_IMPLEMENTED = WCN36XX_HAL_MAX_ENUM_SIZE
-} tAniEdType;
+};
 
 #define WLAN_MAX_KEY_RSC_LEN                16
 #define WLAN_WAPI_KEY_RSC_LEN               16
@@ -547,21 +536,21 @@ typedef enum eAniEdType {
 /*
  * Enum to specify whether key is used for TX only, RX only or both.
  */
-typedef enum eAniKeyDirection {
+enum ani_key_direction {
 	eSIR_TX_ONLY,
 	eSIR_RX_ONLY,
 	eSIR_TX_RX,
 	eSIR_TX_DEFAULT,
 	eSIR_DONOT_USE_KEY_DIRECTION = WCN36XX_HAL_MAX_ENUM_SIZE
-} tAniKeyDirection;
+};
 
-typedef enum eAniWepType {
+enum ani_wep_type {
 	eSIR_WEP_STATIC,
 	eSIR_WEP_DYNAMIC,
 	eSIR_WEP_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tAniWepType;
+};
 
-typedef enum eSriLinkState {
+enum sir_link_state {
 
 	eSIR_LINK_IDLE_STATE = 0,
 	eSIR_LINK_PREASSOC_STATE = 1,
@@ -584,29 +573,29 @@ typedef enum eSriLinkState {
 	eSIR_LINK_LISTEN_STATE = 14,
 
 	eSIR_LINK_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSirLinkState;
+};
 
-typedef enum {
+enum hal_stats_mask {
 	HAL_SUMMARY_STATS_INFO = 0x00000001,
 	HAL_GLOBAL_CLASS_A_STATS_INFO = 0x00000002,
 	HAL_GLOBAL_CLASS_B_STATS_INFO = 0x00000004,
 	HAL_GLOBAL_CLASS_C_STATS_INFO = 0x00000008,
 	HAL_GLOBAL_CLASS_D_STATS_INFO = 0x00000010,
 	HAL_PER_STA_STATS_INFO = 0x00000020
-} eHalStatsMask;
+};
 
 /* BT-AMP events type */
-typedef enum {
+enum bt_amp_event_type {
 	BTAMP_EVENT_CONNECTION_START,
 	BTAMP_EVENT_CONNECTION_STOP,
 	BTAMP_EVENT_CONNECTION_TERMINATED,
 
 	/* This and beyond are invalid values */
 	BTAMP_EVENT_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE,
-} tBtAmpEventType;
+};
 
 /* PE Statistics */
-typedef enum {
+enum pe_stats_mask {
 	PE_SUMMARY_STATS_INFO = 0x00000001,
 	PE_GLOBAL_CLASS_A_STATS_INFO = 0x00000002,
 	PE_GLOBAL_CLASS_B_STATS_INFO = 0x00000004,
@@ -616,7 +605,7 @@ typedef enum {
 
 	/* This and beyond are invalid values */
 	PE_STATS_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} ePEStatsMask;
+};
 
 /* Message definitons - All the messages below need to be packed */
 
@@ -635,7 +624,7 @@ struct sir_keys {
 	/* 0 for multicast */
 	u8 unicast;
 
-	tAniKeyDirection keyDirection;
+	enum ani_key_direction keyDirection;
 
 	/* Usage is unknown */
 	u8 keyRsc[WLAN_MAX_KEY_RSC_LEN];
@@ -653,10 +642,10 @@ struct set_sta_key_params {
 	u16 staIdx;
 
 	/* Encryption Type used with peer */
-	tAniEdType encType;
+	enum ani_ed_type encType;
 
 	/* STATIC/DYNAMIC - valid only for WEP */
-	tAniWepType wepType;
+	enum ani_wep_type wepType;
 
 	/* Default WEP key, valid only for static WEP, must between 0 and 3. */
 	u8 defWEPIdx;
@@ -674,8 +663,8 @@ struct set_sta_key_params {
 
 /* 4-byte control message header used by HAL*/
 struct hal_msg_header {
-	tHalHostMsgType msgType:16;
-	tHalHostMsgVersion msgVersion:16;
+	enum hal_host_msg_type msgType:16;
+	enum hal_host_msg_version msgVersion:16;
 	u32 msgLen;
 };
 
@@ -701,7 +690,7 @@ struct hal_cfg {
 
 struct hal_mac_start_parameters {
 	/* Drive Type - Production or FTM etc */
-	tDriverType driverType;
+	enum driver_type driverType;
 
 	/*Length of the config buffer */
 	u32 uConfigBufferLen;
@@ -749,7 +738,7 @@ struct hal_mac_start_rsp_msg {
 
 struct hal_mac_stop_req_params {
 	/*The reason for which the device is being stopped */
-	tHalStopType reason;
+	enum hal_stop_type reason;
 
 };
 
@@ -846,17 +835,17 @@ typedef struct sSirMacMgmtHdr {
 } tSirMacMgmtHdr, *tpSirMacMgmtHdr;
 
 /* Scan Entry to hold active BSS idx's */
-typedef struct sSirScanEntry {
+struct sir_scan_entry {
 	u8 bssIdx[HAL_NUM_BSSID];
 	u8 activeBSScnt;
-} tSirScanEntry, *ptSirScanEntry;
+};
 
 struct hal_init_scan_req_msg {
 	struct hal_msg_header header;
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
-	eHalSysMode scanMode;
+	enum hal_sys_mode scanMode;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
@@ -879,7 +868,7 @@ struct hal_init_scan_req_msg {
 	tSirMacMgmtHdr macMgmtHdr;
 
 	/* Entry to hold number of active BSS idx's */
-	tSirScanEntry scanEntry;
+	struct sir_scan_entry scanEntry;
 };
 
 struct hal_init_scan_con_req_msg {
@@ -887,7 +876,7 @@ struct hal_init_scan_con_req_msg {
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
-	eHalSysMode scanMode;
+	enum hal_sys_mode scanMode;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
@@ -910,7 +899,7 @@ struct hal_init_scan_con_req_msg {
 	tSirMacMgmtHdr macMgmtHdr;
 
 	/* Entry to hold number of active BSS idx's */
-	tSirScanEntry scanEntry;
+	struct sir_scan_entry scanEntry;
 
 	/* Single NoA usage in Scanning */
 	u8 useNoA;
@@ -967,7 +956,7 @@ struct hal_finish_scan_req_msg {
 
 	/* Identifies the operational state of the AP/STA
 	 * LEARN - AP Role SCAN - STA Role */
-	eHalSysMode scanMode;
+	enum hal_sys_mode scanMode;
 
 	/* Operating channel to tune to. */
 	u8 currentOperChannel;
@@ -975,7 +964,7 @@ struct hal_finish_scan_req_msg {
 	/* Channel Bonding state If 20/40 MHz is operational, this will
 	 * indicate the 40 MHz extension channel in combination with the
 	 * control channel */
-	ePhyChanBondState cbState;
+	enum phy_chan_bond_state cbState;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
@@ -998,7 +987,7 @@ struct hal_finish_scan_req_msg {
 	tSirMacMgmtHdr macMgmtHdr;
 
 	/* Entry to hold number of active BSS idx's */
-	tSirScanEntry scanEntry;
+	struct sir_scan_entry scanEntry;
 
 };
 
@@ -1030,7 +1019,7 @@ struct sir_supported_rates {
 	 *    with this mode updated.
 	 */
 
-	tStaRateMode opRateMode;
+	enum sta_rate_mode opRateMode;
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
@@ -1138,7 +1127,7 @@ struct config_sta_params {
 	u8 greenFieldCapable;
 
 	/* MIMO Power Save mode */
-	tSirMacHTMIMOPowerSaveState mimoPS;
+	enum sir_ht_mimo_state mimoPS;
 
 	/* Delayed BA Support */
 	u8 delayedBASupport;
@@ -1192,7 +1181,7 @@ struct sir_supported_rates_v1 {
          *     with this mode updated.
 	 */
 
-	tStaRateMode opRateMode;
+	enum sta_rate_mode opRateMode;
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
@@ -1316,7 +1305,7 @@ struct config_sta_params_v1 {
 	u8 greenFieldCapable;
 
 	/* MIMO Power Save mode */
-	tSirMacHTMIMOPowerSaveState mimoPS;
+	enum sir_ht_mimo_state mimoPS;
 
 	/* Delayed BA Support */
 	u8 delayedBASupport;
@@ -1422,13 +1411,13 @@ struct delete_sta_rsp_msg {
 
 /* 12 Bytes long because this structure can be used to represent rate and
  * extended rate set IEs. The parser assume this to be at least 12 */
-typedef struct sSirMacRateSet {
+struct sir_rate_set {
 	u8 numRates;
 	u8 rate[SIR_MAC_RATESET_EID_MAX];
-} tSirMacRateSet;
+};
 
 /* access category record */
-typedef struct sSirMacAciAifsn {
+struct sir_aci_aifsn {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u8 rsvd:1;
 	u8 aci:2;
@@ -1440,7 +1429,7 @@ typedef struct sSirMacAciAifsn {
 	u8 aci:2;
 	u8 rsvd:1;
 #endif
-} tSirMacAciAifsn;
+};
 
 /* contention window size */
 typedef struct sSirMacCW {
@@ -1453,20 +1442,20 @@ typedef struct sSirMacCW {
 #endif
 } tSirMacCW;
 
-typedef struct sSirMacEdcaParamRecord {
-	tSirMacAciAifsn aci;
+struct sir_edca_param_record {
+	struct sir_aci_aifsn aci;
 	tSirMacCW cw;
 	u16 txoplimit;
-} tSirMacEdcaParamRecord;
+};
 
-typedef struct sSirMacSSid {
+struct sir_mac_ssid {
 	u8 length;
 	u8 ssId[32];
-} tSirMacSSid;
+};
 
 /* Concurrency role. These are generic IDs that identify the various roles
  *  in the software system. */
-typedef enum {
+enum hal_con_mode {
 	HAL_STA_MODE = 0,
 
 	/* to support softAp mode . This is misleading. It means AP MODE only. */
@@ -1475,14 +1464,14 @@ typedef enum {
 	HAL_P2P_CLIENT_MODE,
 	HAL_P2P_GO_MODE,
 	HAL_MONITOR_MODE,
-} tHalConMode;
+};
 
 /* This is a bit pattern to be set for each mode
  * bit 0 - sta mode
  * bit 1 - ap mode
  * bit 2 - p2p client mode
  * bit 3 - p2p go mode */
-typedef enum {
+enum hal_concurrency_mode {
 	HAL_STA = 1,
 	HAL_SAP = 2,
 
@@ -1492,7 +1481,7 @@ typedef enum {
 	HAL_P2P_CLIENT = 4,
 	HAL_P2P_GO = 8,
 	HAL_MAX_CONCURRENCY_PERSONA = 4
-} tHalConcurrencyMode;
+};
 
 struct config_bss_params {
 	/* BSSID */
@@ -1502,13 +1491,13 @@ struct config_bss_params {
 	u8 selfMacAddr[ETH_ALEN];
 
 	/* BSS type */
-	tSirBssType bssType;
+	enum sir_bss_type bssType;
 
 	/* Operational Mode: AP =0, STA = 1 */
 	u8 operMode;
 
 	/* Network Type */
-	tSirNwType nwType;
+	enum sir_nw_type nwType;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
 	u8 shortSlotTimeSupported;
@@ -1535,7 +1524,7 @@ struct config_bss_params {
 	u8 fRIFSMode;
 
 	/* Beacon Interval in TU */
-	tSirMacBeaconInterval beaconInterval;
+	u16 beaconInterval;
 
 	/* DTIM period */
 	u8 dtimPeriod;
@@ -1553,7 +1542,7 @@ struct config_bss_params {
 	u8 reserved;
 
 	/* SSID of the BSS */
-	tSirMacSSid ssId;
+	struct sir_mac_ssid ssId;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1562,7 +1551,7 @@ struct config_bss_params {
 	u8 action;
 
 	/* MAC Rate Set */
-	tSirMacRateSet rateSet;
+	struct sir_rate_set rateSet;
 
 	/* Enable/Disable HT capabilities of the BSS */
 	u8 htCapable;
@@ -1574,7 +1563,7 @@ struct config_bss_params {
 	u8 rmfEnabled;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	tSirMacHTOperatingMode htOperMode;
+	enum sir_ht_operating_mode htOperMode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
 	u8 dualCTSProtection;
@@ -1595,16 +1584,16 @@ struct config_bss_params {
 	u8 edcaParamsValid;
 
 	/* EDCA Parameters for Best Effort Access Category */
-	tSirMacEdcaParamRecord acbe;
+	struct sir_edca_param_record acbe;
 
 	/* EDCA Parameters forBackground Access Category */
-	tSirMacEdcaParamRecord acbk;
+	struct sir_edca_param_record acbk;
 
 	/* EDCA Parameters for Video Access Category */
-	tSirMacEdcaParamRecord acvi;
+	struct sir_edca_param_record acvi;
 
 	/* EDCA Parameters for Voice Access Category */
-	tSirMacEdcaParamRecord acvo;
+	struct sir_edca_param_record acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
@@ -1614,7 +1603,7 @@ struct config_bss_params {
 	tSetStaKeyParams extSetStaKeyParam;
 #endif
 
-	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as tHalConMode */
+	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum hal_con_mode */
 	u8 halPersona;
 
 	u8 bSpectrumMgtEnable;
@@ -1641,13 +1630,13 @@ struct config_bss_params_v1 {
 	u8 selfMacAddr[ETH_ALEN];
 
 	/* BSS type */
-	tSirBssType bssType;
+	enum sir_bss_type bssType;
 
 	/* Operational Mode: AP =0, STA = 1 */
 	u8 operMode;
 
 	/* Network Type */
-	tSirNwType nwType;
+	enum sir_nw_type nwType;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
 	u8 shortSlotTimeSupported;
@@ -1674,7 +1663,7 @@ struct config_bss_params_v1 {
 	u8 fRIFSMode;
 
 	/* Beacon Interval in TU */
-	tSirMacBeaconInterval beaconInterval;
+	u16 beaconInterval;
 
 	/* DTIM period */
 	u8 dtimPeriod;
@@ -1692,7 +1681,7 @@ struct config_bss_params_v1 {
 	u8 reserved;
 
 	/* SSID of the BSS */
-	tSirMacSSid ssId;
+	struct sir_mac_ssid ssId;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1701,7 +1690,7 @@ struct config_bss_params_v1 {
 	u8 action;
 
 	/* MAC Rate Set */
-	tSirMacRateSet rateSet;
+	struct sir_rate_set rateSet;
 
 	/* Enable/Disable HT capabilities of the BSS */
 	u8 htCapable;
@@ -1713,7 +1702,7 @@ struct config_bss_params_v1 {
 	u8 rmfEnabled;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	tSirMacHTOperatingMode htOperMode;
+	enum sir_ht_operating_mode htOperMode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
 	u8 dualCTSProtection;
@@ -1734,16 +1723,16 @@ struct config_bss_params_v1 {
 	u8 edcaParamsValid;
 
 	/* EDCA Parameters for Best Effort Access Category */
-	tSirMacEdcaParamRecord acbe;
+	struct sir_edca_param_record acbe;
 
 	/* EDCA Parameters forBackground Access Category */
-	tSirMacEdcaParamRecord acbk;
+	struct sir_edca_param_record acbk;
 
 	/* EDCA Parameters for Video Access Category */
-	tSirMacEdcaParamRecord acvi;
+	struct sir_edca_param_record acvi;
 
 	/* EDCA Parameters for Voice Access Category */
-	tSirMacEdcaParamRecord acvo;
+	struct sir_edca_param_record acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
@@ -1753,7 +1742,7 @@ struct config_bss_params_v1 {
 	tSetStaKeyParams extSetStaKeyParam;
 #endif
 
-	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as tHalConMode */
+	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum hal_con_mode */
 	u8 halPersona;
 
 	u8 bSpectrumMgtEnable;
@@ -1865,10 +1854,10 @@ struct hal_join_req_msg {
 	u8 ucLocalPowerConstraint;
 
 	/* Secondary channel offset */
-	ePhyChanBondState secondaryChannelOffset;
+	enum phy_chan_bond_state secondaryChannelOffset;
 
 	/* link State */
-	tSirLinkState linkState;
+	enum sir_link_state linkState;
 
 	/* Max TX power */
 	s8 maxTxPower;
@@ -1905,7 +1894,7 @@ struct set_bss_key_req_msg {
 	u8 bssIdx;
 
 	/* Encryption Type used with peer */
-	tAniEdType encType;
+	enum ani_ed_type encType;
 
 	/* Number of keys */
 	u8 numKeys;
@@ -1957,14 +1946,14 @@ struct remove_bss_key_req_msg {
 	u8 bssIdx;
 
 	/* Encryption Type used with peer */
-	tAniEdType encType;
+	enum ani_ed_type encType;
 
 	/* Key Id */
 	u8 keyId;
 
 	/* STATIC/DYNAMIC. Used in Nullifying in Key Descriptors for
 	 * Static/Dynamic keys */
-	tAniWepType wepType;
+	enum ani_wep_type wepType;
 
 };
 
@@ -1986,7 +1975,7 @@ struct remove_sta_key_req_msg {
 	u16 staIdx;
 
 	/* Encryption Type used with peer */
-	tAniEdType encType;
+	enum ani_ed_type encType;
 
 	/* Key Id */
 	u8 keyId;
@@ -2042,7 +2031,7 @@ struct switch_channel_req_msg {
 	u8 localPowerConstraint;
 
 	/* Secondary channel offset */
-	ePhyChanBondState secondaryChannelOffset;
+	enum phy_chan_bond_state secondaryChannelOffset;
 
 	/* HAL fills in the tx power used for mgmt frames in this field. */
 	u8 txMgmtPower;
@@ -2089,16 +2078,16 @@ struct update_edca_params_req_msg {
 	u16 bssIdx;
 
 	/* Best Effort */
-	tSirMacEdcaParamRecord acbe;
+	struct sir_edca_param_record acbe;
 
 	/* Background */
-	tSirMacEdcaParamRecord acbk;
+	struct sir_edca_param_record acbk;
 
 	/* Video */
-	tSirMacEdcaParamRecord acvi;
+	struct sir_edca_param_record acvi;
 
 	/* Voice */
-	tSirMacEdcaParamRecord acvo;
+	struct sir_edca_param_record acvo;
 };
 
 struct update_edca_params_rsp_msg {
@@ -2196,7 +2185,7 @@ struct ani_summary_stats_info {
 };
 
 /* defines tx_rate_flags */
-typedef enum eTxRateInfo {
+enum tx_rate_info {
 	/* Legacy rates */
 	eHAL_TX_RATE_LEGACY = 0x1,
 
@@ -2211,7 +2200,7 @@ typedef enum eTxRateInfo {
 
 	/* Rate with Long guard interval */
 	eHAL_TX_RATE_LGI = 0x10
-} tTxrateinfoflags;
+};
 
 struct ani_global_class_a_stats_info {
 	/* The number of MPDU frames received by the 802.11 station for
@@ -2364,7 +2353,7 @@ struct set_link_state_req_msg {
 	struct hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
-	tSirLinkState state;
+	enum sir_link_state state;
 	u8 selfMacAddr[ETH_ALEN];
 
 };
@@ -2378,7 +2367,7 @@ struct set_link_state_rsp_msg {
 };
 
 /* TSPEC Params */
-typedef struct sSirMacTSInfoTfc {
+struct sir_ts_info_tfc {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u16 ackPolicy:2;
 	u16 userPrio:3;
@@ -2398,10 +2387,10 @@ typedef struct sSirMacTSInfoTfc {
 	u16 userPrio:3;
 	u16 ackPolicy:2;
 #endif
-} tSirMacTSInfoTfc;
+};
 
 /* Flag to schedule the traffic type */
-typedef struct sSirMacTSInfoSch {
+struct sir_ts_info_sch {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u8 rsvd:7;
 	u8 schedule:1;
@@ -2409,19 +2398,19 @@ typedef struct sSirMacTSInfoSch {
 	u8 schedule:1;
 	u8 rsvd:7;
 #endif
-} tSirMacTSInfoSch;
+};
 
 /* Traffic and scheduling info */
-typedef struct sSirMacTSInfo {
-	tSirMacTSInfoTfc traffic;
-	tSirMacTSInfoSch schedule;
-} tSirMacTSInfo;
+struct sir_ts_info {
+	struct sir_ts_info_tfc traffic;
+	struct sir_ts_info_sch schedule;
+};
 
 /* Information elements */
-typedef struct sSirMacTspecIE {
+struct sir_tspec_ie {
 	u8 type;
 	u8 length;
-	tSirMacTSInfo tsinfo;
+	struct sir_ts_info tsinfo;
 	u16 nomMsduSz;
 	u16 maxMsduSz;
 	u32 minSvcInterval;
@@ -2437,7 +2426,7 @@ typedef struct sSirMacTspecIE {
 	u32 minPhyRate;
 	u16 surplusBw;
 	u16 mediumTime;
-} tSirMacTspecIE;
+};
 
 struct add_ts_req_msg {
 	struct hal_msg_header header;
@@ -2449,7 +2438,7 @@ struct add_ts_req_msg {
 	u16 tspecIdx;
 
 	/* To program TPE with required parameters */
-	tSirMacTspecIE tspec;
+	struct sir_tspec_ie tspec;
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
@@ -2595,21 +2584,21 @@ struct add_ba_rsp_msg {
 	u8 baDialogToken;
 };
 
-typedef struct sAddBaInfo {
+struct add_ba_info {
 	u16 fBaEnable:1;
 	u16 startingSeqNum:12;
 	u16 reserved:3;
-} tAddBaInfo, *tpAddBaInfo;
+};
 
-typedef struct sTriggerBaRspCandidate {
+struct trigger_ba_rsp_candidate {
 	u8 staAddr[ETH_ALEN];
-	tAddBaInfo baInfo[STACFG_MAX_TC];
-} tTriggerBaRspCandidate, *tpTriggerBaRspCandidate;
+	struct add_ba_info baInfo[STACFG_MAX_TC];
+};
 
-typedef struct sTriggerBaCandidate {
+struct trigget_ba_req_candidate {
 	u8 staIdx;
 	u8 tidBitmap;
-} tTriggerBaReqCandidate, *tptTriggerBaReqCandidate;
+};
 
 struct trigger_ba_req_msg {
 	struct hal_msg_header header;
@@ -2971,7 +2960,7 @@ struct indicate_del_sta {
 struct bt_amp_event_msg {
 	struct hal_msg_header header;
 
-	tBtAmpEventType btAmpEventType;
+	enum bt_amp_event_type btAmpEventType;
 
 };
 
@@ -3659,7 +3648,7 @@ struct aggr_add_ts_req {
 	u16 tspecIdx;
 
 	/* Tspec info per AC To program TPE with required parameters */
-	tSirMacTspecIE tspec[WCN36XX_HAL_MAX_AC];
+	struct sir_tspec_ie tspec[WCN36XX_HAL_MAX_AC];
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
@@ -3860,15 +3849,15 @@ struct hal_del_ba_ind_msg {
  *
  * Resume - scanning will start on system resume
  */
-typedef enum {
+enum pno_mode {
 	ePNO_MODE_IMMEDIATE,
 	ePNO_MODE_ON_SUSPEND,
 	ePNO_MODE_ON_RESUME,
 	ePNO_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} ePNOMode;
+};
 
 /* Authentication type */
-typedef enum {
+enum auth_type {
 	eAUTH_TYPE_ANY = 0,
 	eAUTH_TYPE_OPEN_SYSTEM = 1,
 
@@ -3884,10 +3873,10 @@ typedef enum {
 	eAUTH_TYPE_WAPI_WAI_PSK = 9,
 
 	eAUTH_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tAuthType;
+};
 
 /* Encryption type */
-typedef enum eEdType {
+enum ed_type {
 	eED_ANY = 0,
 	eED_NONE = 1,
 	eED_WEP = 2,
@@ -3896,27 +3885,27 @@ typedef enum eEdType {
 	eED_WPI = 5,
 
 	eED_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tEdType;
+};
 
 /* SSID broadcast  type */
-typedef enum eSSIDBcastType {
+enum ssid_bcast_type {
 	eBCAST_UNKNOWN = 0,
 	eBCAST_NORMAL = 1,
 	eBCAST_HIDDEN = 2,
 
 	eBCAST_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
-} tSSIDBcastType;
+};
 
 /* The network description for which PNO will have to look for */
 struct network_type {
 	/* SSID of the BSS */
-	tSirMacSSid ssId;
+	struct sir_mac_ssid ssId;
 
 	/* Authentication type for the network */
-	tAuthType authentication;
+	enum auth_type authentication;
 
 	/* Encryption type for the network */
-	tEdType encryption;
+	enum ed_type encryption;
 
 	/* Indicate the channel on which the Network can be found 0 - if
 	 * all channels */
@@ -3964,7 +3953,7 @@ struct set_pref_netw_list_req {
 	u32 enable;
 
 	/* Immediate,  On Suspend,   On Resume */
-	ePNOMode modePNO;
+	enum pno_mode modePNO;
 
 	/* Number of networks sent for PNO */
 	u32 ucNetworksCount;
@@ -3987,16 +3976,16 @@ struct set_pref_netw_list_req {
 /* The network description for which PNO will have to look for */
 struct network_type_new {
 	/* SSID of the BSS */
-	tSirMacSSid ssId;
+	struct sir_mac_ssid ssId;
 
 	/* Authentication type for the network */
-	tAuthType authentication;
+	enum auth_type authentication;
 
 	/* Encryption type for the network */
-	tEdType encryption;
+	enum ed_type encryption;
 
 	/* SSID broadcast type, normal, hidden or unknown */
-	tSSIDBcastType bcastNetworkType;
+	enum ssid_bcast_type bcastNetworkType;
 
 	/* Indicate the channel on which the Network can be found 0 - if
 	 * all channels */
@@ -4015,7 +4004,7 @@ struct set_pref_netw_list_req_new {
 	u32 enable;
 
 	/* Immediate,  On Suspend,   On Resume */
-	ePNOMode modePNO;
+	enum pno_mode modePNO;
 
 	/* Number of networks sent for PNO */
 	u32 ucNetworksCount;
@@ -4051,7 +4040,7 @@ struct pref_netw_found_ind {
 	struct hal_msg_header header;
 
 	/* Network that was found with the highest RSSI */
-	tSirMacSSid ssId;
+	struct sir_mac_ssid ssId;
 
 	/* Indicates the RSSI */
 	u8 rssi;
@@ -4103,7 +4092,7 @@ struct update_scan_params_req {
 	u16 usPassiveMaxChTime;
 
 	/* Cb State */
-	ePhyChanBondState cbState;
+	enum phy_chan_bond_state cbState;
 };
 
 /* Update scan params - sent from host to PNO to be used during PNO
@@ -4135,7 +4124,7 @@ struct update_scan_params_req_ex {
 	u16 usPassiveMaxChTime;
 
 	/* Cb State */
-	ePhyChanBondState cbState;
+	enum phy_chan_bond_state cbState;
 
 };
 
@@ -4186,14 +4175,14 @@ struct tx_per_hit_ind_msg {
 #define    HAL_MAX_NUM_FILTERS                   20
 #define    HAL_MAX_CMP_PER_FILTER                10
 
-typedef enum {
+enum hal_receive_packet_filter_type {
 	HAL_RCV_FILTER_TYPE_INVALID,
 	HAL_RCV_FILTER_TYPE_FILTER_PKT,
 	HAL_RCV_FILTER_TYPE_BUFFER_PKT,
 	HAL_RCV_FILTER_TYPE_MAX_ENUM_SIZE
-} tHalReceivePacketFilterType;
+};
 
-typedef enum {
+enum hal_rcv_pkt_flt_protocol_type {
 	HAL_FILTER_PROTO_TYPE_INVALID,
 	HAL_FILTER_PROTO_TYPE_MAC,
 	HAL_FILTER_PROTO_TYPE_ARP,
@@ -4201,15 +4190,15 @@ typedef enum {
 	HAL_FILTER_PROTO_TYPE_IPV6,
 	HAL_FILTER_PROTO_TYPE_UDP,
 	HAL_FILTER_PROTO_TYPE_MAX
-} tHalRcvPktFltProtocolType;
+};
 
-typedef enum {
+enum hal_rcv_pkt_flt_cmp_flag_type {
 	HAL_FILTER_CMP_TYPE_INVALID,
 	HAL_FILTER_CMP_TYPE_EQUAL,
 	HAL_FILTER_CMP_TYPE_MASK_EQUAL,
 	HAL_FILTER_CMP_TYPE_NOT_EQUAL,
 	HAL_FILTER_CMP_TYPE_MAX
-} tHalRcvPktFltCmpFlagType;
+};
 
 struct hal_rcv_pkt_filter_params {
 	u8 protocolLayer;
@@ -4355,7 +4344,7 @@ struct set_power_params_resp {
 
 /* Capability bitmap exchange definitions and macros starts */
 
-typedef enum {
+enum place_holder_in_cap_bitmap {
 	MCC = 0,
 	P2P = 1,
 	DOT11AC = 2,
@@ -4380,7 +4369,7 @@ typedef enum {
 	RATECTRL = 21,
 	WOW = 22,
 	MAX_FEATURE_SUPPORTED = 128,
-} placeHolderInCapBitmap;
+};
 
 struct wlan_feat_caps_msg {
 
@@ -4420,7 +4409,7 @@ u8 halMsg_GetHostWlanFeatCaps(u8 feat_enum_value);
                            }
 
 /* status codes to help debug rekey failures */
-typedef enum {
+enum gtk_rekey_status {
 	WCN36XX_HAL_GTK_REKEY_STATUS_SUCCESS = 0,
 
 	/* rekey detected, but not handled */
@@ -4452,10 +4441,10 @@ typedef enum {
 
 	/* non-specific general error */
 	WCN36XX_HAL_GTK_REKEY_STATUS_GEN_ERROR = 255
-} tGTKRekeyStatus;
+};
 
 /* wake reason types */
-typedef enum {
+enum wake_reason_type {
 	WCN36XX_HAL_WAKE_REASON_NONE = 0,
 
 	/* magic packet match */
@@ -4478,7 +4467,7 @@ typedef enum {
 
 	/* BSS connection lost */
 	WCN36XX_HAL_WAKE_REASON_BSS_CONN_LOST = 7,
-} tWakeReasonType;
+};
 
 /*
   Wake Packet which is saved at tWakeReasonParams.DataStart
@@ -4607,13 +4596,13 @@ struct dhcp_ind_status {
  *  reducing transmit power
  *
  *  HAL_THERMAL_MITIGATION_MODE_2 - Not supported */
-typedef enum {
+enum hal_thermal_mitigation_mode_type {
 	HAL_THERMAL_MITIGATION_MODE_INVALID = -1,
 	HAL_THERMAL_MITIGATION_MODE_0,
 	HAL_THERMAL_MITIGATION_MODE_1,
 	HAL_THERMAL_MITIGATION_MODE_2,
 	HAL_THERMAL_MITIGATION_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE,
-} tHalThermalMitigationModeType;
+};
 
 
 /*
@@ -4632,7 +4621,7 @@ typedef enum {
  *
  * HAL_THERMAL_MITIGATION_LEVEL_4 - 4th level of thermal mitigation
  */
-typedef enum {
+enum hal_thermal_mitigation_level_type {
 	HAL_THERMAL_MITIGATION_LEVEL_INVALID = -1,
 	HAL_THERMAL_MITIGATION_LEVEL_0,
 	HAL_THERMAL_MITIGATION_LEVEL_1,
@@ -4640,7 +4629,7 @@ typedef enum {
 	HAL_THERMAL_MITIGATION_LEVEL_3,
 	HAL_THERMAL_MITIGATION_LEVEL_4,
 	HAL_THERMAL_MITIGATION_LEVEL_MAX = WCN36XX_HAL_MAX_ENUM_SIZE,
-} tHalThermalMitigationLevelType;
+};
 
 
 /* WCN36XX_HAL_SET_THERMAL_MITIGATION_REQ */
@@ -4648,10 +4637,10 @@ struct set_thermal_mitigation_req_msg {
 	struct hal_msg_header header;
 
 	/* Thermal Mitigation Operation Mode */
-	tHalThermalMitigationModeType thermalMitMode;
+	enum hal_thermal_mitigation_mode_type thermalMitMode;
 
 	/* Thermal Mitigation Level */
-	tHalThermalMitigationLevelType thermalMitLevel;
+	enum hal_thermal_mitigation_level_type thermalMitLevel;
 
 };
 
