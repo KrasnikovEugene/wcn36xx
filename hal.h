@@ -53,7 +53,6 @@
 /* The maximum value of access category */
 #define WCN36XX_HAL_MAX_AC  4
 
-typedef u8 tSirMacAddr[6];
 typedef u8 tHalIpv4Addr[4];
 
 #define HAL_MAC_ADDR_LEN        6
@@ -860,7 +859,7 @@ struct hal_init_scan_req_msg {
 	eHalSysMode scanMode;
 
 	/* BSSID of the BSS */
-	tSirMacAddr bssid;
+	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
 	u8 notifyBss;
@@ -891,7 +890,7 @@ struct hal_init_scan_con_req_msg {
 	eHalSysMode scanMode;
 
 	/* BSSID of the BSS */
-	tSirMacAddr bssid;
+	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
 	u8 notifyBss;
@@ -979,7 +978,7 @@ struct hal_finish_scan_req_msg {
 	ePhyChanBondState cbState;
 
 	/* BSSID of the BSS */
-	tSirMacAddr bssid;
+	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
 	u8 notifyBss;
@@ -1065,7 +1064,7 @@ struct sir_supported_rates {
 
 struct config_sta_params {
 	/* BSSID of STA */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* ASSOC ID, as assigned by UMAC */
 	u16 assocId;
@@ -1077,7 +1076,7 @@ struct config_sta_params {
 	u8 shortPreambleSupported;
 
 	/* MAC Address of STA */
-	tSirMacAddr staMac;
+	u8 staMac[ETH_ALEN];
 
 	/* Listen interval of the STA */
 	u16 listenInterval;
@@ -1243,7 +1242,7 @@ struct sir_supported_rates_v1 {
 
 struct config_sta_params_v1 {
 	/* BSSID of STA */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* ASSOC ID, as assigned by UMAC */
 	u16 assocId;
@@ -1255,7 +1254,7 @@ struct config_sta_params_v1 {
 	u8 shortPreambleSupported;
 
 	/* MAC Address of STA */
-	tSirMacAddr staMac;
+	u8 staMac[ETH_ALEN];
 
 	/* Listen interval of the STA */
 	u16 listenInterval;
@@ -1497,10 +1496,10 @@ typedef enum {
 
 struct config_bss_params {
 	/* BSSID */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* Self Mac Address */
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 
 	/* BSS type */
 	tSirBssType bssType;
@@ -1636,10 +1635,10 @@ struct config_bss_params {
 
 struct config_bss_params_v1 {
 	/* BSSID */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* Self Mac Address */
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 
 	/* BSS type */
 	tSirBssType bssType;
@@ -1819,7 +1818,7 @@ struct config_bss_rsp_params {
 	u8 bssBcastStaIdx;
 
 	/* MAC Address of STA(PEER/SELF) in staContext of configBSSReq */
-	tSirMacAddr staMac;
+	u8 staMac[ETH_ALEN];
 
 	/* HAL fills in the tx power used for mgmt frames in this field. */
 	s8 txMgmtPower;
@@ -1854,13 +1853,13 @@ struct hal_join_req_msg {
 	struct hal_msg_header header;
 
 	/* Indicates the BSSID to which STA is going to associate */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* Indicates the channel to switch to. */
 	u8 ucChannel;
 
 	/* Self STA MAC */
-	tSirMacAddr selfStaMacAddr;
+	u8 selfStaMacAddr[ETH_ALEN];
 
 	/* Local power constraint */
 	u8 ucLocalPowerConstraint;
@@ -2052,7 +2051,7 @@ struct switch_channel_req_msg {
 	u8 maxTxPower;
 
 	/* Self STA MAC */
-	tSirMacAddr selfStaMacAddr;
+	u8 selfStaMacAddr[ETH_ALEN];
 
 	/* VO WIFI comment: BSSID needed to identify session. As the
 	 * request has power constraints, this should be applied only to
@@ -2063,7 +2062,7 @@ struct switch_channel_req_msg {
 	 * ignoring if using new host/old FW or old host/new FW since it is
 	 * at the end of this struct
 	 */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 };
 
 struct switch_channel_rsp_msg {
@@ -2079,7 +2078,7 @@ struct switch_channel_rsp_msg {
 	u8 txMgmtPower;
 
 	/* BSSID needed to identify session - same as in request */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 };
 
@@ -2364,9 +2363,9 @@ struct hal_stats_rsp_msg {
 struct set_link_state_req_msg {
 	struct hal_msg_header header;
 
-	tSirMacAddr bssid;
+	u8 bssid[ETH_ALEN];
 	tSirLinkState state;
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 
 };
 
@@ -2487,7 +2486,7 @@ struct del_ts_req_msg {
 	u16 tspecIdx;
 
 	/* To lookup station id using the mac address */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 };
 
 struct del_ts_rsp_msg {
@@ -2509,7 +2508,7 @@ struct add_ba_session_req_msg {
 	u16 staIdx;
 
 	/* Peer MAC Address */
-	tSirMacAddr peerMacAddr;
+	u8 peerMacAddr[ETH_ALEN];
 
 	/* ADDBA Action Frame dialog token
 	   HAL will not interpret this object */
@@ -2603,7 +2602,7 @@ typedef struct sAddBaInfo {
 } tAddBaInfo, *tpAddBaInfo;
 
 typedef struct sTriggerBaRspCandidate {
-	tSirMacAddr staAddr;
+	u8 staAddr[ETH_ALEN];
 	tAddBaInfo baInfo[STACFG_MAX_TC];
 } tTriggerBaRspCandidate, *tpTriggerBaRspCandidate;
 
@@ -2629,7 +2628,7 @@ struct trigger_ba_rsp_msg {
 	struct hal_msg_header header;
 
 	/* TO SUPPORT BT-AMP */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* success or failure */
 	u32 status;
@@ -2670,7 +2669,7 @@ struct tsm_stats_req_msg {
 	/* Traffic Id */
 	u8 tsmTID;
 
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 };
 
 struct tsm_stats_rsp_msg {
@@ -2775,15 +2774,15 @@ struct hal_nv_store_ind {
 struct mic_failure_ind_msg {
 	struct hal_msg_header header;
 
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* address used to compute MIC */
-	tSirMacAddr srcMacAddr;
+	u8 srcMacAddr[ETH_ALEN];
 
 	/* transmitter address */
-	tSirMacAddr taMacAddr;
+	u8 taMacAddr[ETH_ALEN];
 
-	tSirMacAddr dstMacAddr;
+	u8 dstMacAddr[ETH_ALEN];
 
 	u8 multicast;
 
@@ -2797,7 +2796,7 @@ struct mic_failure_ind_msg {
 	u8 TSC[SIR_CIPHER_SEQ_CTR_SIZE];
 
 	/* receive address */
-	tSirMacAddr rxMacAddr;
+	u8 rxMacAddr[ETH_ALEN];
 };
 
 struct update_vht_op_mode_req_msg {
@@ -2855,7 +2854,7 @@ struct send_beacon_req_msg {
 	/* Beacon data. */
 	u8 beacon[BEACON_TEMPLATE_SIZE];
 
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* TIM IE offset from the beginning of the template. */
 	u32 timIeOffset;
@@ -2872,7 +2871,7 @@ struct send_beacon_rsp_msg {
 struct enable_radar_req_msg {
 	struct hal_msg_header header;
 
-	tSirMacAddr BSSID;
+	u8 BSSID[ETH_ALEN];
 	u8 channel;
 };
 
@@ -2880,7 +2879,7 @@ struct enable_radar_rsp_msg {
 	struct hal_msg_header header;
 
 	/* Link Parameters */
-	tSirMacAddr BSSID;
+	u8 BSSID[ETH_ALEN];
 
 	/* success or failure */
 	u32 status;
@@ -2909,7 +2908,7 @@ struct radar_detect_ind_msg {
 struct sir_get_tpc_report_req_msg {
 	struct hal_msg_header header;
 
-	tSirMacAddr sta;
+	u8 sta[ETH_ALEN];
 	u8 dialogToken;
 	u8 txpower;
 };
@@ -2927,7 +2926,7 @@ struct send_probe_resp_req_msg {
 	u8 pProbeRespTemplate[BEACON_TEMPLATE_SIZE];
 	u32 probeRespTemplateLen;
 	u32 ucProxyProbeReqValidIEBmap[8];
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 };
 
 struct send_probe_resp_rsp_msg {
@@ -2951,10 +2950,10 @@ struct delete_sta_context_ind_msg {
 	u16 staId;
 
 	/* TO SUPPORT BT-AMP */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 	/* HAL copies bssid from the sta table. */
-	tSirMacAddr addr2;
+	u8 addr2[ETH_ALEN];
 
 	/* To unify the keepalive / unknown A2 / tim-based disa */
 	u16 reasonCode;	
@@ -3143,7 +3142,7 @@ struct hal_keep_alive_req_msg {
 	u32 timePeriod;
 	tHalIpv4Addr hostIpv4Addr;
 	tHalIpv4Addr destIpv4Addr;
-	tSirMacAddr destMacAddr;
+	u8 destMacAddr[ETH_ALEN];
 	u8 bssIdx;
 };
 
@@ -3233,7 +3232,7 @@ struct hal_wowl_enter_req_msg {
 	u8 ucMagicPktEnable;
 
 	/* Magic pattern */
-	tSirMacAddr magicPtrn;
+	u8 magicPtrn[ETH_ALEN];
 
 	/* Enables/disables packet pattern filtering in firmware. Enabling
 	 * this flag enables broadcast pattern matching in Firmware. If
@@ -3539,9 +3538,9 @@ struct set_max_tx_pwr_req {
 	/* BSSID is needed to identify which session issued this request.
 	 * As the request has power constraints, this should be applied
 	 * only to that session */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
-	tSirMacAddr selfStaMacAddr;
+	u8 selfStaMacAddr[ETH_ALEN];
 
 	/* In request, power == MaxTx power to be used. */
 	u8 power;
@@ -3611,7 +3610,7 @@ struct set_p2p_gonoa_rsp_msg {
 struct add_sta_self_req {
 	struct hal_msg_header header;
 
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 	u32 status;
 };
 
@@ -3634,7 +3633,7 @@ struct add_sta_self_rsp_msg {
 struct del_sta_self_req_msg {
 	struct hal_msg_header header;
 
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 
 };
 
@@ -3644,7 +3643,7 @@ struct del_sta_self_rsp_msg {
 	/*success or failure */
 	u32 status;
 
-	tSirMacAddr selfMacAddr;
+	u8 selfMacAddr[ETH_ALEN];
 
 };
 
@@ -3763,7 +3762,7 @@ struct hal_wlan_exclude_unencrpted_ind_msg {
 	struct hal_msg_header header;
 
 	u8 bDot11ExcludeUnencrypted;
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 };
 
 struct noa_attr_ind_msg {
@@ -3817,7 +3816,7 @@ struct hal_del_ba_ind_msg {
 	u16 staIdx;
 
 	/* Peer MAC Address, whose BA session has timed out */
-	tSirMacAddr peerMacAddr;
+	u8 peerMacAddr[ETH_ALEN];
 
 	/* TID for which a BA session timeout is being triggered */
 	u8 baTID;
@@ -3831,7 +3830,7 @@ struct hal_del_ba_ind_msg {
 	u32 reasonCode;
 
 	/* TO SUPPORT BT-AMP */
-	tSirMacAddr bssId;
+	u8 bssId[ETH_ALEN];
 
 };
 
@@ -4257,7 +4256,7 @@ struct hal_rcv_flt_mc_addr_list_type {
 	u8 dataOffset;
 
 	u32 cMulticastAddr;
-	tSirMacAddr multicastAddr[HAL_MAX_NUM_MULTICAST_ADDRESS];
+	u8 multicastAddr[ETH_ALEN][HAL_MAX_NUM_MULTICAST_ADDRESS];
 	u8 bssIdx;
 };
 
@@ -4589,7 +4588,7 @@ struct dhcp_info {
 	/* Indicates the device mode which indicates about the DHCP activity */
 	u8 device_mode;
 
-	tSirMacAddr macAddr;
+	u8 macAddr[ETH_ALEN];
 };
 
 struct dhcp_ind_status {
