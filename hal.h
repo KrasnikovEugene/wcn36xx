@@ -404,7 +404,6 @@ typedef enum {
 	/* 40MHz IF bandwidth with higher 20MHz supporting the primary channel */
 	PHY_DOUBLE_CHANNEL_HIGH_PRIMARY = 3,
 
-#ifdef WLAN_FEATURE_11AC
 	/* 20/40MHZ offset LOW 40/80MHZ offset CENTERED */
 	PHY_QUADRUPLE_CHANNEL_20MHZ_LOW_40MHZ_CENTERED = 4,
 
@@ -425,7 +424,6 @@ typedef enum {
 
 	/* 20/40MHZ offset-HIGH 40/80MHZ offset HIGH */
 	PHY_QUADRUPLE_CHANNEL_20MHZ_HIGH_40MHZ_HIGH = 10,
-#endif
 
 	PHY_CHANNEL_BONDING_STATE_MAX = WLAN_HAL_MAX_ENUM_SIZE
 } ePhyChanBondState;
@@ -456,9 +454,7 @@ typedef enum eStaRateMode {
 	eSTA_11bg,
 	eSTA_11a,
 	eSTA_11n,
-#ifdef WLAN_FEATURE_11AC
 	eSTA_11ac,
-#endif
 	eSTA_INVALID_RATE_MODE = WLAN_HAL_MAX_ENUM_SIZE
 } tStaRateMode, *tpStaRateMode;
 
@@ -576,9 +572,8 @@ typedef enum eSriLinkState {
 	eSIR_LINK_FINISH_SCAN_STATE = 11,
 	eSIR_LINK_INIT_CAL_STATE = 12,
 	eSIR_LINK_FINISH_CAL_STATE = 13,
-#ifdef WLAN_FEATURE_P2P
 	eSIR_LINK_LISTEN_STATE = 14,
-#endif
+
 	eSIR_LINK_MAX = WLAN_HAL_MAX_ENUM_SIZE
 } tSirLinkState;
 
@@ -615,13 +610,6 @@ typedef enum {
 } ePEStatsMask;
 
 /* Message definitons - All the messages below need to be packed */
-
-#if defined(__ANI_COMPILER_PRAGMA_PACK_STACK)
-#pragma pack(push, 1)
-#elif defined(__ANI_COMPILER_PRAGMA_PACK)
-#pragma pack(1)
-#else
-#endif
 
 /* Definition for HAL API Version. */
 struct wcnss_wlan_version {
@@ -2666,8 +2654,6 @@ struct del_ba_rsp_msg {
 
 };
 
-#ifdef FEATURE_WLAN_CCX
-
 struct tsm_stats_req_msg {
 	struct hal_msg_header header;
 
@@ -2705,8 +2691,6 @@ struct tsm_stats_rsp_msg {
 	u16 RoamingDly;
 
 };
-
-#endif
 
 struct set_key_done_msg {
 	struct hal_msg_header header;
@@ -2875,8 +2859,6 @@ struct send_beacon_rsp_msg {
 	u32 status;
 };
 
-#ifdef FEATURE_5GHZ_BAND
-
 struct enable_radar_req_msg {
 	struct hal_msg_header header;
 
@@ -2928,8 +2910,6 @@ struct sir_get_tpc_report_rsp_msg {
 	/* success or failure */
 	u32 status;
 };
-
-#endif
 
 struct send_probe_resp_req_msg {
 	struct hal_msg_header header;
@@ -3598,8 +3578,6 @@ struct get_tx_pwr_rsp_msg {
 	u32 txPower;
 };
 
-#ifdef WLAN_FEATURE_P2P
-
 struct set_p2p_gonoa_req_msg {
 	struct hal_msg_header header;
 
@@ -3619,8 +3597,6 @@ struct set_p2p_gonoa_rsp_msg {
 	u32 status;
 
 };
-
-#endif
 
 struct add_sta_self_req {
 	struct hal_msg_header header;
@@ -3662,9 +3638,9 @@ struct del_sta_self_rsp_msg {
 
 };
 
-#ifdef WLAN_FEATURE_VOWIFI_11R
+struct aggr_add_ts_req {
+	struct hal_msg_header header;
 
-struct {
 	/* Station Index */
 	u16 staIdx;
 
@@ -3691,27 +3667,17 @@ struct {
 
 	/* Delay Interval */
 	u32 delayInterval[WLAN_HAL_MAX_AC];
+};
 
-} tAggrAddTsParams, *tpAggrAddTsParams;
-
-struct {
+struct aggr_add_ts_rsp_msg {
 	struct hal_msg_header header;
-	tAggrAddTsParams aggrAddTsParam;
-} tAggrAddTsReq, *tpAggrAddTsReq;
 
-struct {
 	/* success or failure */
 	u32 status0;
+
 	/* FIXME PRIMA for future use for 11R */
 	u32 status1;
-} tAggrAddTsRspParams, *tpAggrAddTsRspParams;
-
-struct {
-	struct hal_msg_header header;
-	tAggrAddTsRspParams aggrAddTsRspParam;
-} tAggrAddTsRspMsg, *tpAggrAddTsRspMsg;
-
-#endif
+};
 
 struct hal_configure_apps_cpu_wakeup_state_req_msg {
 	struct hal_msg_header header;
@@ -3790,8 +3756,9 @@ struct hal_wlan_exclude_unencrpted_ind_msg {
 	tSirMacAddr bssId;
 };
 
-#ifdef WLAN_FEATURE_P2P
-struct {
+struct noa_attr_ind_msg {
+	struct hal_msg_header header;
+
 	u8 index;
 	u8 oppPsFlag;
 	u16 ctWin;
@@ -3809,23 +3776,15 @@ struct {
 	u32 uNoa2StartTime;
 
 	u32 status;
-} tNoaAttrIndParams, *tpNoaAttrIndParams;
+};
 
-struct {
+struct noa_start_ind_msg {
 	struct hal_msg_header header;
-	tNoaAttrIndParams noaAttrIndParams;
-} tNoaAttrIndMsg, *tpNoaAttrIndMsg;
 
-struct {
 	u32 status;
 	u32 bssIdx;
-} tNoaStartIndParams, *tpNoaStartIndParams;
 
-struct {
-	struct hal_msg_header header;
-	tNoaStartIndParams noaStartIndParams;
-} tNoaStartIndMsg, tpNoaStartIndMsg;
-#endif
+};
 
 struct hal_wlan_host_resume_req_msg {
 	struct hal_msg_header header;
@@ -4716,11 +4675,5 @@ struct stats_class_b_ind {
 	u32 rxTimeTotal;
 
 };
-
-#if defined(__ANI_COMPILER_PRAGMA_PACK_STACK)
-#pragma pack(pop)
-#elif defined(__ANI_COMPILER_PRAGMA_PACK)
-#else
-#endif
 
 #endif /* _HAL_H_ */
