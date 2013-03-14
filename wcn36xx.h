@@ -90,6 +90,7 @@ struct wcn36xx {
 	struct mac_address addresses[2];
 	u8 		ch;
 
+	bool            beacon_enable;
 	// IRQs
 	int 			tx_irq; 	// TX complete irq
 	int 			rx_irq; 	// RX ready irq

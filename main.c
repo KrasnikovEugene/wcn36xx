@@ -200,10 +200,22 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				       u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct sk_buff *skb = NULL;
+	u16 tim_off, tim_len;
+
 	ENTER();
 
 	if(changed & BSS_CHANGED_BSSID) {
 		wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
+	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
+		if(!wcn->beacon_enable) {
+			wcn->beacon_enable = true;
+			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
+			wcn36xx_smd_config_bss(wcn);
+			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+		}
+	} else {
+		wcn36xx_info("wcn36xx_bss_info_changed No handling for change=%x", changed);
 	}
 }
 static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
@@ -401,7 +413,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 		IEEE80211_HW_HAS_RATE_CONTROL |
 		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
 
-	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)|
+		BIT(NL80211_IFTYPE_AP);
+
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 
 	wcn_priv->hw->wiphy->max_scan_ssids = 1;
@@ -480,6 +494,7 @@ static int __init wcn36xx_init(void)
 	}
 
 	private_hw = hw;
+	wcn->beacon_enable = false;
 
 	return 0;
 }

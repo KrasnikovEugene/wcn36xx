@@ -311,6 +311,87 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 		rsp->status, rsp->power);
 	return 0;
 }
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn)
+{
+	struct wcn36xx_fw_msg_config_bss_req msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
+
+	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ)
+
+	memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&msg_body.self_mac, &wcn->addresses[0], ETH_ALEN);
+
+	//TODO do all this configurabel
+	msg_body.bss_type = WCN36XX_FW_MSG_BSS_TYPE_AP;
+	msg_body.oper_mode = 0; //0 - AP,  1-STA
+	msg_body.net_type = WCN36XX_FW_MSG_NET_TYPE_11G;
+	msg_body.short_slot_time = 1;
+	msg_body.beacon_interval = 0x64;
+	msg_body.dtim_period = 2;
+	msg_body.cur_op_ch = 1;
+	msg_body.ssid.len = 1;
+	msg_body.ssid.ssid[0] = 'K';
+	msg_body.obss_prot = 1;
+	msg_body.hal_pers = 1;
+	msg_body.max_tx_power = 0x10;
+
+	memcpy(&msg_body.sta_context.bssid, &wcn->addresses[0], ETH_ALEN);
+	msg_body.sta_context.short_pream_sup = 1;
+	memcpy(&msg_body.sta_context.sta_mac, &wcn->addresses[0], ETH_ALEN);
+	msg_body.sta_context.listen_int = 8;
+	msg_body.sta_context.ht_cap = 1;
+	msg_body.sta_context.short_gi40mhz = 1;
+	msg_body.sta_context.short_gi20mhz = 1;
+	msg_body.sta_context.sta_id = 0xff;
+	msg_body.sta_context.bss_id = 0xff;
+
+	msg_body.sta_context.supported_rates.sta_rate_mode = WCN36XX_FW_MSG_STA_RATE_MODE_11N;
+	msg_body.sta_context.supported_rates.rates_11b[0] = 0x82;
+	msg_body.sta_context.supported_rates.rates_11b[1] = 0x84;
+	msg_body.sta_context.supported_rates.rates_11b[2] = 0x8b;
+	msg_body.sta_context.supported_rates.rates_11b[3] = 0x96;
+
+	msg_body.sta_context.supported_rates.rates_11a[0] = 0x0C;
+	msg_body.sta_context.supported_rates.rates_11a[1] = 0x12;
+	msg_body.sta_context.supported_rates.rates_11a[2] = 0x18;
+	msg_body.sta_context.supported_rates.rates_11a[3] = 0x24;
+	msg_body.sta_context.supported_rates.rates_11a[4] = 0x30;
+	msg_body.sta_context.supported_rates.rates_11a[5] = 0x48;
+	msg_body.sta_context.supported_rates.rates_11a[6] = 0x60;
+	msg_body.sta_context.supported_rates.rates_11a[7] = 0x6C;
+
+	msg_body.sta_context.supported_rates.supported_mcs_set[0] = 0xFF;
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off){
+	struct wcn36xx_fw_msg_send_bcn_req msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
+
+	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_SEND_BEACON_REQ)
+
+	// TODO need to find out why this is needed?
+	msg_body.beacon_len = skb_beacon->len+6;
+	msg_body.beacon_len2 = skb_beacon->len;
+
+	// TODO make this as a const
+	if (0x17C > msg_body.beacon_len) {
+		memcpy(&msg_body.beacon, skb_beacon->data, skb_beacon->len);
+	} else {
+		wcn36xx_error("Beacon is to big: beacon size=%d", msg_body.beacon_len);
+		return -ENOMEM;
+	}
+	memcpy(&msg_body.mac, &wcn->addresses[0], ETH_ALEN);
+
+	// TODO need to find out why this is needed?
+	msg_body.tim_ie_offset = tim_off+4;
+	msg_body.p2p_ie_offset = p2p_off;
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+};
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -351,6 +432,9 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
+	case WCN36XX_FW_MSG_TYPE_CONFIG_BSS_RSP:
+	case WCN36XX_FW_MSG_TYPE_SEND_BEACON_RSP:
+
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_error("response failed");
 		}
