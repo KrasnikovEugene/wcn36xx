@@ -351,7 +351,9 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
-		wcn36xx_smd_rsp_status_check(buf, len);
+		if(wcn36xx_smd_rsp_status_check(buf, len)) {
+			wcn36xx_error("response failed");
+		}
 		break;
 	case WCN36XX_FW_MSG_TYPE_JOIN_RSP:
 		wcn36xx_smd_join_rsp(buf, len);
