@@ -22,8 +22,6 @@
 #ifndef _HAL_H_
 #define _HAL_H_
 
-#include "hw.h"
-
 /*---------------------------------------------------------------------------
   API VERSIONING INFORMATION
 
@@ -833,6 +831,9 @@ typedef struct sSirMacMgmtHdr {
 	u8 bssId[6];
 	tSirMacSeqCtl seqControl;
 } tSirMacMgmtHdr, *tpSirMacMgmtHdr;
+
+/* FIXME: pronto v1 apparently has 4 */
+#define HAL_NUM_BSSID               2
 
 /* Scan Entry to hold active BSS idx's */
 struct sir_scan_entry {
