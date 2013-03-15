@@ -367,10 +367,10 @@ enum hal_host_msg_version {
 };
 
 enum driver_type {
-	eDRIVER_TYPE_PRODUCTION = 0,
-	eDRIVER_TYPE_MFG = 1,
-	eDRIVER_TYPE_DVT = 2,
-	eDRIVER_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	DRIVER_TYPE_PRODUCTION = 0,
+	DRIVER_TYPE_MFG = 1,
+	DRIVER_TYPE_DVT = 2,
+	DRIVER_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum hal_stop_type {
@@ -381,14 +381,14 @@ enum hal_stop_type {
 };
 
 enum hal_sys_mode {
-	eHAL_SYS_MODE_NORMAL,
-	eHAL_SYS_MODE_LEARN,
-	eHAL_SYS_MODE_SCAN,
-	eHAL_SYS_MODE_PROMISC,
-	eHAL_SYS_MODE_SUSPEND_LINK,
-	eHAL_SYS_MODE_ROAM_SCAN,
-	eHAL_SYS_MODE_ROAM_SUSPEND_LINK,
-	eHAL_SYS_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	HAL_SYS_MODE_NORMAL,
+	HAL_SYS_MODE_LEARN,
+	HAL_SYS_MODE_SCAN,
+	HAL_SYS_MODE_PROMISC,
+	HAL_SYS_MODE_SUSPEND_LINK,
+	HAL_SYS_MODE_ROAM_SCAN,
+	HAL_SYS_MODE_ROAM_SUSPEND_LINK,
+	HAL_SYS_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum phy_chan_bond_state {
@@ -431,31 +431,31 @@ enum phy_chan_bond_state {
 /* Spatial Multiplexing(SM) Power Save mode */
 enum sir_ht_mimo_state {
 	/* Static SM Power Save mode */
-	eSIR_HT_MIMO_PS_STATIC = 0,
+	SIR_HT_MIMO_PS_STATIC = 0,
 
 	/* Dynamic SM Power Save mode */
-	eSIR_HT_MIMO_PS_DYNAMIC = 1,
+	SIR_HT_MIMO_PS_DYNAMIC = 1,
 
 	/* reserved */
-	eSIR_HT_MIMO_PS_NA = 2,
+	SIR_HT_MIMO_PS_NA = 2,
 
 	/* SM Power Save disabled */
-	eSIR_HT_MIMO_PS_NO_LIMIT = 3,
+	SIR_HT_MIMO_PS_NO_LIMIT = 3,
 
-	eSIR_HT_MIMO_PS_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_HT_MIMO_PS_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* each station added has a rate mode which specifies the sta attributes */
 enum sta_rate_mode {
-	eSTA_TAURUS = 0,
-	eSTA_TITAN,
-	eSTA_POLARIS,
-	eSTA_11b,
-	eSTA_11bg,
-	eSTA_11a,
-	eSTA_11n,
-	eSTA_11ac,
-	eSTA_INVALID_RATE_MODE = WCN36XX_HAL_MAX_ENUM_SIZE
+	STA_TAURUS = 0,
+	STA_TITAN,
+	STA_POLARIS,
+	STA_11b,
+	STA_11bg,
+	STA_11a,
+	STA_11n,
+	STA_11ac,
+	STA_INVALID_RATE_MODE = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* 1,2,5.5,11 */
@@ -470,60 +470,60 @@ enum sta_rate_mode {
 #define SIR_MAC_MAX_SUPPORTED_MCS_SET    16
 
 enum sir_bss_type {
-	eSIR_INFRASTRUCTURE_MODE,
+	SIR_INFRASTRUCTURE_MODE,
 
 	/* Added for softAP support */
-	eSIR_INFRA_AP_MODE,
+	SIR_INFRA_AP_MODE,
 
-	eSIR_IBSS_MODE,
-
-	/* Added for BT-AMP support */
-	eSIR_BTAMP_STA_MODE,
+	SIR_IBSS_MODE,
 
 	/* Added for BT-AMP support */
-	eSIR_BTAMP_AP_MODE,
+	SIR_BTAMP_STA_MODE,
 
-	eSIR_AUTO_MODE,
+	/* Added for BT-AMP support */
+	SIR_BTAMP_AP_MODE,
 
-	eSIR_DONOT_USE_BSS_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_AUTO_MODE,
+
+	SIR_DONOT_USE_BSS_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum sir_nw_type {
-	eSIR_11A_NW_TYPE,
-	eSIR_11B_NW_TYPE,
-	eSIR_11G_NW_TYPE,
-	eSIR_11N_NW_TYPE,
-	eSIR_DONOT_USE_NW_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_11A_NW_TYPE,
+	SIR_11B_NW_TYPE,
+	SIR_11G_NW_TYPE,
+	SIR_11N_NW_TYPE,
+	SIR_DONOT_USE_NW_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 #define SIR_MAC_RATESET_EID_MAX            12
 
 enum sir_ht_operating_mode {
 	/* No Protection */
-	eSIR_HT_OP_MODE_PURE,
+	SIR_HT_OP_MODE_PURE,
 
 	/* Overlap Legacy device present, protection is optional */
-	eSIR_HT_OP_MODE_OVERLAP_LEGACY,
+	SIR_HT_OP_MODE_OVERLAP_LEGACY,
 
 	/* No legacy device, but 20 MHz HT present */
-	eSIR_HT_OP_MODE_NO_LEGACY_20MHZ_HT,
+	SIR_HT_OP_MODE_NO_LEGACY_20MHZ_HT,
 
 	/* Protection is required */
-	eSIR_HT_OP_MODE_MIXED,
+	SIR_HT_OP_MODE_MIXED,
 
-	eSIR_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* Encryption type enum used with peer */
 enum ani_ed_type {
-	eSIR_ED_NONE,
-	eSIR_ED_WEP40,
-	eSIR_ED_WEP104,
-	eSIR_ED_TKIP,
-	eSIR_ED_CCMP,
-	eSIR_ED_WPI,
-	eSIR_ED_AES_128_CMAC,
-	eSIR_ED_NOT_IMPLEMENTED = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_ED_NONE,
+	SIR_ED_WEP40,
+	SIR_ED_WEP104,
+	SIR_ED_TKIP,
+	SIR_ED_CCMP,
+	SIR_ED_WPI,
+	SIR_ED_AES_128_CMAC,
+	SIR_ED_NOT_IMPLEMENTED = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 #define WLAN_MAX_KEY_RSC_LEN                16
@@ -537,42 +537,42 @@ enum ani_ed_type {
  * Enum to specify whether key is used for TX only, RX only or both.
  */
 enum ani_key_direction {
-	eSIR_TX_ONLY,
-	eSIR_RX_ONLY,
-	eSIR_TX_RX,
-	eSIR_TX_DEFAULT,
-	eSIR_DONOT_USE_KEY_DIRECTION = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_TX_ONLY,
+	SIR_RX_ONLY,
+	SIR_TX_RX,
+	SIR_TX_DEFAULT,
+	SIR_DONOT_USE_KEY_DIRECTION = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum ani_wep_type {
-	eSIR_WEP_STATIC,
-	eSIR_WEP_DYNAMIC,
-	eSIR_WEP_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_WEP_STATIC,
+	SIR_WEP_DYNAMIC,
+	SIR_WEP_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum sir_link_state {
 
-	eSIR_LINK_IDLE_STATE = 0,
-	eSIR_LINK_PREASSOC_STATE = 1,
-	eSIR_LINK_POSTASSOC_STATE = 2,
-	eSIR_LINK_AP_STATE = 3,
-	eSIR_LINK_IBSS_STATE = 4,
+	SIR_LINK_IDLE_STATE = 0,
+	SIR_LINK_PREASSOC_STATE = 1,
+	SIR_LINK_POSTASSOC_STATE = 2,
+	SIR_LINK_AP_STATE = 3,
+	SIR_LINK_IBSS_STATE = 4,
 
 	/* BT-AMP Case */
-	eSIR_LINK_BTAMP_PREASSOC_STATE = 5,
-	eSIR_LINK_BTAMP_POSTASSOC_STATE = 6,
-	eSIR_LINK_BTAMP_AP_STATE = 7,
-	eSIR_LINK_BTAMP_STA_STATE = 8,
+	SIR_LINK_BTAMP_PREASSOC_STATE = 5,
+	SIR_LINK_BTAMP_POSTASSOC_STATE = 6,
+	SIR_LINK_BTAMP_AP_STATE = 7,
+	SIR_LINK_BTAMP_STA_STATE = 8,
 
 	/* Reserved for HAL Internal Use */
-	eSIR_LINK_LEARN_STATE = 9,
-	eSIR_LINK_SCAN_STATE = 10,
-	eSIR_LINK_FINISH_SCAN_STATE = 11,
-	eSIR_LINK_INIT_CAL_STATE = 12,
-	eSIR_LINK_FINISH_CAL_STATE = 13,
-	eSIR_LINK_LISTEN_STATE = 14,
+	SIR_LINK_LEARN_STATE = 9,
+	SIR_LINK_SCAN_STATE = 10,
+	SIR_LINK_FINISH_SCAN_STATE = 11,
+	SIR_LINK_INIT_CAL_STATE = 12,
+	SIR_LINK_FINISH_CAL_STATE = 13,
+	SIR_LINK_LISTEN_STATE = 14,
 
-	eSIR_LINK_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	SIR_LINK_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum hal_stats_mask {
@@ -2187,19 +2187,19 @@ struct ani_summary_stats_info {
 /* defines tx_rate_flags */
 enum tx_rate_info {
 	/* Legacy rates */
-	eHAL_TX_RATE_LEGACY = 0x1,
+	HAL_TX_RATE_LEGACY = 0x1,
 
 	/* HT20 rates */
-	eHAL_TX_RATE_HT20 = 0x2,
+	HAL_TX_RATE_HT20 = 0x2,
 
 	/* HT40 rates */
-	eHAL_TX_RATE_HT40 = 0x4,
+	HAL_TX_RATE_HT40 = 0x4,
 
 	/* Rate with Short guard interval */
-	eHAL_TX_RATE_SGI = 0x8,
+	HAL_TX_RATE_SGI = 0x8,
 
 	/* Rate with Long guard interval */
-	eHAL_TX_RATE_LGI = 0x10
+	HAL_TX_RATE_LGI = 0x10
 };
 
 struct ani_global_class_a_stats_info {
@@ -3850,50 +3850,50 @@ struct hal_del_ba_ind_msg {
  * Resume - scanning will start on system resume
  */
 enum pno_mode {
-	ePNO_MODE_IMMEDIATE,
-	ePNO_MODE_ON_SUSPEND,
-	ePNO_MODE_ON_RESUME,
-	ePNO_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	PNO_MODE_IMMEDIATE,
+	PNO_MODE_ON_SUSPEND,
+	PNO_MODE_ON_RESUME,
+	PNO_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* Authentication type */
 enum auth_type {
-	eAUTH_TYPE_ANY = 0,
-	eAUTH_TYPE_OPEN_SYSTEM = 1,
+	AUTH_TYPE_ANY = 0,
+	AUTH_TYPE_OPEN_SYSTEM = 1,
 
 	/* Upper layer authentication types */
-	eAUTH_TYPE_WPA = 2,
-	eAUTH_TYPE_WPA_PSK = 3,
+	AUTH_TYPE_WPA = 2,
+	AUTH_TYPE_WPA_PSK = 3,
 
-	eAUTH_TYPE_RSN = 4,
-	eAUTH_TYPE_RSN_PSK = 5,
-	eAUTH_TYPE_FT_RSN = 6,
-	eAUTH_TYPE_FT_RSN_PSK = 7,
-	eAUTH_TYPE_WAPI_WAI_CERTIFICATE = 8,
-	eAUTH_TYPE_WAPI_WAI_PSK = 9,
+	AUTH_TYPE_RSN = 4,
+	AUTH_TYPE_RSN_PSK = 5,
+	AUTH_TYPE_FT_RSN = 6,
+	AUTH_TYPE_FT_RSN_PSK = 7,
+	AUTH_TYPE_WAPI_WAI_CERTIFICATE = 8,
+	AUTH_TYPE_WAPI_WAI_PSK = 9,
 
-	eAUTH_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	AUTH_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* Encryption type */
 enum ed_type {
-	eED_ANY = 0,
-	eED_NONE = 1,
-	eED_WEP = 2,
-	eED_TKIP = 3,
-	eED_CCMP = 4,
-	eED_WPI = 5,
+	ED_ANY = 0,
+	ED_NONE = 1,
+	ED_WEP = 2,
+	ED_TKIP = 3,
+	ED_CCMP = 4,
+	ED_WPI = 5,
 
-	eED_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	ED_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* SSID broadcast  type */
 enum ssid_bcast_type {
-	eBCAST_UNKNOWN = 0,
-	eBCAST_NORMAL = 1,
-	eBCAST_HIDDEN = 2,
+	BCAST_UNKNOWN = 0,
+	BCAST_NORMAL = 1,
+	BCAST_HIDDEN = 2,
 
-	eBCAST_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	BCAST_TYPE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* The network description for which PNO will have to look for */
