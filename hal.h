@@ -617,36 +617,36 @@ struct wcnss_wlan_version {
 
 /* Definition for Encryption Keys */
 struct sir_keys {
-	u8 keyId;
+	u8 id;
 
 	/* 0 for multicast */
 	u8 unicast;
 
-	enum ani_key_direction keyDirection;
+	enum ani_key_direction direction;
 
 	/* Usage is unknown */
-	u8 keyRsc[WLAN_MAX_KEY_RSC_LEN];
+	u8 rsc[WLAN_MAX_KEY_RSC_LEN];
 
 	/* =1 for authenticator,=0 for supplicant */
-	u8 paeRole;
+	u8 pae_role;
 
-	u16 keyLength;
+	u16 length;
 	u8 key[SIR_MAC_MAX_KEY_LENGTH];
 };
 
 /* SetStaKeyParams Moving here since it is shared by configbss/setstakey msgs */
 struct set_sta_key_params {
 	/* STA Index */
-	u16 staIdx;
+	u16 index;
 
 	/* Encryption Type used with peer */
-	enum ani_ed_type encType;
+	enum ani_ed_type enc_type;
 
 	/* STATIC/DYNAMIC - valid only for WEP */
-	enum ani_wep_type wepType;
+	enum ani_wep_type wep_type;
 
 	/* Default WEP key, valid only for static WEP, must between 0 and 3. */
-	u8 defWEPIdx;
+	u8 def_wep_idx;
 
 	/* valid only for non-static WEP encyrptions */
 	struct sir_keys key[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
@@ -655,7 +655,7 @@ struct set_sta_key_params {
 	 * Control for Replay Count, 1= Single TID based replay count on Tx
 	 * 0 = Per TID based replay count on TX
 	 */
-	u8 singleTidRc;
+	u8 single_tid_rc;
 
 };
 
@@ -663,24 +663,24 @@ struct set_sta_key_params {
 struct hal_msg_header {
 	enum hal_host_msg_type msgType:16;
 	enum hal_host_msg_version msgVersion:16;
-	u32 msgLen;
+	u32 len;
 };
 
 /* Config format required by HAL for each CFG item*/
 struct hal_cfg {
 	/* Cfg Id. The Id required by HAL is exported by HAL
 	 * in shared header file between UMAC and HAL.*/
-	u16 uCfgId;
+	u16 id;
 
 	/* Length of the Cfg. This parameter is used to go to next cfg 
 	 * in the TLV format.*/
-	u16 uCfgLen;
+	u16 len;
 
 	/* Padding bytes for unaligned address's */
-	u16 uCfgPadBytes;
+	u16 pad_bytes;
 
 	/* Reserve bytes for making cfgVal to align address */
-	u16 uCfgReserve;
+	u16 reserve;
 
 	/* Following the uCfgLen field there should be a 'uCfgLen' bytes
 	 * containing the uCfgValue ; u8 uCfgValue[uCfgLen] */
@@ -688,10 +688,10 @@ struct hal_cfg {
 
 struct hal_mac_start_parameters {
 	/* Drive Type - Production or FTM etc */
-	enum driver_type driverType;
+	enum driver_type type;
 
-	/*Length of the config buffer */
-	u32 uConfigBufferLen;
+	/* Length of the config buffer */
+	u32 len;
 
 	/* Following this there is a TLV formatted buffer of length 
 	 * "uConfigBufferLen" bytes containing all config values. 
@@ -705,7 +705,7 @@ struct hal_mac_start_req_msg {
 	/* Note: The length specified in tHalMacStartReqMsg messages should be
 	 * header.msgLen = sizeof(tHalMacStartReqMsg) + uConfigBufferLen */
 	struct hal_msg_header header;
-	struct hal_mac_start_parameters startReqParams;
+	struct hal_mac_start_parameters params;
 };
 
 struct hal_mac_start_rsp_params {
@@ -713,19 +713,19 @@ struct hal_mac_start_rsp_params {
 	u16 status;
 
 	/*Max number of STA supported by the device */
-	u8 ucMaxStations;
+	u8 stations;
 
 	/*Max number of BSS supported by the device */
-	u8 ucMaxBssids;
+	u8 bssids;
 
 	/*API Version */
-	struct wcnss_wlan_version wcnssWlanVersion;
+	struct wcnss_wlan_version version;
 
 	/*CRM build information */
-	u8 wcnssCrmVersionString[WCN36XX_HAL_VERSION_LENGTH];
+	u8 crm_version[WCN36XX_HAL_VERSION_LENGTH];
 
 	/*hardware/chipset/misc version information */
-	u8 wcnssWlanVersionString[WCN36XX_HAL_VERSION_LENGTH];
+	u8 wlan_version[WCN36XX_HAL_VERSION_LENGTH];
 
 };
 
@@ -758,7 +758,7 @@ struct hal_update_cfg_req_msg {
 	struct hal_msg_header header;
 
 	/* Length of the config buffer. Allows UMAC to update multiple CFGs */
-	u32 uConfigBufferLen;
+	u32 len;
 
 	/* Following this there is a TLV formatted buffer of length 
 	 * "uConfigBufferLen" bytes containing all config values. 
@@ -837,8 +837,8 @@ typedef struct sSirMacMgmtHdr {
 
 /* Scan Entry to hold active BSS idx's */
 struct sir_scan_entry {
-	u8 bssIdx[HAL_NUM_BSSID];
-	u8 activeBSScnt;
+	u8 bss_index[HAL_NUM_BSSID];
+	u8 active_bss_count;
 };
 
 struct hal_init_scan_req_msg {
@@ -846,30 +846,30 @@ struct hal_init_scan_req_msg {
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
-	enum hal_sys_mode scanMode;
+	enum hal_sys_mode mode;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
-	u8 notifyBss;
+	u8 notify;
 
 	/* Kind of frame to be used for notifying the BSS (Data Null, QoS
 	 * Null, or CTS to Self). Must always be a valid frame type. */
-	u8 frameType;
+	u8 frame_type;
 
 	/* UMAC has the option of passing the MAC frame to be used for
 	 * notifying the BSS. If non-zero, HAL will use the MAC frame
 	 * buffer pointed to by macMgmtHdr. If zero, HAL will generate the
 	 * appropriate MAC frame based on frameType. */
-	u8 frameLength;
+	u8 frame_len;
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr macMgmtHdr;
+	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scanEntry;
+	struct sir_scan_entry scan_entry;
 };
 
 struct hal_init_scan_con_req_msg {
@@ -877,36 +877,36 @@ struct hal_init_scan_con_req_msg {
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
-	enum hal_sys_mode scanMode;
+	enum hal_sys_mode mode;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
-	u8 notifyBss;
+	u8 notify;
 
 	/* Kind of frame to be used for notifying the BSS (Data Null, QoS
 	 * Null, or CTS to Self). Must always be a valid frame type. */
-	u8 frameType;
+	u8 frame_type;
 
 	/* UMAC has the option of passing the MAC frame to be used for
 	 * notifying the BSS. If non-zero, HAL will use the MAC frame
 	 * buffer pointed to by macMgmtHdr. If zero, HAL will generate the
 	 * appropriate MAC frame based on frameType. */
-	u8 frameLength;
+	u8 frame_length;
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr macMgmtHdr;
+	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scanEntry;
+	struct sir_scan_entry scan_entry;
 
 	/* Single NoA usage in Scanning */
-	u8 useNoA;
+	u8 use_noa;
 
 	/* Indicates the scan duration (in ms) */
-	u16 scanDuration;
+	u16 scan_duration;
 
 };
 
@@ -922,7 +922,7 @@ struct hal_start_scan_req_msg {
 	struct hal_msg_header header;
 
 	/* Indicates the channel to scan */
-	u8 scanChannel;
+	u8 scan_channel;
 };
 
 struct hal_start_rsm_msg {
@@ -931,8 +931,8 @@ struct hal_start_rsm_msg {
 	/* success or failure */
 	u32 status;
 
-	u32 startTSF[2];
-	u8 txMgmtPower;
+	u32 start_tsf[2];
+	u8 tx_mgmt_power;
 
 };
 
@@ -942,7 +942,7 @@ struct hal_end_scan_req_msg {
 	/* Indicates the channel to stop scanning. Not used really. But
 	 * retained for symmetry with "start Scan" message. It can also
 	 * help in error check if needed. */
-	u8 scanChannel;
+	u8 scan_channel;
 };
 
 struct hal_end_scan_rsp_msg {
@@ -957,38 +957,38 @@ struct hal_finish_scan_req_msg {
 
 	/* Identifies the operational state of the AP/STA
 	 * LEARN - AP Role SCAN - STA Role */
-	enum hal_sys_mode scanMode;
+	enum hal_sys_mode mode;
 
 	/* Operating channel to tune to. */
-	u8 currentOperChannel;
+	u8 oper_channel;
 
 	/* Channel Bonding state If 20/40 MHz is operational, this will
 	 * indicate the 40 MHz extension channel in combination with the
 	 * control channel */
-	enum phy_chan_bond_state cbState;
+	enum phy_chan_bond_state cb_state;
 
 	/* BSSID of the BSS */
 	u8 bssid[ETH_ALEN];
 
 	/* Whether BSS needs to be notified */
-	u8 notifyBss;
+	u8 notify;
 
 	/* Kind of frame to be used for notifying the BSS (Data Null, QoS
 	 * Null, or CTS to Self). Must always be a valid frame type. */
-	u8 frameType;
+	u8 frame_type;
 
 	/* UMAC has the option of passing the MAC frame to be used for
 	 * notifying the BSS. If non-zero, HAL will use the MAC frame
 	 * buffer pointed to by macMgmtHdr. If zero, HAL will generate the
 	 * appropriate MAC frame based on frameType. */
-	u8 frameLength;
+	u8 frame_length;
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr macMgmtHdr;
+	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scanEntry;
+	struct sir_scan_entry scan_entry;
 
 };
 
@@ -1020,13 +1020,13 @@ struct sir_supported_rates {
 	 *    with this mode updated.
 	 */
 
-	enum sta_rate_mode opRateMode;
+	enum sta_rate_mode op_rate_mode;
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
-	u16 llbRates[SIR_NUM_11B_RATES];
-	u16 llaRates[SIR_NUM_11A_RATES];
-	u16 aniLegacyRates[SIR_NUM_POLARIS_RATES];
+	u16 llb_rates[SIR_NUM_11B_RATES];
+	u16 lla_rates[SIR_NUM_11A_RATES];
+	u16 legacy_rates[SIR_NUM_POLARIS_RATES];
 	u16 reserved;
 
 	/* Taurus only supports 26 Titan Rates(no ESF/concat Rates will be
@@ -1034,13 +1034,13 @@ struct sir_supported_rates {
 	 * the last 4 bits(bit28-31) for Taurus, 2(bit26-27) bits are
 	 * reserved. */
 	/* Titan and Taurus Rates */
-	u32 aniEnhancedRateBitmap;
+	u32 enhanced_rate_bitmap;
 
 	/*
 	 * 0-76 bits used, remaining reserved
 	 * bits 0-15 and 32 should be set.
 	 */
-	u8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+	u8 supported_mcs_set[SIR_MAC_MAX_SUPPORTED_MCS_SET];
 
 	/*
 	 * RX Highest Supported Data Rate defines the highest data
@@ -1048,67 +1048,67 @@ struct sir_supported_rates {
 	 * This value is derived from "Supported MCS Set field" inside
 	 * the HT capability element.
 	 */
-	u16 rxHighestDataRate;
+	u16 rx_highest_data_rate;
 
 };
 
 struct config_sta_params {
 	/* BSSID of STA */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* ASSOC ID, as assigned by UMAC */
-	u16 assocId;
+	u16 aid;
 
 	/* STA entry Type: 0 - Self, 1 - Other/Peer, 2 - BSSID, 3 - BCAST */
-	u8 staType;
+	u8 type;
 
 	/* Short Preamble Supported. */
-	u8 shortPreambleSupported;
+	u8 short_preamble_supported;
 
 	/* MAC Address of STA */
-	u8 staMac[ETH_ALEN];
+	u8 mac[ETH_ALEN];
 
 	/* Listen interval of the STA */
-	u16 listenInterval;
+	u16 listen_interval;
 
 	/* Support for 11e/WMM */
-	u8 wmmEnabled;
+	u8 wmm_enabled;
 
 	/* 11n HT capable STA */
-	u8 htCapable;
+	u8 ht_capable;
 
 	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
-	u8 txChannelWidthSet;
+	u8 tx_channel_width_set;
 
 	/* RIFS mode 0 - NA, 1 - Allowed */
-	u8 rifsMode;
+	u8 rifs_mode;
 
 	/* L-SIG TXOP Protection mechanism 
 	   0 - No Support, 1 - Supported
 	   SG - there is global field */
-	u8 lsigTxopProtection;
+	u8 lsig_txop_protection;
 
 	/* Max Ampdu Size supported by STA. TPE programming.
 	   0 : 8k , 1 : 16k, 2 : 32k, 3 : 64k */
-	u8 maxAmpduSize;
+	u8 max_ampdu_size;
 
 	/* Max Ampdu density. Used by RA.  3 : 0~7 : 2^(11nAMPDUdensity -4) */
-	u8 maxAmpduDensity;
+	u8 max_ampdu_density;
 
 	/* Max AMSDU size 1 : 3839 bytes, 0 : 7935 bytes */
-	u8 maxAmsduSize;
+	u8 max_amsdu_size;
 
 	/* Short GI support for 40Mhz packets */
-	u8 fShortGI40Mhz;
+	u8 sgi_40mhz;
 
 	/* Short GI support for 20Mhz packets */
-	u8 fShortGI20Mhz;
+	u8 sgi_20Mhz;
 
 	/* Robust Management Frame (RMF) enabled/disabled */
-	u8 rmfEnabled;
+	u8 rmf;
 
 	/* The unicast encryption type in the association */
-	u32 encryptType;
+	u32 encrypt_type;
 
 	/* HAL should update the existing STA entry, if this flag is set. UMAC
 	   will set this flag in case of RE-ASSOC, where we want to reuse the old
@@ -1118,46 +1118,46 @@ struct config_sta_params {
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
 	   X  X  X  X  BE BK VI VO */
-	u8 uAPSD;
+	u8 uapsd;
 
 	/* Max SP Length */
-	u8 maxSPLen;
+	u8 max_sp_len;
 
 	/* 11n Green Field preamble support
 	   0 - Not supported, 1 - Supported */
-	u8 greenFieldCapable;
+	u8 green_field_capable;
 
 	/* MIMO Power Save mode */
-	enum sir_ht_mimo_state mimoPS;
+	enum sir_ht_mimo_state mimo_ps;
 
 	/* Delayed BA Support */
-	u8 delayedBASupport;
+	u8 delayed_ba_support;
 
 	/* Max AMPDU duration in 32us */
-	u8 us32MaxAmpduDuration;
+	u8 max_ampdu_duration;
 
 	/* HT STA should set it to 1 if it is enabled in BSS. HT STA should
 	 * set it to 0 if AP does not support it. This indication is sent
 	 * to HAL and HAL uses this flag to pickup up appropriate 40Mhz
 	 * rates. */
-	u8 fDsssCckMode40Mhz;
+	u8 dsss_cck_mode_40mhz;
 
 	/* Valid STA Idx when action=Update. Set to 0xFF when invalid!
 	 * Retained for backward compalibity with existing HAL code */
-	u8 staIdx;
+	u8 sta_index;
 
 	/* BSSID of BSS to which station is associated. Set to 0xFF when
 	 * invalid. Retained for backward compalibity with existing HAL
 	 * code */
-	u8 bssIdx;
+	u8 bssid_index;
 
-	u8 p2pCapableSta;
+	u8 p2p;
 
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
 
 	/* These rates are the intersection of peer and self capabilities. */
-	struct sir_supported_rates supportedRates;
+	struct sir_supported_rates supported_rates;
 
 };
 
@@ -1182,13 +1182,13 @@ struct sir_supported_rates_v1 {
          *     with this mode updated.
 	 */
 
-	enum sta_rate_mode opRateMode;
+	enum sta_rate_mode mode;
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
-	u16 llbRates[SIR_NUM_11B_RATES];
-	u16 llaRates[SIR_NUM_11A_RATES];
-	u16 aniLegacyRates[SIR_NUM_POLARIS_RATES];
+	u16 llb_rates[SIR_NUM_11B_RATES];
+	u16 lla_rates[SIR_NUM_11A_RATES];
+	u16 legacy_rates[SIR_NUM_POLARIS_RATES];
 	u16 reserved;
 
 	/* Taurus only supports 26 Titan Rates(no ESF/concat Rates will be
@@ -1197,13 +1197,13 @@ struct sir_supported_rates_v1 {
 	 * reserved. */
 
 	/* Titan and Taurus Rates */
-	u32 aniEnhancedRateBitmap;
+	u32 enhanced_rate_bitmap;
 
 	/*
 	 * 0-76 bits used, remaining reserved
 	 * bits 0-15 and 32 should be set.
 	 */
-	u8 supportedMCSSet[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+	u8 supported_mcs_set[SIR_MAC_MAX_SUPPORTED_MCS_SET];
 
 	/*
 	 * RX Highest Supported Data Rate defines the highest data
@@ -1211,82 +1211,82 @@ struct sir_supported_rates_v1 {
 	 * This value is derived from "Supported MCS Set field" inside
 	 * the HT capability element.
 	 */
-	u16 rxHighestDataRate;
+	u16 rx_highest_data_rate;
 
 	/* Indicates the Maximum MCS that can be received for each number
 	 * of spacial streams */
-	u16 vhtRxMCSMap;
+	u16 vht_rx_mcs_map;
 
 	/* Indicate the highest VHT data rate that the STA is able to receive */
-	u16 vhtRxHighestDataRate;
+	u16 vht_rx_highest_data_rate;
 
 	/* Indicates the Maximum MCS that can be transmitted  for each number
 	 * of spacial streams */
-	u16 vhtTxMCSMap;
+	u16 vht_tx_mcs_map;
 
 	/* Indicate the highest VHT data rate that the STA is able to
 	 * transmit */
-	u16 vhtTxHighestDataRate;
+	u16 vht_tx_highest_data_rate;
 
 };
 
 struct config_sta_params_v1 {
 	/* BSSID of STA */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* ASSOC ID, as assigned by UMAC */
-	u16 assocId;
+	u16 aid;
 
 	/* STA entry Type: 0 - Self, 1 - Other/Peer, 2 - BSSID, 3 - BCAST */
-	u8 staType;
+	u8 type;
 
 	/* Short Preamble Supported. */
-	u8 shortPreambleSupported;
+	u8 short_preamble_supported;
 
 	/* MAC Address of STA */
-	u8 staMac[ETH_ALEN];
+	u8 mac[ETH_ALEN];
 
 	/* Listen interval of the STA */
-	u16 listenInterval;
+	u16 listen_interval;
 
 	/* Support for 11e/WMM */
-	u8 wmmEnabled;
+	u8 wmm;
 
 	/* 11n HT capable STA */
-	u8 htCapable;
+	u8 ht;
 
 	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
-	u8 txChannelWidthSet;
+	u8 tx_channel_width_set;
 
 	/* RIFS mode 0 - NA, 1 - Allowed */
-	u8 rifsMode;
+	u8 rifs_mode;
 
 	/* L-SIG TXOP Protection mechanism
 	   0 - No Support, 1 - Supported
 	   SG - there is global field */
-	u8 lsigTxopProtection;
+	u8 lsig_txop_protection;
 
 	/* Max Ampdu Size supported by STA. TPE programming.
 	   0 : 8k , 1 : 16k, 2 : 32k, 3 : 64k */
-	u8 maxAmpduSize;
+	u8 max_ampdu_size;
 
 	/* Max Ampdu density. Used by RA.  3 : 0~7 : 2^(11nAMPDUdensity -4) */
-	u8 maxAmpduDensity;
+	u8 max_ampdu_density;
 
 	/* Max AMSDU size 1 : 3839 bytes, 0 : 7935 bytes */
-	u8 maxAmsduSize;
+	u8 max_amsdu_size;
 
 	/* Short GI support for 40Mhz packets */
-	u8 fShortGI40Mhz;
+	u8 sgi_40mhz;
 
 	/* Short GI support for 20Mhz packets */
-	u8 fShortGI20Mhz;
+	u8 sgi_20Mhz;
 
 	/* Robust Management Frame (RMF) enabled/disabled */
-	u8 rmfEnabled;
+	u8 rmf;
 
 	/* The unicast encryption type in the association */
-	u32 encryptType;
+	u32 encrypt_type;
 
 	/* HAL should update the existing STA entry, if this flag is set.
 	 * UMAC will set this flag in case of RE-ASSOC, where we want to
@@ -1296,61 +1296,61 @@ struct config_sta_params_v1 {
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
 	   X  X  X  X  BE BK VI VO */
-	u8 uAPSD;
+	u8 uapsd;
 
 	/* Max SP Length */
-	u8 maxSPLen;
+	u8 max_sp_len;
 
 	/* 11n Green Field preamble support
 	   0 - Not supported, 1 - Supported */
-	u8 greenFieldCapable;
+	u8 green_field_capable;
 
 	/* MIMO Power Save mode */
-	enum sir_ht_mimo_state mimoPS;
+	enum sir_ht_mimo_state mimo_ps;
 
 	/* Delayed BA Support */
-	u8 delayedBASupport;
+	u8 delayed_ba_support;
 
 	/* Max AMPDU duration in 32us */
-	u8 us32MaxAmpduDuration;
+	u8 max_ampdu_duration;
 
 	/* HT STA should set it to 1 if it is enabled in BSS. HT STA should
 	 * set it to 0 if AP does not support it. This indication is sent
 	 * to HAL and HAL uses this flag to pickup up appropriate 40Mhz
 	 * rates. */
-	u8 fDsssCckMode40Mhz;
+	u8 dsss_cck_mode_40mhz;
 
 	/* Valid STA Idx when action=Update. Set to 0xFF when invalid!
 	 * Retained for backward compalibity with existing HAL code */
-	u8 staIdx;
+	u8 sta_index;
 
 	/* BSSID of BSS to which station is associated. Set to 0xFF when
 	 * invalid. Retained for backward compalibity with existing HAL
 	 * code */
-	u8 bssIdx;
+	u8 bssid_index;
 
-	u8 p2pCapableSta;
+	u8 p2p;
 
 	/* Reserved to align next field on a dword boundary */
-	u8 htLdpcEnabled:1;
-	u8 vhtLdpcEnabled:1;
-	u8 vhtTxBFEnabled:1;
+	u8 ht_Ldpc_Enabled:1;
+	u8 vht_ldpc_enabled:1;
+	u8 vht_tx_bf_enabled:1;
 	u8 reserved:5;
 
 	/* These rates are the intersection of peer and self capabilities. */
-	struct sir_supported_rates_v1 supportedRates;
+	struct sir_supported_rates_v1 supported_rates;
 
-	u8 vhtCapable;
-	u8 vhtTxChannelWidthSet;
+	u8 vht;
+	u8 vht_tx_channel_width_set;
 
 };
 
 struct config_sta_req_msg {
 	struct hal_msg_header header;
 	union {
-		struct config_sta_params configStaParams;
-		struct config_sta_params_v1 configStaParams_V1;
-	} uStaParams;
+		struct config_sta_params sta_params;
+		struct config_sta_params_v1 sta_params_v1;
+	} u;
 };
 
 struct config_sta_rsp_params {
@@ -1358,30 +1358,30 @@ struct config_sta_rsp_params {
 	u32 status;
 
 	/* Station index; valid only when 'status' field value SUCCESS */
-	u8 staIdx;
+	u8 sta_index;
 
 	/* BSSID Index of BSS to which the station is associated */
-	u8 bssIdx;
+	u8 bssid_index;
 
 	/* DPU Index for PTK */
-	u8 dpuIndex;
+	u8 dpu_index;
 
 	/* DPU Index for GTK */
-	u8 bcastDpuIndex;
+	u8 bcast_dpu_index;
 
 	/* DPU Index for IGTK  */
-	u8 bcastMgmtDpuIdx;
+	u8 bcast_mgmt_dpu_idx;
 
 	/* PTK DPU signature */
-	u8 ucUcastSig;
+	u8 uc_ucast_sig;
 
 	/* GTK DPU isignature */
-	u8 ucBcastSig;
+	u8 uc_bcast_sig;
 
 	/* IGTK DPU signature */
-	u8 ucMgmtSig;
+	u8 uc_mgmt_sig;
 
-	u8 p2pCapableSta;
+	u8 p2p;
 
 };
 
@@ -1395,7 +1395,7 @@ struct delete_sta_req_msg {
 	struct hal_msg_header header;
 
 	/* Index of STA to delete */
-	u8 staIdx;
+	u8 sta_index;
 
 };
 
@@ -1407,13 +1407,13 @@ struct delete_sta_rsp_msg {
 	u32 status;
 
 	/* Index of STA deleted */
-	u8 staId;
+	u8 sta_id;
 };
 
 /* 12 Bytes long because this structure can be used to represent rate and
  * extended rate set IEs. The parser assume this to be at least 12 */
 struct sir_rate_set {
-	u8 numRates;
+	u8 num_rates;
 	u8 rate[SIR_MAC_RATESET_EID_MAX];
 };
 
@@ -1446,12 +1446,12 @@ typedef struct sSirMacCW {
 struct sir_edca_param_record {
 	struct sir_aci_aifsn aci;
 	tSirMacCW cw;
-	u16 txoplimit;
+	u16 txop_limit;
 };
 
 struct sir_mac_ssid {
 	u8 length;
-	u8 ssId[32];
+	u8 ssid[32];
 };
 
 /* Concurrency role. These are generic IDs that identify the various roles
@@ -1486,64 +1486,64 @@ enum hal_concurrency_mode {
 
 struct config_bss_params {
 	/* BSSID */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* Self Mac Address */
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_mac_addr[ETH_ALEN];
 
 	/* BSS type */
-	enum sir_bss_type bssType;
+	enum sir_bss_type bss_type;
 
 	/* Operational Mode: AP =0, STA = 1 */
-	u8 operMode;
+	u8 oper_mode;
 
 	/* Network Type */
-	enum sir_nw_type nwType;
+	enum sir_nw_type nw_type;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
-	u8 shortSlotTimeSupported;
+	u8 short_slot_time_supported;
 
 	/* Co-exist with 11a STA */
-	u8 llaCoexist;
+	u8 lla_coexist;
 
 	/* Co-exist with 11b STA */
-	u8 llbCoexist;
+	u8 llb_coexist;
 
 	/* Co-exist with 11g STA */
-	u8 llgCoexist;
+	u8 llg_coexist;
 
 	/* Coexistence with 11n STA */
-	u8 ht20Coexist;
+	u8 ht20_coexist;
 
 	/* Non GF coexist flag */
-	u8 llnNonGFCoexist;
+	u8 lln_non_gf_coexist;
 
 	/* TXOP protection support */
-	u8 fLsigTXOPProtectionFullSupport;
+	u8 lsig_tx_op_protection_full_support;
 
 	/* RIFS mode */
-	u8 fRIFSMode;
+	u8 rifs_mode;
 
 	/* Beacon Interval in TU */
-	u16 beaconInterval;
+	u16 beacon_interval;
 
 	/* DTIM period */
-	u8 dtimPeriod;
+	u8 dtim_period;
 
 	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
-	u8 txChannelWidthSet;
+	u8 tx_channel_width_set;
 
 	/* Operating channel */
-	u8 currentOperChannel;
+	u8 oper_channel;
 
 	/* Extension channel for channel bonding */
-	u8 currentExtChannel;
+	u8 ext_channel;
 
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
 
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssId;
+	struct sir_mac_ssid ssid;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1552,37 +1552,37 @@ struct config_bss_params {
 	u8 action;
 
 	/* MAC Rate Set */
-	struct sir_rate_set rateSet;
+	struct sir_rate_set rateset;
 
 	/* Enable/Disable HT capabilities of the BSS */
-	u8 htCapable;
+	u8 ht;
 
 	/* Enable/Disable OBSS protection */
-	u8 obssProtEnabled;
+	u8 obss_prot_enabled;
 
 	/* RMF enabled/disabled */
-	u8 rmfEnabled;
+	u8 rmf;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	enum sir_ht_operating_mode htOperMode;
+	enum sir_ht_operating_mode ht_oper_mode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
-	u8 dualCTSProtection;
+	u8 dual_cts_protection;
 
 	/* Probe Response Max retries */
-	u8 ucMaxProbeRespRetryLimit;
+	u8 max_probe_resp_retry_limit;
 
 	/* To Enable Hidden ssid */
-	u8 bHiddenSSIDEn;
+	u8 hidden_ssid;
 
 	/* To Enable Disable FW Proxy Probe Resp */
-	u8 bProxyProbeRespEn;
+	u8 proxy_probe_resp;
 
 	/* Boolean to indicate if EDCA params are valid. UMAC might not
 	 * have valid EDCA params or might not desire to apply EDCA params
 	 * during config BSS. 0 implies Not Valid ; Non-Zero implies
 	 * valid */
-	u8 edcaParamsValid;
+	u8 edca_params_valid;
 
 	/* EDCA Parameters for Best Effort Access Category */
 	struct sir_edca_param_record acbe;
@@ -1598,91 +1598,91 @@ struct config_bss_params {
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
-	u8 extSetStaKeyParamValid;
+	u8 ext_set_sta_key_param_valid;
 
 	/* SetStaKeyParams for ext bss msg */
-	tSetStaKeyParams extSetStaKeyParam;
+	tSetStaKeyParams ext_set_sta_key_param;
 #endif
 
 	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum hal_con_mode */
-	u8 halPersona;
+	u8 hal_persona;
 
-	u8 bSpectrumMgtEnable;
+	u8 spectrum_mgt_enable;
 
 	/* HAL fills in the tx power used for mgmt frames in txMgmtPower */
-	s8 txMgmtPower;
+	s8 tx_mgmt_power;
 
 	/* maxTxPower has max power to be used after applying the power
 	 * constraint if any */
-	s8 maxTxPower;
+	s8 max_tx_power;
 
 	/*Context of the station being added in HW
 	   Add a STA entry for "itself" -
 	   On AP  - Add the AP itself in an "STA context"
 	   On STA - Add the AP to which this STA is joining in an "STA context" */
-	struct config_sta_params staContext;
+	struct config_sta_params sta;
 };
 
 struct config_bss_params_v1 {
 	/* BSSID */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* Self Mac Address */
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_mac_addr[ETH_ALEN];
 
 	/* BSS type */
-	enum sir_bss_type bssType;
+	enum sir_bss_type bss_type;
 
 	/* Operational Mode: AP =0, STA = 1 */
-	u8 operMode;
+	u8 oper_mode;
 
 	/* Network Type */
-	enum sir_nw_type nwType;
+	enum sir_nw_type nw_type;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
-	u8 shortSlotTimeSupported;
+	u8 short_slot_time_supported;
 
 	/* Co-exist with 11a STA */
-	u8 llaCoexist;
+	u8 lla_coexist;
 
 	/* Co-exist with 11b STA */
-	u8 llbCoexist;
+	u8 llb_coexist;
 
 	/* Co-exist with 11g STA */
-	u8 llgCoexist;
+	u8 llg_coexist;
 
 	/* Coexistence with 11n STA */
-	u8 ht20Coexist;
+	u8 ht20_coexist;
 
 	/* Non GF coexist flag */
-	u8 llnNonGFCoexist;
+	u8 lln_non_gf_coexist;
 
 	/* TXOP protection support */
-	u8 fLsigTXOPProtectionFullSupport;
+	u8 lsig_tx_op_protection_full_support;
 
 	/* RIFS mode */
-	u8 fRIFSMode;
+	u8 rifs_mode;
 
 	/* Beacon Interval in TU */
-	u16 beaconInterval;
+	u16 beacon_interval;
 
 	/* DTIM period */
-	u8 dtimPeriod;
+	u8 dtim_period;
 
 	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
-	u8 txChannelWidthSet;
+	u8 tx_channel_width_set;
 
 	/* Operating channel */
-	u8 currentOperChannel;
+	u8 current_oper_channel;
 
 	/* Extension channel for channel bonding */
-	u8 currentExtChannel;
+	u8 current_ext_channel;
 
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
 
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssId;
+	struct sir_mac_ssid ssid;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1691,37 +1691,37 @@ struct config_bss_params_v1 {
 	u8 action;
 
 	/* MAC Rate Set */
-	struct sir_rate_set rateSet;
+	struct sir_rate_set rateset;
 
 	/* Enable/Disable HT capabilities of the BSS */
-	u8 htCapable;
+	u8 ht;
 
 	/* Enable/Disable OBSS protection */
-	u8 obssProtEnabled;
+	u8 obss_prot;
 
 	/* RMF enabled/disabled */
-	u8 rmfEnabled;
+	u8 rmf;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	enum sir_ht_operating_mode htOperMode;
+	enum sir_ht_operating_mode ht_oper_mode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
-	u8 dualCTSProtection;
+	u8 dual_cts_protection;
 
 	/* Probe Response Max retries */
-	u8 ucMaxProbeRespRetryLimit;
+	u8 max_probe_resp_retry_limit;
 
 	/* To Enable Hidden ssid */
-	u8 bHiddenSSIDEn;
+	u8 hidden_ssid;
 
 	/* To Enable Disable FW Proxy Probe Resp */
-	u8 bProxyProbeRespEn;
+	u8 proxy_probe_resp;
 
 	/* Boolean to indicate if EDCA params are valid. UMAC might not
 	 * have valid EDCA params or might not desire to apply EDCA params
 	 * during config BSS. 0 implies Not Valid ; Non-Zero implies
 	 * valid */
-	u8 edcaParamsValid;
+	u8 edca_params_valid;
 
 	/* EDCA Parameters for Best Effort Access Category */
 	struct sir_edca_param_record acbe;
@@ -1737,39 +1737,39 @@ struct config_bss_params_v1 {
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
-	u8 extSetStaKeyParamValid;
+	u8 ext_set_sta_key_param_valid;
 
 	/* SetStaKeyParams for ext bss msg */
-	tSetStaKeyParams extSetStaKeyParam;
+	tSetStaKeyParams ext_set_sta_key_param;
 #endif
 
 	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum hal_con_mode */
-	u8 halPersona;
+	u8 hal_persona;
 
-	u8 bSpectrumMgtEnable;
+	u8 spectrum_mgt;
 
 	/* HAL fills in the tx power used for mgmt frames in txMgmtPower */
-	s8 txMgmtPower;
+	s8 tx_mgmt_power;
 
 	/* maxTxPower has max power to be used after applying the power
 	 * constraint if any */
-	s8 maxTxPower;
+	s8 max_tx_power;
 
 	/*Context of the station being added in HW
 	   Add a STA entry for "itself" -
 	   On AP  - Add the AP itself in an "STA context"
 	   On STA - Add the AP to which this STA is joining in an "STA context" */
-	struct config_sta_params_v1 staContext;
+	struct config_sta_params_v1 sta;
 
-	u8 vhtCapable;
-	u8 vhtTxChannelWidthSet;
+	u8 vht;
+	u8 vht_tx_channel_width_set;
 };
 
 struct config_bss_req_msg {
 	struct hal_msg_header header;
 	union {
-		struct config_bss_params configBssParams;
-		struct config_bss_params_v1 configBssParams_V1;
+		struct config_bss_params bss_params;
+		struct config_bss_params_v1 bss_params_v1;
 	} uBssParams;
 };
 
@@ -1778,53 +1778,53 @@ struct config_bss_rsp_params {
 	u32 status;
 
 	/* BSS index allocated by HAL */
-	u8 bssIdx;
+	u8 bss_index;
 
 	/* DPU descriptor index for PTK */
-	u8 dpuDescIndx;
+	u8 dpu_desc_index;
 
 	/* PTK DPU signature */
-	u8 ucastDpuSignature;
+	u8 ucast_dpu_signature;
 
 	/* DPU descriptor index for GTK */
-	u8 bcastDpuDescIndx;
+	u8 bcast_dpu_desc_indx;
 
 	/* GTK DPU signature */
-	u8 bcastDpuSignature;
+	u8 bcast_dpu_signature;
 
 	/* DPU descriptor for IGTK */
-	u8 mgmtDpuDescIndx;
+	u8 mgmt_dpu_desc_index;
 
 	/* IGTK DPU signature */
-	u8 mgmtDpuSignature;
+	u8 mgmt_dpu_signature;
 
 	/* Station Index for BSS entry */
-	u8 bssStaIdx;
+	u8 bss_sta_index;
 
 	/* Self station index for this BSS */
-	u8 bssSelfStaIdx;
+	u8 bss_self_sta_index;
 
 	/* Bcast station for buffering bcast frames in AP role */
-	u8 bssBcastStaIdx;
+	u8 bss_bcast_sta_idx;
 
 	/* MAC Address of STA(PEER/SELF) in staContext of configBSSReq */
-	u8 staMac[ETH_ALEN];
+	u8 mac[ETH_ALEN];
 
 	/* HAL fills in the tx power used for mgmt frames in this field. */
-	s8 txMgmtPower;
+	s8 tx_mgmt_power;
 
 };
 
 struct config_bss_rsp_msg {
 	struct hal_msg_header header;
-	struct config_bss_rsp_params configBssRspParams;
+	struct config_bss_rsp_params bss_rsp_params;
 };
 
 struct delete_bss_req_msg {
 	struct hal_msg_header header;
 
 	/* BSS index to be deleted */
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -1835,7 +1835,7 @@ struct delete_bss_rsp_msg {
 	u32 status;
 
 	/* BSS index that has been deleted */
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -1843,25 +1843,25 @@ struct hal_join_req_msg {
 	struct hal_msg_header header;
 
 	/* Indicates the BSSID to which STA is going to associate */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* Indicates the channel to switch to. */
-	u8 ucChannel;
+	u8 channel;
 
 	/* Self STA MAC */
-	u8 selfStaMacAddr[ETH_ALEN];
+	u8 self_sta_mac_addr[ETH_ALEN];
 
 	/* Local power constraint */
-	u8 ucLocalPowerConstraint;
+	u8 local_power_constraint;
 
 	/* Secondary channel offset */
-	enum phy_chan_bond_state secondaryChannelOffset;
+	enum phy_chan_bond_state secondary_channel_offset;
 
 	/* link State */
-	enum sir_link_state linkState;
+	enum sir_link_state link_state;
 
 	/* Max TX power */
-	s8 maxTxPower;
+	s8 max_tx_power;
 };
 
 struct hal_join_rsp_msg {
@@ -1871,20 +1871,20 @@ struct hal_join_rsp_msg {
 	u32 status;
 
 	/* HAL fills in the tx power used for mgmt frames in this field */
-	u8 txMgmtPower;
+	u8 tx_mgmt_power;
 };
 
 struct post_assoc_req_msg {
 	struct hal_msg_header header;
 
-	struct config_sta_params configStaParams;
-	struct config_bss_params configBssParams;
+	struct config_sta_params sta_params;
+	struct config_bss_params bss_params;
 };
 
 struct post_assoc_rsp_msg {
 	struct hal_msg_header header;
-	struct config_sta_rsp_params configStaRspParams;
-	struct config_bss_rsp_params configBssRspParams;
+	struct config_sta_rsp_params sta_rsp_params;
+	struct config_bss_rsp_params bss_rsp_params;
 };
 
 /* This is used by PE to create a set of WEP keys for a given BSS. */
@@ -1892,26 +1892,26 @@ struct set_bss_key_req_msg {
 	struct hal_msg_header header;
 
 	/* BSS Index of the BSS */
-	u8 bssIdx;
+	u8 bss_idx;
 
 	/* Encryption Type used with peer */
-	enum ani_ed_type encType;
+	enum ani_ed_type enc_type;
 
 	/* Number of keys */
-	u8 numKeys;
+	u8 num_keys;
 
 	/* Array of keys. */
-	struct sir_keys key[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
+	struct sir_keys keys[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
 
 	/* Control for Replay Count, 1= Single TID based replay count on Tx
 	 * 0 = Per TID based replay count on TX */
-	u8 singleTidRc;
+	u8 single_tid_rc;
 };
 
 /* tagged version of set bss key */
 struct set_bss_key_req_msg_tagged {
 	struct set_bss_key_req_msg Msg;
-	u32 Tag;
+	u32 tag;
 };
 
 struct set_bss_key_rsp_msg {
@@ -1944,17 +1944,17 @@ struct remove_bss_key_req_msg {
 	struct hal_msg_header header;
 
 	/* BSS Index of the BSS */
-	u8 bssIdx;
+	u8 bss_idx;
 
 	/* Encryption Type used with peer */
-	enum ani_ed_type encType;
+	enum ani_ed_type enc_type;
 
 	/* Key Id */
-	u8 keyId;
+	u8 id;
 
 	/* STATIC/DYNAMIC. Used in Nullifying in Key Descriptors for
 	 * Static/Dynamic keys */
-	enum ani_wep_type wepType;
+	enum ani_wep_type wep_type;
 
 };
 
@@ -1973,13 +1973,13 @@ struct remove_sta_key_req_msg {
 	struct hal_msg_header header;
 
 	/* STA Index */
-	u16 staIdx;
+	u16 sta_idx;
 
 	/* Encryption Type used with peer */
-	enum ani_ed_type encType;
+	enum ani_ed_type enc_type;
 
 	/* Key Id */
-	u8 keyId;
+	u8 key_id;
 
 	/* Whether to invalidate the Broadcast key or Unicast key. In case
 	 * of WEP, the same key is used for both broadcast and unicast. */
@@ -2009,15 +2009,15 @@ struct start_oem_data_req_msg {
 	struct hal_msg_header header;
 
 	u32 status;
-	tSirMacAddr selfMacAddr;
-	u8 oemDataReq[OEM_DATA_REQ_SIZE];
+	tSirMacAddr self_mac_addr;
+	u8 oem_data_req[OEM_DATA_REQ_SIZE];
 
 };
 
 struct start_oem_data_rsp_msg {
 	struct hal_msg_header header;
 
-	u8 oemDataRsp[OEM_DATA_RSP_SIZE];
+	u8 oem_data_rsp[OEM_DATA_RSP_SIZE];
 };
 
 #endif
@@ -2026,22 +2026,22 @@ struct switch_channel_req_msg {
 	struct hal_msg_header header;
 
 	/* Channel number */
-	u8 channelNumber;
+	u8 channel_number;
 
 	/* Local power constraint */
-	u8 localPowerConstraint;
+	u8 local_power_constraint;
 
 	/* Secondary channel offset */
-	enum phy_chan_bond_state secondaryChannelOffset;
+	enum phy_chan_bond_state secondary_channel_offset;
 
 	/* HAL fills in the tx power used for mgmt frames in this field. */
-	u8 txMgmtPower;
+	u8 tx_mgmt_power;
 
 	/* Max TX power */
-	u8 maxTxPower;
+	u8 max_tx_power;
 
 	/* Self STA MAC */
-	u8 selfStaMacAddr[ETH_ALEN];
+	u8 self_sta_mac_addr[ETH_ALEN];
 
 	/* VO WIFI comment: BSSID needed to identify session. As the
 	 * request has power constraints, this should be applied only to
@@ -2052,7 +2052,7 @@ struct switch_channel_req_msg {
 	 * ignoring if using new host/old FW or old host/new FW since it is
 	 * at the end of this struct
 	 */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 };
 
 struct switch_channel_rsp_msg {
@@ -2062,13 +2062,13 @@ struct switch_channel_rsp_msg {
 	u32 status;
 
 	/* Channel number - same as in request */
-	u8 channelNumber;
+	u8 channel_number;
 
 	/* HAL fills in the tx power used for mgmt frames in this field */
-	u8 txMgmtPower;
+	u8 tx_mgmt_power;
 
 	/* BSSID needed to identify session - same as in request */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 };
 
@@ -2076,7 +2076,7 @@ struct update_edca_params_req_msg {
 	struct hal_msg_header header;
 
 	/*BSS Index */
-	u16 bssIdx;
+	u16 bss_index;
 
 	/* Best Effort */
 	struct sir_edca_param_record acbe;
@@ -2101,34 +2101,34 @@ struct update_edca_params_rsp_msg {
 struct dpu_stats_params
 {
 	/* Index of STA to which the statistics */
-	u16 staIdx;
+	u16 sta_index;
 
 	/* Encryption mode */
-	u8 encMode;
+	u8 enc_mode;
 
 	/* status */
 	u32 status;
 
 	/* Statistics */
-	u32 sendBlocks;
-	u32 recvBlocks;
+	u32 send_blocks;
+	u32 recv_blocks;
 	u32 replays;
-	u8 micErrorCnt;
-	u32 protExclCnt;
-	u16 formatErrCnt;
-	u16 unDecryptableCnt;
-	u32 decryptErrCnt;
-	u32 decryptOkCnt;
+	u8 mic_error_cnt;
+	u32 prot_excl_cnt;
+	u16 format_err_cnt;
+	u16 un_decryptable_cnt;
+	u32 decrypt_err_cnt;
+	u32 decrypt_ok_cnt;
 };
 
 struct hal_stats_req_msg {
 	struct hal_msg_header header;
 
 	/* Valid STA Idx for per STA stats request */
-	u32 staId;
+	u32 sta_id;
 
 	/* Categories of stats requested as specified in eHalStatsMask */
-	u32 statsMask;
+	u32 stats_mask;
 };
 
 struct ani_summary_stats_info {
@@ -2149,7 +2149,7 @@ struct ani_summary_stats_info {
 
 	/* Total number of packets that were successfully received (after
 	 * appropriate filter rules including multi-cast, broadcast) */
-	u32 rx_frm_cnt;	
+	u32 rx_frm_cnt;
 
 	/* Total number of duplicate frames received successfully */
 	u32 frm_dup_cnt;
@@ -2285,8 +2285,8 @@ struct ani_global_security_stats {
 };
 
 struct ani_global_class_b_stats_info {
-	struct ani_global_security_stats ucStats;
-	struct ani_global_security_stats mcbcStats;
+	struct ani_global_security_stats uc_stats;
+	struct ani_global_security_stats mc_bc_stats;
 };
 
 struct ani_global_class_c_stats_info {
@@ -2337,16 +2337,16 @@ struct hal_stats_rsp_msg {
 	u32 status;
 
 	/* STA Idx */
-	u32 staId;
+	u32 sta_index;
 
 	/* Categories of STATS being returned as per eHalStatsMask */
-	u32 statsMask;
+	u32 stats_mask;
 
 	/* message type is same as the request type */
-	u16 msgType;
+	u16 msg_type;
 
 	/* length of the entire request, includes the pStatsBuf length too */
-	u16 msgLen;
+	u16 msg_len;
 
 };
 
@@ -2355,7 +2355,7 @@ struct set_link_state_req_msg {
 
 	u8 bssid[ETH_ALEN];
 	enum sir_link_state state;
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_mac_addr[ETH_ALEN];
 
 };
 
@@ -2411,32 +2411,32 @@ struct sir_ts_info {
 struct sir_tspec_ie {
 	u8 type;
 	u8 length;
-	struct sir_ts_info tsinfo;
-	u16 nomMsduSz;
-	u16 maxMsduSz;
-	u32 minSvcInterval;
-	u32 maxSvcInterval;
-	u32 inactInterval;
-	u32 suspendInterval;
-	u32 svcStartTime;
-	u32 minDataRate;
-	u32 meanDataRate;
-	u32 peakDataRate;
-	u32 maxBurstSz;
-	u32 delayBound;
-	u32 minPhyRate;
-	u16 surplusBw;
-	u16 mediumTime;
+	struct sir_ts_info ts_info;
+	u16 nom_msdu_size;
+	u16 max_msdu_size;
+	u32 min_svc_interval;
+	u32 max_svc_interval;
+	u32 inact_interval;
+	u32 suspend_interval;
+	u32 svc_start_time;
+	u32 min_data_rate;
+	u32 mean_data_rate;
+	u32 peak_data_rate;
+	u32 max_burst_sz;
+	u32 delay_bound;
+	u32 min_phy_rate;
+	u16 surplus_bw;
+	u16 medium_time;
 };
 
 struct add_ts_req_msg {
 	struct hal_msg_header header;
 
 	/* Station Index */
-	u16 staIdx;
+	u16 sta_index;
 
 	/* TSPEC handler uniquely identifying a TSPEC for a STA in a BSS */
-	u16 tspecIdx;
+	u16 tspec_index;
 
 	/* To program TPE with required parameters */
 	struct sir_tspec_ie tspec;
@@ -2444,18 +2444,18 @@ struct add_ts_req_msg {
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
 	   X  X  X  X  BE BK VI VO */
-	u8 uAPSD;
+	u8 uapsd;
 
 	/* These parameters are for all the access categories */
 
 	/* Service Interval */
-	u32 srvInterval[WCN36XX_HAL_MAX_AC];
+	u32 service_interval[WCN36XX_HAL_MAX_AC];
 
 	/* Suspend Interval */
-	u32 susInterval[WCN36XX_HAL_MAX_AC];
+	u32 suspend_interval[WCN36XX_HAL_MAX_AC];
 
 	/* Delay Interval */
-	u32 delayInterval[WCN36XX_HAL_MAX_AC];
+	u32 delay_interval[WCN36XX_HAL_MAX_AC];
 };
 
 struct add_rs_rsp_msg {
@@ -2470,13 +2470,13 @@ struct del_ts_req_msg {
 	struct hal_msg_header header;
 
 	/* Station Index */
-	u16 staIdx;
+	u16 sta_index;
 
 	/* TSPEC identifier uniquely identifying a TSPEC for a STA in a BSS */
-	u16 tspecIdx;
+	u16 tspec_index;
 
 	/* To lookup station id using the mac address */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 };
 
 struct del_ts_rsp_msg {
@@ -2495,22 +2495,22 @@ struct add_ba_session_req_msg {
 	struct hal_msg_header header;
 
 	/* Station Index */
-	u16 staIdx;
+	u16 sta_index;
 
 	/* Peer MAC Address */
-	u8 peerMacAddr[ETH_ALEN];
+	u8 mac_addr[ETH_ALEN];
 
 	/* ADDBA Action Frame dialog token
 	   HAL will not interpret this object */
-	u8 baDialogToken;
+	u8 dialog_token;
 
 	/* TID for which the BA is being setup
 	   This identifies the TC or TS of interest */
-	u8 baTID;
+	u8 tid;
 
 	/* 0 - Delayed BA (Not supported)
 	   1 - Immediate BA */
-	u8 baPolicy;
+	u8 policy;
 
 	/* Indicates the number of buffers for this TID (baTID)
 	   NOTE - This is the requested buffer size. When this
@@ -2518,20 +2518,20 @@ struct add_ba_session_req_msg {
 	   possible that HDD may change this buffer size. Any
 	   change in the buffer size should be noted by PE and
 	   advertized appropriately in the ADDBA response */
-	u16 baBufferSize;
+	u16 buffer_size;
 
 	/* BA timeout in TU's 0 means no timeout will occur */
-	u16 baTimeout;
+	u16 timeout;
 
 	/* b0..b3 - Fragment Number - Always set to 0
 	   b4..b15 - Starting Sequence Number of first MSDU
 	   for which this BA is setup */
-	u16 baSSN;
+	u16 ssn;
 
 	/* ADDBA direction
 	   1 - Originator
 	   0 - Recipient */
-	u8 baDirection;
+	u8 direction;
 };
 
 struct add_ba_session_rsp_msg {
@@ -2541,37 +2541,37 @@ struct add_ba_session_rsp_msg {
 	u32 status;
 
 	/* Dialog token */
-	u8 baDialogToken;
+	u8 dialog_token;
 
 	/* TID for which the BA session has been setup */
-	u8 baTID;
+	u8 ba_tid;
 
 	/* BA Buffer Size allocated for the current BA session */
-	u8 baBufferSize;
+	u8 ba_buffer_size;
 
-	u8 baSessionID;
+	u8 ba_session_id;
 
 	/* Reordering Window buffer */
-	u8 winSize;
+	u8 win_size;
 
 	/*Station Index to id the sta */
-	u8 STAID;
+	u8 sta_index;
 
 	/* Starting Sequence Number */
-	u16 SSN;
+	u16 ssn;
 };
 
 struct add_ba_req_msg {
 	struct hal_msg_header header;
 
 	/* Session Id */
-	u8 baSessionID;
+	u8 session_id;
 
 	/* Reorder Window Size */
-	u8 winSize;
+	u8 win_Size;
 
 #ifdef FEATURE_ON_CHIP_REORDERING
-	u8 isReorderingDoneOnChip;
+	u8 reordering_done_on_chip;
 #endif
 };
 
@@ -2582,35 +2582,35 @@ struct add_ba_rsp_msg {
 	u32 status;
 
 	/* Dialog token */
-	u8 baDialogToken;
+	u8 dialog_token;
 };
 
 struct add_ba_info {
-	u16 fBaEnable:1;
-	u16 startingSeqNum:12;
+	u16 ba_enable:1;
+	u16 starting_seq_num:12;
 	u16 reserved:3;
 };
 
 struct trigger_ba_rsp_candidate {
-	u8 staAddr[ETH_ALEN];
-	struct add_ba_info baInfo[STACFG_MAX_TC];
+	u8 sta_addr[ETH_ALEN];
+	struct add_ba_info ba_info[STACFG_MAX_TC];
 };
 
 struct trigget_ba_req_candidate {
-	u8 staIdx;
-	u8 tidBitmap;
+	u8 sta_index;
+	u8 tid_bitmap;
 };
 
 struct trigger_ba_req_msg {
 	struct hal_msg_header header;
 
 	/* Session Id */
-	u8 baSessionID;
+	u8 session_id;
 
 	/* baCandidateCnt is followed by trigger BA 
 	 * Candidate List(tTriggerBaCandidate)
 	 */
-	u16 baCandidateCnt;
+	u16 candidate_cnt;
 
 };
 
@@ -2618,7 +2618,7 @@ struct trigger_ba_rsp_msg {
 	struct hal_msg_header header;
 
 	/* TO SUPPORT BT-AMP */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* success or failure */
 	u32 status;
@@ -2626,22 +2626,22 @@ struct trigger_ba_rsp_msg {
 	/* baCandidateCnt is followed by trigger BA 
 	 * Rsp Candidate List(tTriggerRspBaCandidate)
 	 */
-	u16 baCandidateCnt;
+	u16 candidate_cnt;
 };
 
 struct del_ba_req_msg {
 	struct hal_msg_header header;
 
 	/* Station Index */
-	u16 staIdx;
+	u16 sta_index;
 
 	/* TID for which the BA session is being deleted */
-	u8 baTID;
+	u8 tid;
 
 	/* DELBA direction
 	   1 - Originator
 	   0 - Recipient */
-	u8 baDirection;
+	u8 direction;
 
 };
 
@@ -2657,9 +2657,9 @@ struct tsm_stats_req_msg {
 	struct hal_msg_header header;
 
 	/* Traffic Id */
-	u8 tsmTID;
+	u8 tid;
 
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 };
 
 struct tsm_stats_rsp_msg {
@@ -2669,25 +2669,25 @@ struct tsm_stats_rsp_msg {
 	u32 status;
 
 	/* Uplink Packet Queue delay */
-	u16 UplinkPktQueueDly;
+	u16 uplink_pkt_queue_delay;
 
 	/* Uplink Packet Queue delay histogram */
-	u16 UplinkPktQueueDlyHist[4];
+	u16 uplink_pkt_queue_delay_hist[4];
 
 	/* Uplink Packet Transmit delay */
-	u32 UplinkPktTxDly;
+	u32 uplink_pkt_tx_delay;
 
 	/* Uplink Packet loss */
-	u16 UplinkPktLoss;
+	u16 uplink_pkt_loss;
 
 	/* Uplink Packet count */
-	u16 UplinkPktCount;
+	u16 uplink_pkt_count;
 
 	/* Roaming count */
-	u8 RoamingCount;
+	u8 roaming_count;
 
 	/* Roaming Delay */
-	u16 RoamingDly;
+	u16 roaming_delay;
 
 };
 
@@ -2696,7 +2696,7 @@ struct set_key_done_msg {
 
 	/*bssid of the keys */
 	u8 bssidx;
-	u8 encType;
+	u8 enc_type;
 };
 
 struct hal_nv_img_download_req_msg {
@@ -2713,17 +2713,17 @@ struct hal_nv_img_download_req_msg {
 	 * isLastFragment field to 1. Note that all the NV blobs would be
 	 * concatenated together by HAL without any padding bytes in
 	 * between.*/
-	u16 fragNumber;
+	u16 frag_number;
 
 	/* Is this the last fragment? When set to 1 it indicates that no
 	 * more fragments will be sent by UMAC and HAL can concatenate all
 	 * the NV blobs rcvd & proceed with the parsing. HAL would generate
 	 * a WCN36XX_HAL_DOWNLOAD_NV_RSP to the WCN36XX_HAL_DOWNLOAD_NV_REQ after
 	 * it receives each fragment */
-	u16 isLastFragment;
+	u16 last_fragment;
 
 	/* NV Image size (number of bytes) */
-	u32 nvImgBufferSize;
+	u32 nv_img_buffer_size;
 
 	/* Following the 'nvImageBufferSize', there should be
 	 * nvImageBufferSize bytes of NV Image i.e.
@@ -2745,10 +2745,10 @@ struct hal_nv_store_ind {
 	struct hal_msg_header header;
 
 	/* NV Item */
-	u32 tableID;
+	u32 table_id;
 
 	/* Size of NV Blob */
-	u32 nvBlobSize;
+	u32 nv_blob_size;
 
 	/* Following the 'nvBlobSize', there should be nvBlobSize bytes of
 	 * NV blob i.e. u8[nvBlobSize] */
@@ -2764,36 +2764,36 @@ struct hal_nv_store_ind {
 struct mic_failure_ind_msg {
 	struct hal_msg_header header;
 
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* address used to compute MIC */
-	u8 srcMacAddr[ETH_ALEN];
+	u8 src_addr[ETH_ALEN];
 
 	/* transmitter address */
-	u8 taMacAddr[ETH_ALEN];
+	u8 ta_addr[ETH_ALEN];
 
-	u8 dstMacAddr[ETH_ALEN];
+	u8 dst_addr[ETH_ALEN];
 
 	u8 multicast;
 
 	/* first byte of IV */
-	u8 IV1;
+	u8 iv1;
 
 	/* second byte of IV */
-	u8 keyId;
+	u8 key_id;
 
 	/* sequence number */
-	u8 TSC[SIR_CIPHER_SEQ_CTR_SIZE];
+	u8 tsc[SIR_CIPHER_SEQ_CTR_SIZE];
 
 	/* receive address */
-	u8 rxMacAddr[ETH_ALEN];
+	u8 rx_addr[ETH_ALEN];
 };
 
 struct update_vht_op_mode_req_msg {
 	struct hal_msg_header header;
 
-	u16 opMode;
-	u16 staId;
+	u16 op_mode;
+	u16 sta_id;
 
 };
 
@@ -2806,28 +2806,28 @@ struct update_vht_op_mode_params_rsp_msg {
 struct update_beacon_req_msg {
 	struct hal_msg_header header;
 
-	u8 bssIdx;
+	u8 bss_index;
 
 	/* shortPreamble mode. HAL should update all the STA rates when it
 	 * receives this message */
-	u8 fShortPreamble;
+	u8 short_preamble;
 
 	/* short Slot time. */
-	u8 fShortSlotTime;
+	u8 short_slot_time;
 
 	/* Beacon Interval */
-	u16 beaconInterval;
+	u16 beacon_interval;
 
 	/* Protection related */
-	u8 llaCoexist;
-	u8 llbCoexist;
-	u8 llgCoexist;
-	u8 ht20MhzCoexist;
-	u8 llnNonGFCoexist;
-	u8 fLsigTXOPProtectionFullSupport;
-	u8 fRIFSMode;
+	u8 lla_coexist;
+	u8 llb_coexist;
+	u8 llg_coexist;
+	u8 ht20_coexist;
+	u8 lln_non_gf_coexist;
+	u8 lsig_tx_op_protection_full_support;
+	u8 rifs_mode;
 
-	u16 paramChangeBitmap;
+	u16 param_change_bitmap;
 };
 
 struct update_beacon_rsp_msg {
@@ -2839,18 +2839,18 @@ struct send_beacon_req_msg {
 	struct hal_msg_header header;
 
 	/* length of the template. */
-	u32 beaconLength;
+	u32 beacon_length;
 
 	/* Beacon data. */
 	u8 beacon[BEACON_TEMPLATE_SIZE];
 
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* TIM IE offset from the beginning of the template. */
-	u32 timIeOffset;
+	u32 tim_ie_offset;
 
 	/* P2P IE offset from the begining of the template */
-	u16 p2pIeOffset;
+	u16 p2p_ie_offset;
 };
 
 struct send_beacon_rsp_msg {
@@ -2861,7 +2861,7 @@ struct send_beacon_rsp_msg {
 struct enable_radar_req_msg {
 	struct hal_msg_header header;
 
-	u8 BSSID[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 	u8 channel;
 };
 
@@ -2869,7 +2869,7 @@ struct enable_radar_rsp_msg {
 	struct hal_msg_header header;
 
 	/* Link Parameters */
-	u8 BSSID[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* success or failure */
 	u32 status;
@@ -2878,7 +2878,7 @@ struct enable_radar_rsp_msg {
 struct radar_detect_intr_ind_msg {
 	struct hal_msg_header header;
 
-	u8 radarDetChannel;
+	u8 radar_det_channel;
 
 };
 
@@ -2886,20 +2886,20 @@ struct radar_detect_ind_msg {
 	struct hal_msg_header header;
 
 	/* channel number in which the RADAR detected */
-	u8 channelNumber;
+	u8 channel_number;
 
 	/* RADAR pulse width in usecond */
-	u16 radarPulseWidth;
+	u16 radar_pulse_width;
 
 	/* Number of RADAR pulses */
-	u16 numRadarPulse;
+	u16 num_radar_pulse;
 };
 
 struct sir_get_tpc_report_req_msg {
 	struct hal_msg_header header;
 
 	u8 sta[ETH_ALEN];
-	u8 dialogToken;
+	u8 dialog_token;
 	u8 txpower;
 };
 
@@ -2913,10 +2913,10 @@ struct sir_get_tpc_report_rsp_msg {
 struct send_probe_resp_req_msg {
 	struct hal_msg_header header;
 
-	u8 pProbeRespTemplate[BEACON_TEMPLATE_SIZE];
-	u32 probeRespTemplateLen;
-	u32 ucProxyProbeReqValidIEBmap[8];
-	u8 bssId[ETH_ALEN];
+	u8 probe_resp_template[BEACON_TEMPLATE_SIZE];
+	u32 probe_resp_template_len;
+	u32 proxy_probe_req_valid_ie_bmap[8];
+	u8 bssid[ETH_ALEN];
 };
 
 struct send_probe_resp_rsp_msg {
@@ -2936,26 +2936,26 @@ struct send_unknown_frame_rx_ind_msg {
 struct delete_sta_context_ind_msg {
 	struct hal_msg_header header;
 
-	u16 assocId;
-	u16 staId;
+	u16 aid;
+	u16 sta_id;
 
 	/* TO SUPPORT BT-AMP */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 	/* HAL copies bssid from the sta table. */
 	u8 addr2[ETH_ALEN];
 
 	/* To unify the keepalive / unknown A2 / tim-based disa */
-	u16 reasonCode;	
+	u16 reason_code;
 };
 
 struct indicate_del_sta {
 	struct hal_msg_header header;
-	u8 assocId;
-	u8 staIdx;
-	u8 bssIdx;
-	u8 uReasonCode;
-	u32 uStatus;
+	u8 aid;
+	u8 sta_index;
+	u8 bss_index;
+	u8 reason_code;
+	u32 status;
 };
 
 struct bt_amp_event_msg {
@@ -2976,10 +2976,10 @@ struct tl_hal_flush_ac_req_msg {
 	struct hal_msg_header header;
 
 	/* Station Index. originates from HAL */
-	u8 ucSTAId;
+	u8 sta_id;
 
 	/* TID for which the transmit queue is being flushed */
-	u8 ucTid;
+	u8 tid;
 
 };
 
@@ -2987,10 +2987,10 @@ struct tl_hal_flush_ac_rsp_msg {
 	struct hal_msg_header header;
 
 	/* Station Index. originates from HAL */
-	u8 ucSTAId;
+	u8 sta_id;
 
 	/* TID for which the transmit queue is being flushed */
-	u8 ucTid;
+	u8 tid;
 
 	/* success or failure */
 	u32 status;
@@ -3007,66 +3007,66 @@ struct hal_exit_imps_req {
 struct hal_enter_bmps_req_msg {
 	struct hal_msg_header header;
 
-	u8 bssIdx;
+	u8 bss_index;
 
 	/* TBTT value derived from the last beacon */
 #ifndef BUILD_QWPTTSTATIC
 	u64 tbtt;
 #endif
-	u8 dtimCount;
+	u8 dtim_count;
 
 	/* DTIM period given to HAL during association may not be valid, if
 	 * association is based on ProbeRsp instead of beacon. */
-	u8 dtimPeriod;
+	u8 dtim_period;
 
 	/* For CCX and 11R Roaming */
-	u32 rssiFilterPeriod;
+	u32 rssi_filter_period;
 
-	u32 numBeaconPerRssiAverage;
-	u8 bRssiFilterEnable;
+	u32 num_beacon_per_rssi_average;
+	u8 rssi_filter_enable;
 };
 
 struct hal_exit_bmps_req_msg {
 	struct hal_msg_header header;
 
-	u8 sendDataNull;
-	u8 bssIdx;
+	u8 send_data_null;
+	u8 bss_index;
 };
 
 struct hal_missed_beacon_ind_msg {
 	struct hal_msg_header header;
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 /* Beacon Filtering data structures */
 
 /* The above structure would be followed by multiple of below mentioned structure */
 struct beacon_filter_ie {
-	u8 elementId;
-	u8 checkIePresence;
+	u8 element_id;
+	u8 check_ie_presence;
 	u8 offset;
 	u8 value;
-	u8 bitMask;
+	u8 bitmask;
 	u8 ref;
 };
 
 struct hal_add_bcn_filter_req_msg {
 	struct hal_msg_header header;
 
-	u16 capabilityInfo;
-	u16 capabilityMask;
-	u16 beaconInterval;
-	u16 ieNum;
-	u8 bssIdx;
+	u16 capability_info;
+	u16 capability_mask;
+	u16 beacon_interval;
+	u16 ie_num;
+	u8 bss_index;
 	u8 reserved;
 };
 
 struct hal_rem_bcn_filter_req {
 	struct hal_msg_header header;
 
-	u8 ucIeCount;
-	u8 ucRemIeId[1];
+	u8 ie_Count;
+	u8 rem_ie_id[1];
 };
 
 #define HAL_IPV4_ARP_REPLY_OFFLOAD                  0
@@ -3080,40 +3080,43 @@ struct hal_rem_bcn_filter_req {
 #define HAL_OFFLOAD_ARP_AND_BCAST_FILTER_ENABLE     (HAL_OFFLOAD_ENABLE|HAL_OFFLOAD_BCAST_FILTER_ENABLE)
 
 struct hal_ns_offload_params {
-	u8 srcIPv6Addr[HAL_IPV6_ADDR_LEN];
-	u8 selfIPv6Addr[HAL_IPV6_ADDR_LEN];
+	u8 src_ipv6_addr[HAL_IPV6_ADDR_LEN];
+	u8 self_ipv6_addr[HAL_IPV6_ADDR_LEN];
 
 	/* Only support 2 possible Network Advertisement IPv6 address */
-	u8 targetIPv6Addr1[HAL_IPV6_ADDR_LEN];
-	u8 targetIPv6Addr2[HAL_IPV6_ADDR_LEN];
+	u8 target_ipv6_addr1[HAL_IPV6_ADDR_LEN];
+	u8 target_ipv6_addr2[HAL_IPV6_ADDR_LEN];
 
-	u8 selfMacAddr[HAL_MAC_ADDR_LEN];
-	u8 srcIPv6AddrValid:1;
-	u8 targetIPv6Addr1Valid:1;
-	u8 targetIPv6Addr2Valid:1;
+	u8 self_addr[HAL_MAC_ADDR_LEN];
+	u8 src_ipv6_addr_valid:1;
+	u8 target_ipv6_addr1_valid:1;
+	u8 target_ipv6_addr2_valid:1;
 	u8 reserved1:5;
 
 	/* make it DWORD aligned */
 	u8 reserved2;
 
 	/* slot index for this offload */
-	u32 slotIndex;
-	u8 bssIdx;
+	u32 slot_index;
+	u8 bss_index;
 };
 
 struct hal_host_offload_req {
-	u8 offloadType;
-	u8 enableOrDisable;
+	u8 offload_Type;
+
+	/* enable or disable */
+	u8 enable;
+
 	union {
-		u8 hostIpv4Addr[4];
-		u8 hostIpv6Addr[HAL_IPV6_ADDR_LEN];
+		u8 host_ipv4_addr[4];
+		u8 host_ipv6_addr[HAL_IPV6_ADDR_LEN];
 	} params;
 };
 
 struct hal_host_offload_req_msg {
 	struct hal_msg_header header;
-	struct hal_host_offload_req hostOffloadParams;
-	struct hal_ns_offload_params nsOffloadParams;
+	struct hal_host_offload_req host_offload_params;
+	struct hal_ns_offload_params ns_offload_params;
 };
 
 /* Packet Types. */
@@ -3128,48 +3131,48 @@ struct hal_host_offload_req_msg {
 struct hal_keep_alive_req_msg {
 	struct hal_msg_header header;
 
-	u8 packetType;
-	u32 timePeriod;
-	tHalIpv4Addr hostIpv4Addr;
-	tHalIpv4Addr destIpv4Addr;
-	u8 destMacAddr[ETH_ALEN];
-	u8 bssIdx;
+	u8 packet_type;
+	u32 time_period;
+	tHalIpv4Addr host_ipv4_addr;
+	tHalIpv4Addr dest_ipv4_addr;
+	u8 dest_addr[ETH_ALEN];
+	u8 bss_index;
 };
 
 struct hal_rssi_threshold_req_msg {
 	struct hal_msg_header header;
 
-	s8 ucRssiThreshold1:8;
-	s8 ucRssiThreshold2:8;
-	s8 ucRssiThreshold3:8;
-	u8 bRssiThres1PosNotify:1;
-	u8 bRssiThres1NegNotify:1;
-	u8 bRssiThres2PosNotify:1;
-	u8 bRssiThres2NegNotify:1;
-	u8 bRssiThres3PosNotify:1;
-	u8 bRssiThres3NegNotify:1;
-	u8 bReserved10:2;
+	s8 threshold1:8;
+	s8 threshold2:8;
+	s8 threshold3:8;
+	u8 thres1_pos_notify:1;
+	u8 thres1_neg_notify:1;
+	u8 thres2_pos_notify:1;
+	u8 thres2_neg_notify:1;
+	u8 thres3_pos_notify:1;
+	u8 thres3_neg_notify:1;
+	u8 reserved10:2;
 
 };
 
 struct hal_enter_uapsd_req_msg {
 	struct hal_msg_header header;
 
-	u8 bkDeliveryEnabled:1;
-	u8 beDeliveryEnabled:1;
-	u8 viDeliveryEnabled:1;
-	u8 voDeliveryEnabled:1;
-	u8 bkTriggerEnabled:1;
-	u8 beTriggerEnabled:1;
-	u8 viTriggerEnabled:1;
-	u8 voTriggerEnabled:1;
-	u8 bssIdx;
+	u8 bk_delivery:1;
+	u8 be_delivery:1;
+	u8 vi_delivery:1;
+	u8 vo_delivery:1;
+	u8 bk_trigger:1;
+	u8 be_trigger:1;
+	u8 vi_trigger:1;
+	u8 vo_trigger:1;
+	u8 bss_index;
 
 };
 
 struct hal_exit_uapsd_req_msg {
 	struct hal_msg_header header;
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 #define HAL_WOWL_BCAST_PATTERN_MAX_SIZE 128
@@ -3179,39 +3182,39 @@ struct hal_wowl_add_bcast_ptrn_req_msg {
 	struct hal_msg_header header;
 
 	/* Pattern ID */
-	u8 ucPatternId;
+	u8 id;
 
 	/* Pattern byte offset from beginning of the 802.11 packet to start
 	 * of the wake-up pattern */
-	u8 ucPatternByteOffset;
+	u8 byte_Offset;
 
 	/* Non-Zero Pattern size */
-	u8 ucPatternSize;
+	u8 size;
 
 	/* Pattern */
-	u8 ucPattern[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
+	u8 pattern[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
 
 	/* Non-zero pattern mask size */
-	u8 ucPatternMaskSize;
+	u8 mask_size;
 
 	/* Pattern mask */
-	u8 ucPatternMask[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
+	u8 mask[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
 
 	/* Extra pattern */
-	u8 ucPatternExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
+	u8 extra[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
 
 	/* Extra pattern mask */
-	u8 ucPatternMaskExt[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
+	u8 mask_extra[HAL_WOWL_BCAST_PATTERN_MAX_SIZE];
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_wow_del_bcast_ptrn_req_msg {
 	struct hal_msg_header header;
 
 	/* Pattern ID of the wakeup pattern to be deleted */
-	u8 ucPatternId;
-	u8 bssIdx;
+	u8 id;
+	u8 bss_index;
 
 };
 
@@ -3219,17 +3222,17 @@ struct hal_wowl_enter_req_msg {
 	struct hal_msg_header header;
 
 	/* Enables/disables magic packet filtering */
-	u8 ucMagicPktEnable;
+	u8 magic_packet_enable;
 
 	/* Magic pattern */
-	u8 magicPtrn[ETH_ALEN];
+	u8 magic_pattern[ETH_ALEN];
 
 	/* Enables/disables packet pattern filtering in firmware. Enabling
 	 * this flag enables broadcast pattern matching in Firmware. If
 	 * unicast pattern matching is also desired,
 	 * ucUcastPatternFilteringEnable flag must be set tot true as well
 	 */
-	u8 ucPatternFilteringEnable;
+	u8 pattern_filtering_enable;
 
 	/* Enables/disables unicast packet pattern filtering. This flag
 	 * specifies whether we want to do pattern match on unicast packets
@@ -3237,73 +3240,73 @@ struct hal_wowl_enter_req_msg {
 	 * if the ucPatternFilteringEnable (main controlling flag) is set
 	 * to false
 	 */
-	u8 ucUcastPatternFilteringEnable;
+	u8 ucast_pattern_filtering_enable;
 
 	/* This configuration is valid only when magicPktEnable=1. It
 	 * requests hardware to wake up when it receives the Channel Switch
 	 * Action Frame.
 	 */
-	u8 ucWowChnlSwitchRcv;
+	u8 wow_channel_switch_receive;
 
 	/* This configuration is valid only when magicPktEnable=1. It
 	 * requests hardware to wake up when it receives the
 	 * Deauthentication Frame.
 	 */
-	u8 ucWowDeauthRcv;
+	u8 wow_deauth_receive;
 
 	/* This configuration is valid only when magicPktEnable=1. It
 	 * requests hardware to wake up when it receives the Disassociation
 	 * Frame.
 	 */
-	u8 ucWowDisassocRcv;
+	u8 wow_disassoc_receive;
 
 	/* This configuration is valid only when magicPktEnable=1. It
 	 * requests hardware to wake up when it has missed consecutive
 	 * beacons. This is a hardware register configuration (NOT a
 	 * firmware configuration).
 	 */
-	u8 ucWowMaxMissedBeacons;
+	u8 wow_max_missed_beacons;
 
 	/* This configuration is valid only when magicPktEnable=1. This is
 	 * a timeout value in units of microsec. It requests hardware to
 	 * unconditionally wake up after it has stayed in WoWLAN mode for
 	 * some time. Set 0 to disable this feature.
 	 */
-	u8 ucWowMaxSleepUsec;
+	u8 wow_max_sleep;
 
 	/* This configuration directs the WoW packet filtering to look for
 	 * EAP-ID requests embedded in EAPOL frames and use this as a wake
 	 * source.
 	 */
-	u8 ucWoWEAPIDRequestEnable;
+	u8 wow_eap_id_request_enable;
 
 	/* This configuration directs the WoW packet filtering to look for
 	 * EAPOL-4WAY requests and use this as a wake source.
 	 */
-	u8 ucWoWEAPOL4WayEnable;
+	u8 wow_eapol_4way_enable;
 
 	/* This configuration allows a host wakeup on an network scan
 	 * offload match.
 	 */
-	u8 ucWowNetScanOffloadMatch;
+	u8 wow_net_scan_offload_match;
 
 	/* This configuration allows a host wakeup on any GTK rekeying
 	 * error.
 	 */
-	u8 ucWowGTKRekeyError;
+	u8 wow_gtk_rekey_error;
 
 	/* This configuration allows a host wakeup on BSS connection loss.
 	 */
-	u8 ucWoWBSSConnLoss;
+	u8 wow_bss_connection_loss;
 
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
 struct hal_wowl_exit_req_msg {
 	struct hal_msg_header header;
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_get_rssi_req_msg {
@@ -3314,7 +3317,7 @@ struct hal_get_roam_rssi_req_msg {
 	struct hal_msg_header header;
 
 	/* Valid STA Idx for per STA stats request */
-	u32 staId;
+	u32 sta_id;
 
 };
 
@@ -3322,7 +3325,7 @@ struct hal_set_uapsd_ac_params_req_msg {
 	struct hal_msg_header header;
 
 	/* STA index */
-	u8 staidx;
+	u8 sta_idx;
 
 	/* Access Category */
 	u8 ac;
@@ -3331,20 +3334,20 @@ struct hal_set_uapsd_ac_params_req_msg {
 	u8 up;
 
 	/* Service Interval */
-	u32 srvInterval;
+	u32 service_interval;
 
 	/* Suspend Interval */
-	u32 susInterval;
+	u32 suspend_interval;
 
 	/* Delay Interval */
-	u32 delayInterval;
+	u32 delay_interval;
 };
 
 struct hal_configure_rxp_filter_req_msg {
 	struct hal_msg_header header;
 
-	u8 setMcstBcstFilterSetting;
-	u8 setMcstBcstFilter;
+	u8 set_mcst_bcst_filter_setting;
+	u8 set_mcst_bcst_filter;
 };
 
 struct hal_enter_imps_rsp_msg {
@@ -3366,7 +3369,7 @@ struct hal_enter_bmps_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_exit_bmps_rsp_msg {
@@ -3374,7 +3377,7 @@ struct hal_exit_bmps_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3383,7 +3386,7 @@ struct hal_enter_uapsd_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3392,21 +3395,21 @@ struct hal_exit_uapsd_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
 struct hal_rssi_notification_ind_msg {
 	struct hal_msg_header header;
 
-	u32 bRssiThres1PosCross:1;
-	u32 bRssiThres1NegCross:1;
-	u32 bRssiThres2PosCross:1;
-	u32 bRssiThres2NegCross:1;
-	u32 bRssiThres3PosCross:1;
-	u32 bRssiThres3NegCross:1;
-	u32 avgRssi:8;
-	u32 bReserved:18;
+	u32 rssi_thres1_pos_cross:1;
+	u32 rssi_thres1_neg_cross:1;
+	u32 rssi_thres2_pos_cross:1;
+	u32 rssi_thres2_neg_cross:1;
+	u32 rssi_thres3_pos_cross:1;
+	u32 rssi_thres3_neg_cross:1;
+	u32 avg_rssi:8;
+	u32 reserved:18;
 
 };
 
@@ -3425,7 +3428,7 @@ struct hal_get_roam_rssi_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-	u8 staId;
+	u8 sta_id;
 	s8 rssi;
 
 };
@@ -3435,7 +3438,7 @@ struct hal_wowl_enter_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3444,7 +3447,7 @@ struct hal_wowl_exit_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3469,7 +3472,7 @@ struct hal_add_wowl_bcast_ptrn_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3478,7 +3481,7 @@ struct hal_del_wowl_bcast_ptrn_rsp_msg {
 
 	/* success or failure */
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -3528,9 +3531,9 @@ struct set_max_tx_pwr_req {
 	/* BSSID is needed to identify which session issued this request.
 	 * As the request has power constraints, this should be applied
 	 * only to that session */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
-	u8 selfStaMacAddr[ETH_ALEN];
+	u8 self_addr[ETH_ALEN];
 
 	/* In request, power == MaxTx power to be used. */
 	u8 power;
@@ -3550,8 +3553,8 @@ struct set_tx_pwr_req_msg {
 	struct hal_msg_header header;
 
 	/* TX Power in milli watts */
-	u32 txPower;
-	u8 bssIdx;
+	u32 tx_power;
+	u8 bss_index;
 };
 
 struct set_tx_pwr_rsp_msg {
@@ -3564,7 +3567,7 @@ struct set_tx_pwr_rsp_msg {
 struct get_tx_pwr_req_msg {
 	struct hal_msg_header header;
 
-	u8 staId;
+	u8 sta_id;
 };
 
 struct get_tx_pwr_rsp_msg {
@@ -3574,19 +3577,19 @@ struct get_tx_pwr_rsp_msg {
 	u32 status;
 
 	/* TX Power in milli watts */
-	u32 txPower;
+	u32 tx_power;
 };
 
 struct set_p2p_gonoa_req_msg {
 	struct hal_msg_header header;
 
 	u8 opp_ps;
-	u32 ctWindow;
+	u32 ct_window;
 	u8 count;
 	u32 duration;
 	u32 interval;
 	u32 single_noa_duration;
-	u8 psSelection;
+	u8 ps_selection;
 };
 
 struct set_p2p_gonoa_rsp_msg {
@@ -3600,7 +3603,7 @@ struct set_p2p_gonoa_rsp_msg {
 struct add_sta_self_req {
 	struct hal_msg_header header;
 
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_addr[ETH_ALEN];
 	u32 status;
 };
 
@@ -3611,19 +3614,19 @@ struct add_sta_self_rsp_msg {
 	u32 status;
 
 	/*Self STA Index */
-	u8 selfStaIdx;
+	u8 self_sta_index;
 
 	/* DPU Index (IGTK, PTK, GTK all same) */
-	u8 dpuIdx;
+	u8 dpu_index;
 
 	/* DPU Signature */
-	u8 dpuSignature;
+	u8 dpu_signature;
 };
 
 struct del_sta_self_req_msg {
 	struct hal_msg_header header;
 
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_addr[ETH_ALEN];
 
 };
 
@@ -3633,7 +3636,7 @@ struct del_sta_self_rsp_msg {
 	/*success or failure */
 	u32 status;
 
-	u8 selfMacAddr[ETH_ALEN];
+	u8 self_addr[ETH_ALEN];
 
 };
 
@@ -3641,12 +3644,12 @@ struct aggr_add_ts_req {
 	struct hal_msg_header header;
 
 	/* Station Index */
-	u16 staIdx;
+	u16 sta_idx;
 
 	/* TSPEC handler uniquely identifying a TSPEC for a STA in a BSS.
 	 * This will carry the bitmap with the bit positions representing
 	 * different AC.s */
-	u16 tspecIdx;
+	u16 tspec_index;
 
 	/* Tspec info per AC To program TPE with required parameters */
 	struct sir_tspec_ie tspec[WCN36XX_HAL_MAX_AC];
@@ -3654,18 +3657,18 @@ struct aggr_add_ts_req {
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
 	   X  X  X  X  BE BK VI VO */
-	u8 uAPSD;
+	u8 uapsd;
 
 	/* These parameters are for all the access categories */
 
 	/* Service Interval */
-	u32 srvInterval[WCN36XX_HAL_MAX_AC];
+	u32 service_interval[WCN36XX_HAL_MAX_AC];
 
 	/* Suspend Interval */
-	u32 susInterval[WCN36XX_HAL_MAX_AC];
+	u32 suspend_interval[WCN36XX_HAL_MAX_AC];
 
 	/* Delay Interval */
-	u32 delayInterval[WCN36XX_HAL_MAX_AC];
+	u32 delay_interval[WCN36XX_HAL_MAX_AC];
 };
 
 struct aggr_add_ts_rsp_msg {
@@ -3681,7 +3684,7 @@ struct aggr_add_ts_rsp_msg {
 struct hal_configure_apps_cpu_wakeup_state_req_msg {
 	struct hal_msg_header header;
 
-	u8 isAppsCpuAwake;
+	u8 is_apps_cpu_awake;
 
 };
 
@@ -3711,11 +3714,11 @@ struct hal_dump_cmd_rsp_msg {
 	u32 status;
 
 	/* Length of the responce message */
-	u32 rspLength;
+	u32 rsp_length;
 
 	/* FIXME: Currently considering the the responce will be less than
 	 * 100bytes */
-	u8 rspBuffer[DUMPCMD_RSP_BUFFER];
+	u8 rsp_buffer[DUMPCMD_RSP_BUFFER];
 
 };
 
@@ -3727,10 +3730,10 @@ struct coex_ind_msg {
 	struct hal_msg_header header;
 
 	/* Coex Indication Type */
-	u32 coexIndType;
+	u32 type;
 
 	/* Coex Indication Data */
-	u32 coexIndData[WLAN_COEX_IND_DATA_SIZE];
+	u32 data[WLAN_COEX_IND_DATA_SIZE];
 };
 
 struct tx_compl_ind_msg {
@@ -3744,35 +3747,35 @@ struct tx_compl_ind_msg {
 struct hal_wlan_host_suspend_ind_msg {
 	struct hal_msg_header header;
 
-	u32 configuredMcstBcstFilterSetting;
-	u32 activeSessionCount;
+	u32 configured_mcst_bcst_filter_setting;
+	u32 active_session_count;
 };
 
 struct hal_wlan_exclude_unencrpted_ind_msg {
 	struct hal_msg_header header;
 
-	u8 bDot11ExcludeUnencrypted;
-	u8 bssId[ETH_ALEN];
+	u8 dot11_exclude_unencrypted;
+	u8 bssid[ETH_ALEN];
 };
 
 struct noa_attr_ind_msg {
 	struct hal_msg_header header;
 
 	u8 index;
-	u8 oppPsFlag;
-	u16 ctWin;
+	u8 opp_ps_flag;
+	u16 ctwin;
 
-	u16 uNoa1IntervalCnt;
-	u16 bssIdx;
-	u32 uNoa1Duration;
-	u32 uNoa1Interval;
-	u32 uNoa1StartTime;
+	u16 noa1_interval_count;
+	u16 bss_index;
+	u32 noa1_duration;
+	u32 noa1_interval;
+	u32 noa1_starttime;
 
-	u16 uNoa2IntervalCnt;
-	u16 rsvd2;
-	u32 uNoa2Duration;
-	u32 uNoa2Interval;
-	u32 uNoa2StartTime;
+	u16 noa2_interval_count;
+	u16 reserved2;
+	u32 noa2_duration;
+	u32 noa2_interval;
+	u32 noa2_start_time;
 
 	u32 status;
 };
@@ -3781,14 +3784,14 @@ struct noa_start_ind_msg {
 	struct hal_msg_header header;
 
 	u32 status;
-	u32 bssIdx;
+	u32 bss_index;
 
 };
 
 struct hal_wlan_host_resume_req_msg {
 	struct hal_msg_header header;
 
-	u8 configuredMcstBcstFilterSetting;
+	u8 configured_mcst_bcst_filter_setting;
 
 };
 
@@ -3803,24 +3806,24 @@ struct hal_host_resume_rsp_msg {
 struct hal_del_ba_ind_msg {
 	struct hal_msg_header header;
 
-	u16 staIdx;
+	u16 sta_idx;
 
 	/* Peer MAC Address, whose BA session has timed out */
-	u8 peerMacAddr[ETH_ALEN];
+	u8 peer_addr[ETH_ALEN];
 
 	/* TID for which a BA session timeout is being triggered */
-	u8 baTID;
+	u8 ba_tid;
 
 	/* DELBA direction
 	 * 1 - Originator
 	 * 0 - Recipient
 	 */
-	u8 baDirection;
+	u8 direction;
 
-	u32 reasonCode;
+	u32 reason_code;
 
 	/* TO SUPPORT BT-AMP */
-	u8 bssId[ETH_ALEN];
+	u8 bssid[ETH_ALEN];
 
 };
 
@@ -3900,7 +3903,7 @@ enum ssid_bcast_type {
 /* The network description for which PNO will have to look for */
 struct network_type {
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssId;
+	struct sir_mac_ssid ssid;
 
 	/* Authentication type for the network */
 	enum auth_type authentication;
@@ -3910,20 +3913,20 @@ struct network_type {
 
 	/* Indicate the channel on which the Network can be found 0 - if
 	 * all channels */
-	u8 ucChannelCount;
-	u8 aChannels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
+	u8 channel_count;
+	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
 
 	/* Indicates the RSSI threshold for the network to be considered */
-	u8 rssiThreshold;
+	u8 rssi_threshold;
 };
 
 struct scan_timer {
 	/* How much it should wait */
-	u32 uTimerValue;
+	u32 value;
 
 	/* How many times it should repeat that wait value 0 - keep using
 	 * this timer until PNO is disabled */
-	u32 uTimerRepeat;
+	u32 repeat;
 
 	/* e.g: 2 3 4 0 - it will wait 2s between consecutive scans for 3
 	 * times - after that it will wait 4s between consecutive scans
@@ -3933,7 +3936,7 @@ struct scan_timer {
 /* The network parameters to be sent to the PNO algorithm */
 struct scan_timers_type {
 	/* set to 0 if you wish for PNO to use its default telescopic timer */
-	u8 ucScanTimersCount;
+	u8 count;
 
 	/* A set value represents the amount of time that PNO will wait
 	 * between two consecutive scan procedures If the desired is for a
@@ -3942,7 +3945,7 @@ struct scan_timers_type {
 	 * complex - telescopic like timer multiple values can be set -
 	 * once PNO reaches the end of the array it will continue scanning
 	 * at intervals presented by the last value */
-	struct scan_timer aTimerValues[WCN36XX_HAL_PNO_MAX_SCAN_TIMERS];
+	struct scan_timer values[WCN36XX_HAL_PNO_MAX_SCAN_TIMERS];
 
 };
 
@@ -3954,30 +3957,30 @@ struct set_pref_netw_list_req {
 	u32 enable;
 
 	/* Immediate,  On Suspend,   On Resume */
-	enum pno_mode modePNO;
+	enum pno_mode mode;
 
 	/* Number of networks sent for PNO */
-	u32 ucNetworksCount;
+	u32 networks_count;
 
 	/* The networks that PNO needs to look for */
-	struct network_type aNetworks[WCN36XX_HAL_PNO_MAX_SUPP_NETWORKS];
+	struct network_type networks[WCN36XX_HAL_PNO_MAX_SUPP_NETWORKS];
 
 	/* The scan timers required for PNO */
-	struct scan_timers_type scanTimers;
+	struct scan_timers_type scan_timers;
 
 	/* Probe template for 2.4GHz band */
-	u16 us24GProbeSize;
-	u8 a24GProbeTemplate[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
+	u16 band_24g_probe_size;
+	u8 band_24g_probe_template[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
 
 	/* Probe template for 5GHz band */
-	u16 us5GProbeSize;
-	u8 a5GProbeTemplate[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
+	u16 band_5g_probe_size;
+	u8 band_5g_probe_template[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
 };
 
 /* The network description for which PNO will have to look for */
 struct network_type_new {
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssId;
+	struct sir_mac_ssid ssid;
 
 	/* Authentication type for the network */
 	enum auth_type authentication;
@@ -3986,15 +3989,15 @@ struct network_type_new {
 	enum ed_type encryption;
 
 	/* SSID broadcast type, normal, hidden or unknown */
-	enum ssid_bcast_type bcastNetworkType;
+	enum ssid_bcast_type bcast_network_type;
 
 	/* Indicate the channel on which the Network can be found 0 - if
 	 * all channels */
-	u8 ucChannelCount;
-	u8 aChannels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
+	u8 channel_count;
+	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
 
 	/* Indicates the RSSI threshold for the network to be considered */
-	u8 rssiThreshold;
+	u8 rssi_threshold;
 };
 
 /* Preferred network list request new */
@@ -4005,24 +4008,24 @@ struct set_pref_netw_list_req_new {
 	u32 enable;
 
 	/* Immediate,  On Suspend,   On Resume */
-	enum pno_mode modePNO;
+	enum pno_mode mode;
 
 	/* Number of networks sent for PNO */
-	u32 ucNetworksCount;
+	u32 networks_count;
 
 	/* The networks that PNO needs to look for */
-	struct network_type_new aNetworks[WCN36XX_HAL_PNO_MAX_SUPP_NETWORKS];
+	struct network_type_new networks[WCN36XX_HAL_PNO_MAX_SUPP_NETWORKS];
 
 	/* The scan timers required for PNO */
-	struct scan_timers_type scanTimers;
+	struct scan_timers_type scan_timers;
 
 	/* Probe template for 2.4GHz band */
-	u16 us24GProbeSize;
-	u8 a24GProbeTemplate[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
+	u16 band_24g_probe_size;
+	u8 band_24g_probe_template[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
 
 	/* Probe template for 5GHz band */
-	u16 us5GProbeSize;
-	u8 a5GProbeTemplate[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
+	u16 band_5g_probe_size;
+	u8 band_5g_probe_template[WCN36XX_HAL_PNO_MAX_PROBE_SIZE];
 
 };
 
@@ -4041,7 +4044,7 @@ struct pref_netw_found_ind {
 	struct hal_msg_header header;
 
 	/* Network that was found with the highest RSSI */
-	struct sir_mac_ssid ssId;
+	struct sir_mac_ssid ssid;
 
 	/* Indicates the RSSI */
 	u8 rssi;
@@ -4052,7 +4055,7 @@ struct set_rssi_filter_req {
 	struct hal_msg_header header;
 
 	/* RSSI Threshold */
-	u8 ucRssiThreshold;
+	u8 rssi_threshold;
 
 };
 
@@ -4071,29 +4074,29 @@ struct update_scan_params_req {
 	struct hal_msg_header header;
 
 	/* Host setting for 11d */
-	u8 b11dEnabled;
+	u8 dot11d_enabled;
 
 	/* Lets PNO know that host has determined the regulatory domain */
-	u8 b11dResolved;
+	u8 dot11d_resolved;
 
 	/* Channels on which PNO is allowed to scan */
-	u8 ucChannelCount;
-	u8 aChannels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
+	u8 channel_count;
+	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS];
 
 	/* Minimum channel time */
-	u16 usActiveMinChTime;
+	u16 active_min_ch_time;
 
 	/* Maximum channel time */
-	u16 usActiveMaxChTime;
+	u16 active_max_ch_time;
 
 	/* Minimum channel time */
-	u16 usPassiveMinChTime;
+	u16 passive_min_ch_time;
 
 	/* Maximum channel time */
-	u16 usPassiveMaxChTime;
+	u16 passive_max_ch_time;
 
 	/* Cb State */
-	enum phy_chan_bond_state cbState;
+	enum phy_chan_bond_state state;
 };
 
 /* Update scan params - sent from host to PNO to be used during PNO
@@ -4103,29 +4106,29 @@ struct update_scan_params_req_ex {
 	struct hal_msg_header header;
 
 	/* Host setting for 11d */
-	u8 b11dEnabled;
+	u8 dot11d_enabled;
 
 	/* Lets PNO know that host has determined the regulatory domain */
-	u8 b11dResolved;
+	u8 dot11d_resolved;
 
 	/* Channels on which PNO is allowed to scan */
-	u8 ucChannelCount;
-	u8 aChannels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS_EX];
+	u8 channel_count;
+	u8 channels[WCN36XX_HAL_PNO_MAX_NETW_CHANNELS_EX];
 
 	/* Minimum channel time */
-	u16 usActiveMinChTime;
+	u16 active_min_ch_time;
 
 	/* Maximum channel time */
-	u16 usActiveMaxChTime;
+	u16 active_max_ch_time;
 
 	/* Minimum channel time */
-	u16 usPassiveMinChTime;
+	u16 passive_min_ch_time;
 
 	/* Maximum channel time */
-	u16 usPassiveMaxChTime;
+	u16 passive_max_ch_time;
 
 	/* Cb State */
-	enum phy_chan_bond_state cbState;
+	enum phy_chan_bond_state state;
 
 };
 
@@ -4144,17 +4147,17 @@ struct hal_set_tx_per_tracking_req_msg {
 	struct hal_msg_header header;
 
 	/* 0: disable, 1:enable */
-	u8 ucTxPerTrackingEnable;
+	u8 tx_per_tracking_enable;
 
 	/* Check period, unit is sec. */
-	u8 ucTxPerTrackingPeriod;
+	u8 tx_per_tracking_period;
 
 	/* (Fail TX packet)/(Total TX packet) ratio, the unit is 10%. */
-	u8 ucTxPerTrackingRatio;
+	u8 tx_per_tracking_ratio;
 
 	/* A watermark of check number, once the tx packet exceed this
 	 * number, we do the check, default is 5 */
-	u32 uTxPerTrackingWatermark;
+	u32 tx_per_tracking_watermark;
 
 };
 
@@ -4202,52 +4205,52 @@ enum hal_rcv_pkt_flt_cmp_flag_type {
 };
 
 struct hal_rcv_pkt_filter_params {
-	u8 protocolLayer;
-	u8 cmpFlag;
+	u8 protocol_layer;
+	u8 cmp_flag;
 
 	/* Length of the data to compare */
-	u16 dataLength;
+	u16 data_length;
 
 	/* from start of the respective frame header */
-	u8 dataOffset;
+	u8 data_offset;
 
 	/* Reserved field */
 	u8 reserved;
 
 	/* Data to compare */
-	u8 compareData[HAL_PROTOCOL_DATA_LEN];
+	u8 compare_data[HAL_PROTOCOL_DATA_LEN];
 
 	/* Mask to be applied on the received packet data before compare */
-	u8 dataMask[HAL_PROTOCOL_DATA_LEN];
+	u8 data_mask[HAL_PROTOCOL_DATA_LEN];
 };
 
 struct hal_sessionized_rcv_pkt_filter_cfg_type {
-	u8 filterId;
-	u8 filterType;
-	u8 numParams;
-	u32 coleasceTime;
-	u8 bssIdx;
-	struct hal_rcv_pkt_filter_params paramsData[1];
+	u8 id;
+	u8 type;
+	u8 params_count;
+	u32 coleasce_time;
+	u8 bss_index;
+	struct hal_rcv_pkt_filter_params params[1];
 };
 
 struct hal_set_rcv_pkt_filter_req_msg {
 	struct hal_msg_header header;
 
-	u8 filterId;
-	u8 filterType;
-	u8 numParams;
-	u32 coalesceTime;
-	struct hal_rcv_pkt_filter_params paramsData[1];
+	u8 id;
+	u8 type;
+	u8 params_count;
+	u32 coalesce_time;
+	struct hal_rcv_pkt_filter_params params[1];
 
 };
 
 struct hal_rcv_flt_mc_addr_list_type {
 	/* from start of the respective frame header */
-	u8 dataOffset;
+	u8 data_offset;
 
-	u32 cMulticastAddr;
-	u8 multicastAddr[ETH_ALEN][HAL_MAX_NUM_MULTICAST_ADDRESS];
-	u8 bssIdx;
+	u32 mc_addr_count;
+	u8 mc_addr[ETH_ALEN][HAL_MAX_NUM_MULTICAST_ADDRESS];
+	u8 bss_index;
 };
 
 struct hal_set_pkt_filter_rsp_msg {
@@ -4256,19 +4259,19 @@ struct hal_set_pkt_filter_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_rcv_flt_pkt_match_cnt_req_msg {
 	struct hal_msg_header header;
 
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
 struct hal_rcv_flt_pkt_match_cnt {
-	u8 filterId;
-	u32 matchCnt;
+	u8 id;
+	u32 match_cnt;
 };
 
 struct hal_rcv_flt_pkt_match_cnt_rsp_msg {
@@ -4277,37 +4280,37 @@ struct hal_rcv_flt_pkt_match_cnt_rsp_msg {
 	/* Success or Failure */
 	u32 status;
 
-	u32 matchCnt;
-	struct hal_rcv_flt_pkt_match_cnt filterMatchCnt[HAL_MAX_NUM_FILTERS];
-	u8 bssIdx;
+	u32 match_count;
+	struct hal_rcv_flt_pkt_match_cnt matches[HAL_MAX_NUM_FILTERS];
+	u8 bss_index;
 };
 
 struct hal_rcv_flt_pkt_clear_param {
 	/* only valid for response message */
 	u32 status;
-	u8 filterId;
-	u8 bssIdx;
+	u8 id;
+	u8 bss_index;
 };
 
 struct hal_rcv_flt_pkt_clear_req_msg {
 	struct hal_msg_header header;
-	struct hal_rcv_flt_pkt_clear_param filterClearParam;
+	struct hal_rcv_flt_pkt_clear_param param;
 };
 
 struct hal_rcv_flt_pkt_clear_rsp_msg {
 	struct hal_msg_header header;
-	struct hal_rcv_flt_pkt_clear_param filterClearParam;
+	struct hal_rcv_flt_pkt_clear_param param;
 };
 
 struct hal_rcv_flt_pkt_set_mc_list_req_msg {
 	struct hal_msg_header header;
-	struct hal_rcv_flt_mc_addr_list_type mcAddrList;
+	struct hal_rcv_flt_mc_addr_list_type mc_addr_list;
 };
 
 struct hal_rcv_flt_pkt_set_mc_list_rsp_msg {
 	struct hal_msg_header header;
 	u32 status;
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 /* Packet Filtering Definitions End */
@@ -4316,22 +4319,22 @@ struct set_power_params_req_msg {
 	struct hal_msg_header header;
 
 	/*  Ignore DTIM */
-	u32 uIgnoreDTIM;
+	u32 ignore_dtim;
 
 	/* DTIM Period */
-	u32 uDTIMPeriod;
+	u32 dtim_period;
 
 	/* Listen Interval */
-	u32 uListenInterval;
+	u32 listen_interval;
 
 	/* Broadcast Multicast Filter  */
-	u32 uBcastMcastFilter;
+	u32 bcast_mcast_filter;
 
 	/* Beacon Early Termination */
-	u32 uEnableBET;
+	u32 enable_bet;
 
 	/* Beacon Early Termination Interval */
-	u32 uBETInterval;
+	u32 bet_interval;
 };
 
 struct set_power_params_resp {
@@ -4376,7 +4379,7 @@ struct wlan_feat_caps_msg {
 
 	struct hal_msg_header header;
 
-	u32 featCaps[4];
+	u32 feat_caps[4];
 
 };
 
@@ -4489,25 +4492,25 @@ struct hal_wake_reason_ind {
 	struct hal_msg_header header;
 
 	/* see tWakeReasonType */
-	u32 ulReason;
+	u32 reason;
 
 	/* argument specific to the reason type */
-	u32 ulReasonArg;
+	u32 reason_arg;
 
 	/* length of optional data stored in this message, in case HAL
 	 * truncates the data (i.e. data packets) this length will be less
 	 * than the actual length */
-	u32 ulStoredDataLen;
+	u32 stored_data_len;
 
 	/* actual length of data */
-	u32 ulActualDataLen;
+	u32 actual_data_len;
 
 	/* variable length start of data (length == storedDataLen) see
 	 * specific wake type */
-	u8 aDataStart[1];
+	u8 data_start[1];
 
-	u32 uBssIdx:8;
-	u32 bReserved:24;
+	u32 bss_index:8;
+	u32 reserved:24;
 };
 
 #define HAL_GTK_KEK_BYTES 16
@@ -4521,56 +4524,56 @@ struct hal_gtk_offload_req_msg {
 	struct hal_msg_header header;
 
 	/* optional flags */
-	u32 ulFlags;
+	u32 flags;
 
 	/* Key confirmation key */
-	u8 aKCK[HAL_GTK_KCK_BYTES];
+	u8 kck[HAL_GTK_KCK_BYTES];
 
 	/* key encryption key */
-	u8 aKEK[HAL_GTK_KEK_BYTES];
+	u8 kek[HAL_GTK_KEK_BYTES];
 
 	/* replay counter */
-	u64 ullKeyReplayCounter;
+	u64 key_replay_counter;
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_gtk_offload_rsp_msg {
 	struct hal_msg_header header;
 
 	/* success or failure */
-	u32 ulStatus;
+	u32 status;
 
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_gtk_offload_get_info_req_msg {
 	struct hal_msg_header header;
-	u8 bssIdx;
+	u8 bss_index;
 };
 
 struct hal_gtk_offload_get_info_rsp_msg {
 	struct hal_msg_header header;
 
 	/* success or failure */
-	u32 ulStatus;
+	u32 status;
 
 	/* last rekey status when the rekey was offloaded */
-	u32 ulLastRekeyStatus;
+	u32 last_rekey_status;
 
 	/* current replay counter value */
-	u64 ullKeyReplayCounter;
+	u64 key_replay_counter;
 
 	/* total rekey attempts */
-	u32 ulTotalRekeyCount;
+	u32 total_rekey_count;
 
 	/* successful GTK rekeys */
-	u32 ulGTKRekeyCount;
+	u32 gtk_rekey_count;
 
 	/* successful iGTK rekeys */
-	u32 ulIGTKRekeyCount;
+	u32 igtk_rekey_count;
 
-	u8 bssIdx;
+	u8 bss_index;
 
 };
 
@@ -4578,7 +4581,7 @@ struct dhcp_info {
 	/* Indicates the device mode which indicates about the DHCP activity */
 	u8 device_mode;
 
-	u8 macAddr[ETH_ALEN];
+	u8 addr[ETH_ALEN];
 };
 
 struct dhcp_ind_status {
@@ -4638,10 +4641,10 @@ struct set_thermal_mitigation_req_msg {
 	struct hal_msg_header header;
 
 	/* Thermal Mitigation Operation Mode */
-	enum hal_thermal_mitigation_mode_type thermalMitMode;
+	enum hal_thermal_mitigation_mode_type mode;
 
 	/* Thermal Mitigation Level */
-	enum hal_thermal_mitigation_level_type thermalMitLevel;
+	enum hal_thermal_mitigation_level_type level;
 
 };
 
@@ -4665,13 +4668,13 @@ struct stats_class_b_ind {
 	/* Per STA Stats */
 
 	/* TX stats */
-	u32 txBytesPushed;
-	u32 txPacketsPushed;
+	u32 tx_bytes_pushed;
+	u32 tx_packets_pushed;
 
 	/* RX stats */
-	u32 rxBytesRcvd;
-	u32 rxPacketsRcvd;
-	u32 rxTimeTotal;
+	u32 rx_bytes_rcvd;
+	u32 rx_packets_rcvd;
+	u32 rx_time_total;
 
 };
 
