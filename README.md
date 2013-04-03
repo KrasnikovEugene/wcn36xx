@@ -41,3 +41,6 @@ CM_BUILD=mako
 
 ARM_EABI_TOOLCHAIN=$(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin
 ANDROID_PRODUCT_OUT=$(ANDROID_BUILD_TOP)/out/target/product/$(CM_BUILD)
+
+Mailing list: wcn36xx@lists.infradead.org
+Subscription: http://lists.infradead.org/mailman/listinfo/wcn36xx
