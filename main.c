@@ -127,7 +127,7 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
 
-static void wcn36xx_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *control, struct sk_buff *skb)
 {
 	struct ieee80211_mgmt *mgmt;
 	ENTER();
