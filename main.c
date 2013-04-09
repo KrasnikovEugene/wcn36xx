@@ -158,9 +158,9 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 	wcn36xx_smd_update_scan_params(wcn);
 	wcn36xx_smd_exit_imps(wcn);
 	if (req->n_ssids > 0) {
-		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie, req->ie_len);
+		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie_len);
 	} else {
-		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie, req->ie_len);
+		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie_len);
 	}
 	for(i = 0; i < req->n_channels; i++) {
 		wcn36xx_smd_init_scan(wcn);
