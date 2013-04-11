@@ -1775,7 +1775,7 @@ struct config_bss_req_msg {
 	union {
 		struct config_bss_params bss_params;
 		struct config_bss_params_v1 bss_params_v1;
-	} uBssParams;
+	} u;
 };
 
 struct config_bss_rsp_params {
@@ -3098,7 +3098,7 @@ struct wcn36xx_hal_host_offload_req {
 	union {
 		u8 host_ipv4_addr[4];
 		u8 host_ipv6_addr[WCN36XX_HAL_IPV6_ADDR_LEN];
-	} params;
+	} u;
 };
 
 struct wcn36xx_hal_host_offload_req_msg {
