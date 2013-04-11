@@ -51,7 +51,6 @@
 /* The maximum value of access category */
 #define WCN36XX_HAL_MAX_AC  4
 
-#define WCN36XX_HAL_MAC_ADDR_LEN        6
 #define WCN36XX_HAL_IPV4_ADDR_LEN       4
 
 #define WALN_HAL_STA_INVALID_IDX 0xFF
@@ -3063,7 +3062,6 @@ struct wcn36xx_hal_rem_bcn_filter_req {
 #define WCN36XX_HAL_IPV6_NEIGHBOR_DISCOVERY_OFFLOAD         1
 #define WCN36XX_HAL_IPV6_NS_OFFLOAD                         2
 #define WCN36XX_HAL_IPV6_ADDR_LEN                           16
-#define WCN36XX_HAL_MAC_ADDR_LEN                            6
 #define WCN36XX_HAL_OFFLOAD_DISABLE                         0
 #define WCN36XX_HAL_OFFLOAD_ENABLE                          1
 #define WCN36XX_HAL_OFFLOAD_BCAST_FILTER_ENABLE             0x2
@@ -3077,7 +3075,7 @@ struct wcn36xx_hal_ns_offload_params {
 	u8 target_ipv6_addr1[WCN36XX_HAL_IPV6_ADDR_LEN];
 	u8 target_ipv6_addr2[WCN36XX_HAL_IPV6_ADDR_LEN];
 
-	u8 self_addr[WCN36XX_HAL_MAC_ADDR_LEN];
+	u8 self_addr[ETH_ALEN];
 	u8 src_ipv6_addr_valid:1;
 	u8 target_ipv6_addr1_valid:1;
 	u8 target_ipv6_addr2_valid:1;
