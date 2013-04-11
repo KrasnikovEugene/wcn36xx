@@ -779,7 +779,7 @@ struct hal_update_cfg_rsp_msg {
 };
 
 /* Frame control field format (2 bytes) */
-typedef struct sSirMacFrameCtl {
+struct wcn36xx_hal_mac_frame_ctl {
 
 #ifndef ANI_LITTLE_BIT_ENDIAN
 
@@ -813,25 +813,25 @@ typedef struct sSirMacFrameCtl {
 
 #endif
 
-} tSirMacFrameCtl, *tpSirMacFrameCtl;
+};
 
 /* Sequence control field */
-typedef struct sSirMacSeqCtl {
+struct wcn36xx_hal_mac_seq_ctl {
 	u8 fragNum:4;
 	u8 seqNumLo:4;
 	u8 seqNumHi:8;
-} tSirMacSeqCtl, *tpSirMacSeqCtl;
+};
 
 /* Management header format */
-typedef struct sSirMacMgmtHdr {
-	tSirMacFrameCtl fc;
+struct wcn36xx_hal_mac_mgmt_hdr {
+	struct wcn36xx_hal_mac_frame_ctl fc;
 	u8 durationLo;
 	u8 durationHi;
 	u8 da[6];
 	u8 sa[6];
 	u8 bssId[6];
-	tSirMacSeqCtl seqControl;
-} tSirMacMgmtHdr, *tpSirMacMgmtHdr;
+	struct wcn36xx_hal_mac_seq_ctl seqControl;
+};
 
 /* FIXME: pronto v1 apparently has 4 */
 #define HAL_NUM_BSSID               2
@@ -867,7 +867,7 @@ struct hal_init_scan_req_msg {
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr mac_mgmt_hdr;
+	struct wcn36xx_hal_mac_mgmt_hdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
 	struct wcn36xx_hal_scan_entry scan_entry;
@@ -898,7 +898,7 @@ struct hal_init_scan_con_req_msg {
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr mac_mgmt_hdr;
+	struct wcn36xx_hal_mac_mgmt_hdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
 	struct wcn36xx_hal_scan_entry scan_entry;
@@ -986,7 +986,7 @@ struct hal_finish_scan_req_msg {
 
 	/* Following the framelength there is a MAC frame buffer if
 	 * frameLength is non-zero. */
-	tSirMacMgmtHdr mac_mgmt_hdr;
+	struct wcn36xx_hal_mac_mgmt_hdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
 	struct wcn36xx_hal_scan_entry scan_entry;
@@ -1434,7 +1434,7 @@ struct wcn36xx_hal_aci_aifsn {
 };
 
 /* contention window size */
-typedef struct sSirMacCW {
+struct wcn36xx_hal_mac_cw {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u8 max:4;
 	u8 min:4;
@@ -1442,11 +1442,11 @@ typedef struct sSirMacCW {
 	u8 min:4;
 	u8 max:4;
 #endif
-} tSirMacCW;
+};
 
 struct wcn36xx_hal_edca_param_record {
 	struct wcn36xx_hal_aci_aifsn aci;
-	tSirMacCW cw;
+	struct wcn36xx_hal_mac_cw cw;
 	u16 txop_limit;
 };
 
