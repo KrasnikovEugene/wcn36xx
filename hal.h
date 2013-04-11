@@ -4383,35 +4383,6 @@ struct wlan_feat_caps_msg {
 
 };
 
-#define IS_MCC_SUPPORTED_BY_HOST (!!(halMsg_GetHostWlanFeatCaps(MCC)))
-#define IS_SLM_SESSIONIZATION_SUPPORTED_BY_HOST (!!(halMsg_GetHostWlanFeatCaps(SLM_SESSIONIZATION)))
-#define IS_FEATURE_SUPPORTED_BY_HOST(featEnumValue) (!!halMsg_GetHostWlanFeatCaps(featEnumValue))
-#define IS_WLANACTIVE_OFFLOAD_SUPPORTED_BY_HOST (!!(halMsg_GetHostWlanFeatCaps(WLANACTIVE_OFFLOAD)))
-
-u8 halMsg_GetHostWlanFeatCaps(u8 feat_enum_value);
-
-#define setFeatCaps(a,b)   {  u32 arr_index, bit_index; \
-                              if ((b)<=127) { \
-                                arr_index = (b)/32; \
-                                bit_index = (b)%32; \
-                                (a)->featCaps[arr_index] |= (1<<bit_index); \
-                              } \
-                           }
-#define getFeatCaps(a,b,c) {  u32 arr_index, bit_index; \
-                              if ((b)<=127) { \
-                                arr_index = (b)/32; \
-                                bit_index = (b)%32; \
-                                (c) = ((a)->featCaps[arr_index] & (1<<bit_index))?1:0; \
-                              } \
-                           }
-#define clearFeatCaps(a,b) {  u32 arr_index, bit_index; \
-                              if ((b)<=127) { \
-                                arr_index = (b)/32; \
-                                bit_index = (b)%32; \
-                                (a)->featCaps[arr_index] &= ~(1<<bit_index); \
-                              } \
-                           }
-
 /* status codes to help debug rekey failures */
 enum gtk_rekey_status {
 	WCN36XX_HAL_GTK_REKEY_STATUS_SUCCESS = 0,
