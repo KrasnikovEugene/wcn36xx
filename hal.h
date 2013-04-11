@@ -425,20 +425,20 @@ enum phy_chan_bond_state {
 };
 
 /* Spatial Multiplexing(SM) Power Save mode */
-enum sir_ht_mimo_state {
+enum wcn36xx_hal_ht_mimo_state {
 	/* Static SM Power Save mode */
-	SIR_HT_MIMO_PS_STATIC = 0,
+	WCN36XX_HAL_HT_MIMO_PS_STATIC = 0,
 
 	/* Dynamic SM Power Save mode */
-	SIR_HT_MIMO_PS_DYNAMIC = 1,
+	WCN36XX_HAL_HT_MIMO_PS_DYNAMIC = 1,
 
 	/* reserved */
-	SIR_HT_MIMO_PS_NA = 2,
+	WCN36XX_HAL_HT_MIMO_PS_NA = 2,
 
 	/* SM Power Save disabled */
-	SIR_HT_MIMO_PS_NO_LIMIT = 3,
+	WCN36XX_HAL_HT_MIMO_PS_NO_LIMIT = 3,
 
-	SIR_HT_MIMO_PS_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_HT_MIMO_PS_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* each station added has a rate mode which specifies the sta attributes */
@@ -455,120 +455,120 @@ enum sta_rate_mode {
 };
 
 /* 1,2,5.5,11 */
-#define SIR_NUM_11B_RATES           4
+#define WCN36XX_HAL_NUM_11B_RATES           4
 
 /* 6,9,12,18,24,36,48,54 */
-#define SIR_NUM_11A_RATES           8
+#define WCN36XX_HAL_NUM_11A_RATES           8
 
 /* 72,96,108 */
-#define SIR_NUM_POLARIS_RATES       3
+#define WCN36XX_HAL_NUM_POLARIS_RATES       3
 
-#define SIR_MAC_MAX_SUPPORTED_MCS_SET    16
+#define WCN36XX_HAL_MAC_MAX_SUPPORTED_MCS_SET    16
 
-enum sir_bss_type {
-	SIR_INFRASTRUCTURE_MODE,
+enum wcn36xx_hal_bss_type {
+	WCN36XX_HAL_INFRASTRUCTURE_MODE,
 
 	/* Added for softAP support */
-	SIR_INFRA_AP_MODE,
+	WCN36XX_HAL_INFRA_AP_MODE,
 
-	SIR_IBSS_MODE,
-
-	/* Added for BT-AMP support */
-	SIR_BTAMP_STA_MODE,
+	WCN36XX_HAL_IBSS_MODE,
 
 	/* Added for BT-AMP support */
-	SIR_BTAMP_AP_MODE,
+	WCN36XX_HAL_BTAMP_STA_MODE,
 
-	SIR_AUTO_MODE,
+	/* Added for BT-AMP support */
+	WCN36XX_HAL_BTAMP_AP_MODE,
 
-	SIR_DONOT_USE_BSS_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_AUTO_MODE,
+
+	WCN36XX_HAL_DONOT_USE_BSS_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
-enum sir_nw_type {
-	SIR_11A_NW_TYPE,
-	SIR_11B_NW_TYPE,
-	SIR_11G_NW_TYPE,
-	SIR_11N_NW_TYPE,
-	SIR_DONOT_USE_NW_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
+enum wcn36xx_hal_nw_type {
+	WCN36XX_HAL_11A_NW_TYPE,
+	WCN36XX_HAL_11B_NW_TYPE,
+	WCN36XX_HAL_11G_NW_TYPE,
+	WCN36XX_HAL_11N_NW_TYPE,
+	WCN36XX_HAL_DONOT_USE_NW_TYPE = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
-#define SIR_MAC_RATESET_EID_MAX            12
+#define WCN36XX_HAL_MAC_RATESET_EID_MAX            12
 
-enum sir_ht_operating_mode {
+enum wcn36xx_hal_ht_operating_mode {
 	/* No Protection */
-	SIR_HT_OP_MODE_PURE,
+	WCN36XX_HAL_HT_OP_MODE_PURE,
 
 	/* Overlap Legacy device present, protection is optional */
-	SIR_HT_OP_MODE_OVERLAP_LEGACY,
+	WCN36XX_HAL_HT_OP_MODE_OVERLAP_LEGACY,
 
 	/* No legacy device, but 20 MHz HT present */
-	SIR_HT_OP_MODE_NO_LEGACY_20MHZ_HT,
+	WCN36XX_HAL_HT_OP_MODE_NO_LEGACY_20MHZ_HT,
 
 	/* Protection is required */
-	SIR_HT_OP_MODE_MIXED,
+	WCN36XX_HAL_HT_OP_MODE_MIXED,
 
-	SIR_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 /* Encryption type enum used with peer */
 enum ani_ed_type {
-	SIR_ED_NONE,
-	SIR_ED_WEP40,
-	SIR_ED_WEP104,
-	SIR_ED_TKIP,
-	SIR_ED_CCMP,
-	SIR_ED_WPI,
-	SIR_ED_AES_128_CMAC,
-	SIR_ED_NOT_IMPLEMENTED = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_ED_NONE,
+	WCN36XX_HAL_ED_WEP40,
+	WCN36XX_HAL_ED_WEP104,
+	WCN36XX_HAL_ED_TKIP,
+	WCN36XX_HAL_ED_CCMP,
+	WCN36XX_HAL_ED_WPI,
+	WCN36XX_HAL_ED_AES_128_CMAC,
+	WCN36XX_HAL_ED_NOT_IMPLEMENTED = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 #define WLAN_MAX_KEY_RSC_LEN                16
 #define WLAN_WAPI_KEY_RSC_LEN               16
 
 /* MAX key length when ULA is used */
-#define SIR_MAC_MAX_KEY_LENGTH              32
-#define SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS     4
+#define WCN36XX_HAL_MAC_MAX_KEY_LENGTH              32
+#define WCN36XX_HAL_MAC_MAX_NUM_OF_DEFAULT_KEYS     4
 
 /*
  * Enum to specify whether key is used for TX only, RX only or both.
  */
 enum ani_key_direction {
-	SIR_TX_ONLY,
-	SIR_RX_ONLY,
-	SIR_TX_RX,
-	SIR_TX_DEFAULT,
-	SIR_DONOT_USE_KEY_DIRECTION = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_TX_ONLY,
+	WCN36XX_HAL_RX_ONLY,
+	WCN36XX_HAL_TX_RX,
+	WCN36XX_HAL_TX_DEFAULT,
+	WCN36XX_HAL_DONOT_USE_KEY_DIRECTION = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum ani_wep_type {
-	SIR_WEP_STATIC,
-	SIR_WEP_DYNAMIC,
-	SIR_WEP_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_WEP_STATIC,
+	WCN36XX_HAL_WEP_DYNAMIC,
+	WCN36XX_HAL_WEP_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
-enum sir_link_state {
+enum wcn36xx_hal_link_state {
 
-	SIR_LINK_IDLE_STATE = 0,
-	SIR_LINK_PREASSOC_STATE = 1,
-	SIR_LINK_POSTASSOC_STATE = 2,
-	SIR_LINK_AP_STATE = 3,
-	SIR_LINK_IBSS_STATE = 4,
+	WCN36XX_HAL_LINK_IDLE_STATE = 0,
+	WCN36XX_HAL_LINK_PREASSOC_STATE = 1,
+	WCN36XX_HAL_LINK_POSTASSOC_STATE = 2,
+	WCN36XX_HAL_LINK_AP_STATE = 3,
+	WCN36XX_HAL_LINK_IBSS_STATE = 4,
 
 	/* BT-AMP Case */
-	SIR_LINK_BTAMP_PREASSOC_STATE = 5,
-	SIR_LINK_BTAMP_POSTASSOC_STATE = 6,
-	SIR_LINK_BTAMP_AP_STATE = 7,
-	SIR_LINK_BTAMP_STA_STATE = 8,
+	WCN36XX_HAL_LINK_BTAMP_PREASSOC_STATE = 5,
+	WCN36XX_HAL_LINK_BTAMP_POSTASSOC_STATE = 6,
+	WCN36XX_HAL_LINK_BTAMP_AP_STATE = 7,
+	WCN36XX_HAL_LINK_BTAMP_STA_STATE = 8,
 
 	/* Reserved for HAL Internal Use */
-	SIR_LINK_LEARN_STATE = 9,
-	SIR_LINK_SCAN_STATE = 10,
-	SIR_LINK_FINISH_SCAN_STATE = 11,
-	SIR_LINK_INIT_CAL_STATE = 12,
-	SIR_LINK_FINISH_CAL_STATE = 13,
-	SIR_LINK_LISTEN_STATE = 14,
+	WCN36XX_HAL_LINK_LEARN_STATE = 9,
+	WCN36XX_HAL_LINK_SCAN_STATE = 10,
+	WCN36XX_HAL_LINK_FINISH_SCAN_STATE = 11,
+	WCN36XX_HAL_LINK_INIT_CAL_STATE = 12,
+	WCN36XX_HAL_LINK_FINISH_CAL_STATE = 13,
+	WCN36XX_HAL_LINK_LISTEN_STATE = 14,
 
-	SIR_LINK_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
+	WCN36XX_HAL_LINK_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
 enum hal_stats_mask {
@@ -614,7 +614,7 @@ struct wcnss_wlan_version {
 } __packed;
 
 /* Definition for Encryption Keys */
-struct sir_keys {
+struct wcn36xx_hal_keys {
 	u8 id;
 
 	/* 0 for multicast */
@@ -629,7 +629,7 @@ struct sir_keys {
 	u8 pae_role;
 
 	u16 length;
-	u8 key[SIR_MAC_MAX_KEY_LENGTH];
+	u8 key[WCN36XX_HAL_MAC_MAX_KEY_LENGTH];
 };
 
 /* SetStaKeyParams Moving here since it is shared by configbss/setstakey msgs */
@@ -647,7 +647,7 @@ struct set_sta_key_params {
 	u8 def_wep_idx;
 
 	/* valid only for non-static WEP encyrptions */
-	struct sir_keys key[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
+	struct wcn36xx_hal_keys key[WCN36XX_HAL_MAC_MAX_NUM_OF_DEFAULT_KEYS];
 
 	/*
 	 * Control for Replay Count, 1= Single TID based replay count on Tx
@@ -837,7 +837,7 @@ typedef struct sSirMacMgmtHdr {
 #define HAL_NUM_BSSID               2
 
 /* Scan Entry to hold active BSS idx's */
-struct sir_scan_entry {
+struct wcn36xx_hal_scan_entry {
 	u8 bss_index[HAL_NUM_BSSID];
 	u8 active_bss_count;
 };
@@ -870,7 +870,7 @@ struct hal_init_scan_req_msg {
 	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scan_entry;
+	struct wcn36xx_hal_scan_entry scan_entry;
 };
 
 struct hal_init_scan_con_req_msg {
@@ -901,7 +901,7 @@ struct hal_init_scan_con_req_msg {
 	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scan_entry;
+	struct wcn36xx_hal_scan_entry scan_entry;
 
 	/* Single NoA usage in Scanning */
 	u8 use_noa;
@@ -989,7 +989,7 @@ struct hal_finish_scan_req_msg {
 	tSirMacMgmtHdr mac_mgmt_hdr;
 
 	/* Entry to hold number of active BSS idx's */
-	struct sir_scan_entry scan_entry;
+	struct wcn36xx_hal_scan_entry scan_entry;
 
 };
 
@@ -1001,7 +1001,7 @@ struct hal_finish_scan_rsp_msg {
 
 };
 
-struct sir_supported_rates {
+struct wcn36xx_hal_supported_rates {
 	/*
 	 * For Self STA Entry: this represents Self Mode.
 	 * For Peer Stations, this represents the mode of the peer.
@@ -1025,9 +1025,9 @@ struct sir_supported_rates {
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
-	u16 llb_rates[SIR_NUM_11B_RATES];
-	u16 lla_rates[SIR_NUM_11A_RATES];
-	u16 legacy_rates[SIR_NUM_POLARIS_RATES];
+	u16 llb_rates[WCN36XX_HAL_NUM_11B_RATES];
+	u16 lla_rates[WCN36XX_HAL_NUM_11A_RATES];
+	u16 legacy_rates[WCN36XX_HAL_NUM_POLARIS_RATES];
 	u16 reserved;
 
 	/* Taurus only supports 26 Titan Rates(no ESF/concat Rates will be
@@ -1041,7 +1041,7 @@ struct sir_supported_rates {
 	 * 0-76 bits used, remaining reserved
 	 * bits 0-15 and 32 should be set.
 	 */
-	u8 supported_mcs_set[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+	u8 supported_mcs_set[WCN36XX_HAL_MAC_MAX_SUPPORTED_MCS_SET];
 
 	/*
 	 * RX Highest Supported Data Rate defines the highest data
@@ -1129,7 +1129,7 @@ struct config_sta_params {
 	u8 green_field_capable;
 
 	/* MIMO Power Save mode */
-	enum sir_ht_mimo_state mimo_ps;
+	enum wcn36xx_hal_ht_mimo_state mimo_ps;
 
 	/* Delayed BA Support */
 	u8 delayed_ba_support;
@@ -1158,11 +1158,11 @@ struct config_sta_params {
 	u8 reserved;
 
 	/* These rates are the intersection of peer and self capabilities. */
-	struct sir_supported_rates supported_rates;
+	struct wcn36xx_hal_supported_rates supported_rates;
 
 };
 
-struct sir_supported_rates_v1 {
+struct wcn36xx_hal_supported_rates_v1 {
 	/*
 	 * For Self STA Entry: this represents Self Mode.
 	 * For Peer Stations, this represents the mode of the peer.
@@ -1187,9 +1187,9 @@ struct sir_supported_rates_v1 {
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
-	u16 llb_rates[SIR_NUM_11B_RATES];
-	u16 lla_rates[SIR_NUM_11A_RATES];
-	u16 legacy_rates[SIR_NUM_POLARIS_RATES];
+	u16 llb_rates[WCN36XX_HAL_NUM_11B_RATES];
+	u16 lla_rates[WCN36XX_HAL_NUM_11A_RATES];
+	u16 legacy_rates[WCN36XX_HAL_NUM_POLARIS_RATES];
 	u16 reserved;
 
 	/* Taurus only supports 26 Titan Rates(no ESF/concat Rates will be
@@ -1204,7 +1204,7 @@ struct sir_supported_rates_v1 {
 	 * 0-76 bits used, remaining reserved
 	 * bits 0-15 and 32 should be set.
 	 */
-	u8 supported_mcs_set[SIR_MAC_MAX_SUPPORTED_MCS_SET];
+	u8 supported_mcs_set[WCN36XX_HAL_MAC_MAX_SUPPORTED_MCS_SET];
 
 	/*
 	 * RX Highest Supported Data Rate defines the highest data
@@ -1307,7 +1307,7 @@ struct config_sta_params_v1 {
 	u8 green_field_capable;
 
 	/* MIMO Power Save mode */
-	enum sir_ht_mimo_state mimo_ps;
+	enum wcn36xx_hal_ht_mimo_state mimo_ps;
 
 	/* Delayed BA Support */
 	u8 delayed_ba_support;
@@ -1339,7 +1339,7 @@ struct config_sta_params_v1 {
 	u8 reserved:5;
 
 	/* These rates are the intersection of peer and self capabilities. */
-	struct sir_supported_rates_v1 supported_rates;
+	struct wcn36xx_hal_supported_rates_v1 supported_rates;
 
 	u8 vht;
 	u8 vht_tx_channel_width_set;
@@ -1413,13 +1413,13 @@ struct delete_sta_rsp_msg {
 
 /* 12 Bytes long because this structure can be used to represent rate and
  * extended rate set IEs. The parser assume this to be at least 12 */
-struct sir_rate_set {
+struct wcn36xx_hal_rate_set {
 	u8 num_rates;
-	u8 rate[SIR_MAC_RATESET_EID_MAX];
+	u8 rate[WCN36XX_HAL_MAC_RATESET_EID_MAX];
 };
 
 /* access category record */
-struct sir_aci_aifsn {
+struct wcn36xx_hal_aci_aifsn {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u8 rsvd:1;
 	u8 aci:2;
@@ -1444,13 +1444,13 @@ typedef struct sSirMacCW {
 #endif
 } tSirMacCW;
 
-struct sir_edca_param_record {
-	struct sir_aci_aifsn aci;
+struct wcn36xx_hal_edca_param_record {
+	struct wcn36xx_hal_aci_aifsn aci;
 	tSirMacCW cw;
 	u16 txop_limit;
 };
 
-struct sir_mac_ssid {
+struct wcn36xx_hal_mac_ssid {
 	u8 length;
 	u8 ssid[32];
 };
@@ -1493,13 +1493,13 @@ struct config_bss_params {
 	u8 self_mac_addr[ETH_ALEN];
 
 	/* BSS type */
-	enum sir_bss_type bss_type;
+	enum wcn36xx_hal_bss_type bss_type;
 
 	/* Operational Mode: AP =0, STA = 1 */
 	u8 oper_mode;
 
 	/* Network Type */
-	enum sir_nw_type nw_type;
+	enum wcn36xx_hal_nw_type nw_type;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
 	u8 short_slot_time_supported;
@@ -1544,7 +1544,7 @@ struct config_bss_params {
 	u8 reserved;
 
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssid;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1553,7 +1553,7 @@ struct config_bss_params {
 	u8 action;
 
 	/* MAC Rate Set */
-	struct sir_rate_set rateset;
+	struct wcn36xx_hal_rate_set rateset;
 
 	/* Enable/Disable HT capabilities of the BSS */
 	u8 ht;
@@ -1565,7 +1565,7 @@ struct config_bss_params {
 	u8 rmf;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	enum sir_ht_operating_mode ht_oper_mode;
+	enum wcn36xx_hal_ht_operating_mode ht_oper_mode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
 	u8 dual_cts_protection;
@@ -1586,16 +1586,16 @@ struct config_bss_params {
 	u8 edca_params_valid;
 
 	/* EDCA Parameters for Best Effort Access Category */
-	struct sir_edca_param_record acbe;
+	struct wcn36xx_hal_edca_param_record acbe;
 
 	/* EDCA Parameters forBackground Access Category */
-	struct sir_edca_param_record acbk;
+	struct wcn36xx_hal_edca_param_record acbk;
 
 	/* EDCA Parameters for Video Access Category */
-	struct sir_edca_param_record acvi;
+	struct wcn36xx_hal_edca_param_record acvi;
 
 	/* EDCA Parameters for Voice Access Category */
-	struct sir_edca_param_record acvo;
+	struct wcn36xx_hal_edca_param_record acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
@@ -1637,13 +1637,13 @@ struct config_bss_params_v1 {
 	u8 self_mac_addr[ETH_ALEN];
 
 	/* BSS type */
-	enum sir_bss_type bss_type;
+	enum wcn36xx_hal_bss_type bss_type;
 
 	/* Operational Mode: AP =0, STA = 1 */
 	u8 oper_mode;
 
 	/* Network Type */
-	enum sir_nw_type nw_type;
+	enum wcn36xx_hal_nw_type nw_type;
 
 	/* Used to classify PURE_11G/11G_MIXED to program MTU */
 	u8 short_slot_time_supported;
@@ -1688,7 +1688,7 @@ struct config_bss_params_v1 {
 	u8 reserved;
 
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssid;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* HAL should update the existing BSS entry, if this flag is set.
 	 * UMAC will set this flag in case of reassoc, where we want to
@@ -1697,7 +1697,7 @@ struct config_bss_params_v1 {
 	u8 action;
 
 	/* MAC Rate Set */
-	struct sir_rate_set rateset;
+	struct wcn36xx_hal_rate_set rateset;
 
 	/* Enable/Disable HT capabilities of the BSS */
 	u8 ht;
@@ -1709,7 +1709,7 @@ struct config_bss_params_v1 {
 	u8 rmf;
 
 	/* HT Operating Mode operating mode of the 802.11n STA */
-	enum sir_ht_operating_mode ht_oper_mode;
+	enum wcn36xx_hal_ht_operating_mode ht_oper_mode;
 
 	/* Dual CTS Protection: 0 - Unused, 1 - Used */
 	u8 dual_cts_protection;
@@ -1730,16 +1730,16 @@ struct config_bss_params_v1 {
 	u8 edca_params_valid;
 
 	/* EDCA Parameters for Best Effort Access Category */
-	struct sir_edca_param_record acbe;
+	struct wcn36xx_hal_edca_param_record acbe;
 
 	/* EDCA Parameters forBackground Access Category */
-	struct sir_edca_param_record acbk;
+	struct wcn36xx_hal_edca_param_record acbk;
 
 	/* EDCA Parameters for Video Access Category */
-	struct sir_edca_param_record acvi;
+	struct wcn36xx_hal_edca_param_record acvi;
 
 	/* EDCA Parameters for Voice Access Category */
-	struct sir_edca_param_record acvo;
+	struct wcn36xx_hal_edca_param_record acvo;
 
 #ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
@@ -1864,7 +1864,7 @@ struct hal_join_req_msg {
 	enum phy_chan_bond_state secondary_channel_offset;
 
 	/* link State */
-	enum sir_link_state link_state;
+	enum wcn36xx_hal_link_state link_state;
 
 	/* Max TX power */
 	s8 max_tx_power;
@@ -1907,7 +1907,7 @@ struct set_bss_key_req_msg {
 	u8 num_keys;
 
 	/* Array of keys. */
-	struct sir_keys keys[SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS];
+	struct wcn36xx_hal_keys keys[WCN36XX_HAL_MAC_MAX_NUM_OF_DEFAULT_KEYS];
 
 	/* Control for Replay Count, 1= Single TID based replay count on Tx
 	 * 0 = Per TID based replay count on TX */
@@ -2082,16 +2082,16 @@ struct update_edca_params_req_msg {
 	u16 bss_index;
 
 	/* Best Effort */
-	struct sir_edca_param_record acbe;
+	struct wcn36xx_hal_edca_param_record acbe;
 
 	/* Background */
-	struct sir_edca_param_record acbk;
+	struct wcn36xx_hal_edca_param_record acbk;
 
 	/* Video */
-	struct sir_edca_param_record acvi;
+	struct wcn36xx_hal_edca_param_record acvi;
 
 	/* Voice */
-	struct sir_edca_param_record acvo;
+	struct wcn36xx_hal_edca_param_record acvo;
 };
 
 struct update_edca_params_rsp_msg {
@@ -2355,7 +2355,7 @@ struct set_link_state_req_msg {
 	struct hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
-	enum sir_link_state state;
+	enum wcn36xx_hal_link_state state;
 	u8 self_mac_addr[ETH_ALEN];
 
 };
@@ -2368,7 +2368,7 @@ struct set_link_state_rsp_msg {
 };
 
 /* TSPEC Params */
-struct sir_ts_info_tfc {
+struct wcn36xx_hal_ts_info_tfc {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u16 ackPolicy:2;
 	u16 userPrio:3;
@@ -2391,7 +2391,7 @@ struct sir_ts_info_tfc {
 };
 
 /* Flag to schedule the traffic type */
-struct sir_ts_info_sch {
+struct wcn36xx_hal_ts_info_sch {
 #ifndef ANI_LITTLE_BIT_ENDIAN
 	u8 rsvd:7;
 	u8 schedule:1;
@@ -2402,16 +2402,16 @@ struct sir_ts_info_sch {
 };
 
 /* Traffic and scheduling info */
-struct sir_ts_info {
-	struct sir_ts_info_tfc traffic;
-	struct sir_ts_info_sch schedule;
+struct wcn36xx_hal_ts_info {
+	struct wcn36xx_hal_ts_info_tfc traffic;
+	struct wcn36xx_hal_ts_info_sch schedule;
 };
 
 /* Information elements */
-struct sir_tspec_ie {
+struct wcn36xx_hal_tspec_ie {
 	u8 type;
 	u8 length;
-	struct sir_ts_info ts_info;
+	struct wcn36xx_hal_ts_info ts_info;
 	u16 nom_msdu_size;
 	u16 max_msdu_size;
 	u32 min_svc_interval;
@@ -2439,7 +2439,7 @@ struct add_ts_req_msg {
 	u16 tspec_index;
 
 	/* To program TPE with required parameters */
-	struct sir_tspec_ie tspec;
+	struct wcn36xx_hal_tspec_ie tspec;
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
@@ -2750,7 +2750,7 @@ struct hal_nv_store_ind {
 
 /* End of Block Ack Related Parameters */
 
-#define SIR_CIPHER_SEQ_CTR_SIZE 6
+#define WCN36XX_HAL_CIPHER_SEQ_CTR_SIZE 6
 
 /* Definition for MIC failure indication MAC reports this each time a MIC
  * failure occures on Rx TKIP packet
@@ -2777,7 +2777,7 @@ struct mic_failure_ind_msg {
 	u8 key_id;
 
 	/* sequence number */
-	u8 tsc[SIR_CIPHER_SEQ_CTR_SIZE];
+	u8 tsc[WCN36XX_HAL_CIPHER_SEQ_CTR_SIZE];
 
 	/* receive address */
 	u8 rx_addr[ETH_ALEN];
@@ -2887,7 +2887,7 @@ struct radar_detect_ind_msg {
 	u16 num_radar_pulse;
 };
 
-struct sir_get_tpc_report_req_msg {
+struct wcn36xx_hal_get_tpc_report_req_msg {
 	struct hal_msg_header header;
 
 	u8 sta[ETH_ALEN];
@@ -2895,7 +2895,7 @@ struct sir_get_tpc_report_req_msg {
 	u8 txpower;
 };
 
-struct sir_get_tpc_report_rsp_msg {
+struct wcn36xx_hal_get_tpc_report_rsp_msg {
 	struct hal_msg_header header;
 
 	/* success or failure */
@@ -3624,7 +3624,7 @@ struct aggr_add_ts_req {
 	u16 tspec_index;
 
 	/* Tspec info per AC To program TPE with required parameters */
-	struct sir_tspec_ie tspec[WCN36XX_HAL_MAX_AC];
+	struct wcn36xx_hal_tspec_ie tspec[WCN36XX_HAL_MAX_AC];
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
 	   b7 b6 b5 b4 b3 b2 b1 b0 =
@@ -3866,7 +3866,7 @@ enum ssid_bcast_type {
 /* The network description for which PNO will have to look for */
 struct network_type {
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssid;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* Authentication type for the network */
 	enum auth_type authentication;
@@ -3942,7 +3942,7 @@ struct set_pref_netw_list_req {
 /* The network description for which PNO will have to look for */
 struct network_type_new {
 	/* SSID of the BSS */
-	struct sir_mac_ssid ssid;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* Authentication type for the network */
 	enum auth_type authentication;
@@ -4005,7 +4005,7 @@ struct pref_netw_found_ind {
 	struct hal_msg_header header;
 
 	/* Network that was found with the highest RSSI */
-	struct sir_mac_ssid ssid;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* Indicates the RSSI */
 	u8 rssi;
