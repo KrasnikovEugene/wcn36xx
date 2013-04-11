@@ -1,0 +1,26 @@
+From 25a051408f299de2f98889af6778cdf823edd3ee Mon Sep 17 00:00:00 2001
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+Date: Tue, 9 Apr 2013 18:14:01 +0200
+Subject: [PATCH 3/3] Update tx ops to lates mac80211
+
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/main.c b/main.c
+index ff2d1d6..8117733 100644
+--- a/main.c
++++ b/main.c
+@@ -127,7 +127,7 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
+ 	*total &= WCN36XX_SUPPORTED_FILTERS;
+ }
+ 
+-static void wcn36xx_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *control, struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt;
+ 	ENTER();
+-- 
+1.7.10
+
