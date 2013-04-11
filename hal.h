@@ -658,7 +658,7 @@ struct set_sta_key_params {
 };
 
 /* 4-byte control message header used by HAL*/
-struct hal_msg_header {
+struct wcn36xx_hal_msg_header {
 	enum hal_host_msg_type msgType:16;
 	enum hal_host_msg_version msgVersion:16;
 	u32 len;
@@ -702,7 +702,7 @@ struct hal_mac_start_parameters {
 struct hal_mac_start_req_msg {
 	/* Note: The length specified in tHalMacStartReqMsg messages should be
 	 * header.msgLen = sizeof(tHalMacStartReqMsg) + uConfigBufferLen */
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_mac_start_parameters params;
 };
 
@@ -728,7 +728,7 @@ struct hal_mac_start_rsp_params {
 };
 
 struct hal_mac_start_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_mac_start_rsp_params startRspParams;
 };
 
@@ -739,12 +739,12 @@ struct hal_mac_stop_req_params {
 };
 
 struct hal_mac_stop_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_mac_stop_req_params stopReqParams;
 };
 
 struct hal_mac_stop_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -755,7 +755,7 @@ struct hal_update_cfg_req_msg {
 	 * Note: The length specified in tHalUpdateCfgReqMsg messages should be
 	 * header.msgLen = sizeof(tHalUpdateCfgReqMsg) + uConfigBufferLen
 	 */
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Length of the config buffer. Allows UMAC to update multiple CFGs */
 	u32 len;
@@ -771,7 +771,7 @@ struct hal_update_cfg_req_msg {
 };
 
 struct hal_update_cfg_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -843,7 +843,7 @@ struct wcn36xx_hal_scan_entry {
 };
 
 struct hal_init_scan_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
@@ -874,7 +874,7 @@ struct hal_init_scan_req_msg {
 };
 
 struct hal_init_scan_con_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* LEARN - AP Role
 	   SCAN - STA Role */
@@ -912,7 +912,7 @@ struct hal_init_scan_con_req_msg {
 };
 
 struct hal_init_scan_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -920,14 +920,14 @@ struct hal_init_scan_rsp_msg {
 };
 
 struct hal_start_scan_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Indicates the channel to scan */
 	u8 scan_channel;
 };
 
 struct hal_start_rsm_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -938,7 +938,7 @@ struct hal_start_rsm_msg {
 };
 
 struct hal_end_scan_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Indicates the channel to stop scanning. Not used really. But
 	 * retained for symmetry with "start Scan" message. It can also
@@ -947,14 +947,14 @@ struct hal_end_scan_req_msg {
 };
 
 struct hal_end_scan_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_finish_scan_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Identifies the operational state of the AP/STA
 	 * LEARN - AP Role SCAN - STA Role */
@@ -994,7 +994,7 @@ struct hal_finish_scan_req_msg {
 };
 
 struct hal_finish_scan_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -1347,7 +1347,7 @@ struct config_sta_params_v1 {
 };
 
 struct config_sta_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	union {
 		struct config_sta_params sta_params;
 		struct config_sta_params_v1 sta_params_v1;
@@ -1387,13 +1387,13 @@ struct config_sta_rsp_params {
 };
 
 struct config_sta_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct config_sta_rsp_params configStaRspParams;
 };
 
 /* Delete STA Request message */
 struct delete_sta_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Index of STA to delete */
 	u8 sta_index;
@@ -1402,7 +1402,7 @@ struct delete_sta_req_msg {
 
 /* Delete STA Response message */
 struct delete_sta_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -1772,7 +1772,7 @@ struct config_bss_params_v1 {
 };
 
 struct config_bss_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	union {
 		struct config_bss_params bss_params;
 		struct config_bss_params_v1 bss_params_v1;
@@ -1822,12 +1822,12 @@ struct config_bss_rsp_params {
 };
 
 struct config_bss_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct config_bss_rsp_params bss_rsp_params;
 };
 
 struct delete_bss_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* BSS index to be deleted */
 	u8 bss_index;
@@ -1835,7 +1835,7 @@ struct delete_bss_req_msg {
 };
 
 struct delete_bss_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Success or Failure */
 	u32 status;
@@ -1846,7 +1846,7 @@ struct delete_bss_rsp_msg {
 };
 
 struct hal_join_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Indicates the BSSID to which STA is going to associate */
 	u8 bssid[ETH_ALEN];
@@ -1871,7 +1871,7 @@ struct hal_join_req_msg {
 };
 
 struct hal_join_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -1881,21 +1881,21 @@ struct hal_join_rsp_msg {
 };
 
 struct post_assoc_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	struct config_sta_params sta_params;
 	struct config_bss_params bss_params;
 };
 
 struct post_assoc_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct config_sta_rsp_params sta_rsp_params;
 	struct config_bss_rsp_params bss_rsp_params;
 };
 
 /* This is used by PE to create a set of WEP keys for a given BSS. */
 struct set_bss_key_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* BSS Index of the BSS */
 	u8 bss_idx;
@@ -1921,7 +1921,7 @@ struct set_bss_key_req_msg_tagged {
 };
 
 struct set_bss_key_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -1934,19 +1934,19 @@ struct set_bss_key_rsp_msg {
  * a new key descriptor is created based on the key field.
  */
 struct set_sta_key_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct set_sta_key_params setStaKeyParams;
 };
 
 struct set_sta_key_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct remove_bss_key_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* BSS Index of the BSS */
 	u8 bss_idx;
@@ -1963,7 +1963,7 @@ struct remove_bss_key_req_msg {
 };
 
 struct remove_bss_key_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -1973,7 +1973,7 @@ struct remove_bss_key_rsp_msg {
  * This is used by PE to Remove the key information on a given station.
  */
 struct remove_sta_key_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* STA Index */
 	u16 sta_idx;
@@ -1991,7 +1991,7 @@ struct remove_sta_key_req_msg {
 };
 
 struct remove_sta_key_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*success or failure */
 	u32 status;
@@ -2009,7 +2009,7 @@ struct remove_sta_key_rsp_msg {
 #endif
 
 struct start_oem_data_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 status;
 	tSirMacAddr self_mac_addr;
@@ -2018,7 +2018,7 @@ struct start_oem_data_req_msg {
 };
 
 struct start_oem_data_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 oem_data_rsp[OEM_DATA_RSP_SIZE];
 };
@@ -2026,7 +2026,7 @@ struct start_oem_data_rsp_msg {
 #endif
 
 struct switch_channel_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Channel number */
 	u8 channel_number;
@@ -2059,7 +2059,7 @@ struct switch_channel_req_msg {
 };
 
 struct switch_channel_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Status */
 	u32 status;
@@ -2076,7 +2076,7 @@ struct switch_channel_rsp_msg {
 };
 
 struct update_edca_params_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*BSS Index */
 	u16 bss_index;
@@ -2095,7 +2095,7 @@ struct update_edca_params_req_msg {
 };
 
 struct update_edca_params_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -2125,7 +2125,7 @@ struct dpu_stats_params
 };
 
 struct hal_stats_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Valid STA Idx for per STA stats request */
 	u32 sta_id;
@@ -2333,7 +2333,7 @@ struct ani_per_sta_stats_info {
 };
 
 struct hal_stats_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Success or Failure */
 	u32 status;
@@ -2352,7 +2352,7 @@ struct hal_stats_rsp_msg {
 };
 
 struct set_link_state_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
 	enum wcn36xx_hal_link_state state;
@@ -2361,7 +2361,7 @@ struct set_link_state_req_msg {
 };
 
 struct set_link_state_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -2430,7 +2430,7 @@ struct wcn36xx_hal_tspec_ie {
 };
 
 struct add_ts_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
 	u16 sta_index;
@@ -2459,14 +2459,14 @@ struct add_ts_req_msg {
 };
 
 struct add_rs_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct del_ts_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
 	u16 sta_index;
@@ -2479,7 +2479,7 @@ struct del_ts_req_msg {
 };
 
 struct del_ts_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -2490,7 +2490,7 @@ struct del_ts_rsp_msg {
 /* Start of BLOCK ACK related Parameters */
 
 struct add_ba_session_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
 	u16 sta_index;
@@ -2533,7 +2533,7 @@ struct add_ba_session_req_msg {
 };
 
 struct add_ba_session_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -2560,7 +2560,7 @@ struct add_ba_session_rsp_msg {
 };
 
 struct add_ba_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Session Id */
 	u8 session_id;
@@ -2574,7 +2574,7 @@ struct add_ba_req_msg {
 };
 
 struct add_ba_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -2600,7 +2600,7 @@ struct trigget_ba_req_candidate {
 };
 
 struct trigger_ba_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Session Id */
 	u8 session_id;
@@ -2613,7 +2613,7 @@ struct trigger_ba_req_msg {
 };
 
 struct trigger_ba_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* TO SUPPORT BT-AMP */
 	u8 bssid[ETH_ALEN];
@@ -2628,7 +2628,7 @@ struct trigger_ba_rsp_msg {
 };
 
 struct del_ba_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
 	u16 sta_index;
@@ -2643,14 +2643,14 @@ struct del_ba_req_msg {
 };
 
 struct del_ba_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct tsm_stats_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Traffic Id */
 	u8 tid;
@@ -2659,7 +2659,7 @@ struct tsm_stats_req_msg {
 };
 
 struct tsm_stats_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*success or failure */
 	u32 status;
@@ -2687,7 +2687,7 @@ struct tsm_stats_rsp_msg {
 };
 
 struct set_key_done_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*bssid of the keys */
 	u8 bssidx;
@@ -2698,7 +2698,7 @@ struct hal_nv_img_download_req_msg {
 	/* Note: The length specified in tHalNvImgDownloadReqMsg messages
 	 * should be header.msgLen = sizeof(tHalNvImgDownloadReqMsg) +
 	 * nvImgBufferSize */
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Fragment sequence number of the NV Image. Note that NV Image
 	 * might not fit into one message due to size limitation of the SMD
@@ -2726,7 +2726,7 @@ struct hal_nv_img_download_req_msg {
 };
 
 struct hal_nv_img_download_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Success or Failure. HAL would generate a
 	 * WCN36XX_HAL_DOWNLOAD_NV_RSP after each fragment */
@@ -2736,7 +2736,7 @@ struct hal_nv_img_download_rsp_msg {
 struct hal_nv_store_ind {
 	/* Note: The length specified in tHalNvStoreInd messages should be
 	 * header.msgLen = sizeof(tHalNvStoreInd) + nvBlobSize */
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* NV Item */
 	u32 table_id;
@@ -2756,7 +2756,7 @@ struct hal_nv_store_ind {
  * failure occures on Rx TKIP packet
  */
 struct mic_failure_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
 
@@ -2784,20 +2784,20 @@ struct mic_failure_ind_msg {
 };
 
 struct update_vht_op_mode_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u16 op_mode;
 	u16 sta_id;
 };
 
 struct update_vht_op_mode_params_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 status;
 };
 
 struct update_beacon_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bss_index;
 
@@ -2824,12 +2824,12 @@ struct update_beacon_req_msg {
 };
 
 struct update_beacon_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u32 status;
 };
 
 struct send_beacon_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* length of the template. */
 	u32 beacon_length;
@@ -2847,19 +2847,19 @@ struct send_beacon_req_msg {
 };
 
 struct send_beacon_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u32 status;
 };
 
 struct enable_radar_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
 	u8 channel;
 };
 
 struct enable_radar_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Link Parameters */
 	u8 bssid[ETH_ALEN];
@@ -2869,13 +2869,13 @@ struct enable_radar_rsp_msg {
 };
 
 struct radar_detect_intr_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 radar_det_channel;
 };
 
 struct radar_detect_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* channel number in which the RADAR detected */
 	u8 channel_number;
@@ -2888,7 +2888,7 @@ struct radar_detect_ind_msg {
 };
 
 struct wcn36xx_hal_get_tpc_report_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 sta[ETH_ALEN];
 	u8 dialog_token;
@@ -2896,14 +2896,14 @@ struct wcn36xx_hal_get_tpc_report_req_msg {
 };
 
 struct wcn36xx_hal_get_tpc_report_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct send_probe_resp_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 probe_resp_template[BEACON_TEMPLATE_SIZE];
 	u32 probe_resp_template_len;
@@ -2912,21 +2912,21 @@ struct send_probe_resp_req_msg {
 };
 
 struct send_probe_resp_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct send_unknown_frame_rx_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct delete_sta_context_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u16 aid;
 	u16 sta_id;
@@ -2942,7 +2942,7 @@ struct delete_sta_context_ind_msg {
 };
 
 struct indicate_del_sta {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u8 aid;
 	u8 sta_index;
 	u8 bss_index;
@@ -2951,20 +2951,20 @@ struct indicate_del_sta {
 };
 
 struct bt_amp_event_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	enum bt_amp_event_type btAmpEventType;
 };
 
 struct bt_amp_event_rsp {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct tl_hal_flush_ac_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index. originates from HAL */
 	u8 sta_id;
@@ -2974,7 +2974,7 @@ struct tl_hal_flush_ac_req_msg {
 };
 
 struct tl_hal_flush_ac_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index. originates from HAL */
 	u8 sta_id;
@@ -2987,15 +2987,15 @@ struct tl_hal_flush_ac_rsp_msg {
 };
 
 struct hal_enter_imps_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 };
 
 struct hal_exit_imps_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 };
 
 struct hal_enter_bmps_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bss_index;
 
@@ -3017,14 +3017,14 @@ struct hal_enter_bmps_req_msg {
 };
 
 struct hal_exit_bmps_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 send_data_null;
 	u8 bss_index;
 };
 
 struct hal_missed_beacon_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bss_index;
 };
@@ -3042,7 +3042,7 @@ struct beacon_filter_ie {
 };
 
 struct hal_add_bcn_filter_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u16 capability_info;
 	u16 capability_mask;
@@ -3053,7 +3053,7 @@ struct hal_add_bcn_filter_req_msg {
 };
 
 struct hal_rem_bcn_filter_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 ie_Count;
 	u8 rem_ie_id[1];
@@ -3104,7 +3104,7 @@ struct hal_host_offload_req {
 };
 
 struct hal_host_offload_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_host_offload_req host_offload_params;
 	struct hal_ns_offload_params ns_offload_params;
 };
@@ -3119,7 +3119,7 @@ struct hal_host_offload_req_msg {
 
 /* Keep Alive request. */
 struct hal_keep_alive_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 packet_type;
 	u32 time_period;
@@ -3130,7 +3130,7 @@ struct hal_keep_alive_req_msg {
 };
 
 struct hal_rssi_threshold_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	s8 threshold1:8;
 	s8 threshold2:8;
@@ -3145,7 +3145,7 @@ struct hal_rssi_threshold_req_msg {
 };
 
 struct hal_enter_uapsd_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bk_delivery:1;
 	u8 be_delivery:1;
@@ -3159,7 +3159,7 @@ struct hal_enter_uapsd_req_msg {
 };
 
 struct hal_exit_uapsd_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u8 bss_index;
 };
 
@@ -3167,7 +3167,7 @@ struct hal_exit_uapsd_req_msg {
 #define HAL_WOWL_BCAST_MAX_NUM_PATTERNS 16
 
 struct hal_wowl_add_bcast_ptrn_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Pattern ID */
 	u8 id;
@@ -3198,7 +3198,7 @@ struct hal_wowl_add_bcast_ptrn_req_msg {
 };
 
 struct hal_wow_del_bcast_ptrn_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Pattern ID of the wakeup pattern to be deleted */
 	u8 id;
@@ -3206,7 +3206,7 @@ struct hal_wow_del_bcast_ptrn_req_msg {
 };
 
 struct hal_wowl_enter_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Enables/disables magic packet filtering */
 	u8 magic_packet_enable;
@@ -3290,24 +3290,24 @@ struct hal_wowl_enter_req_msg {
 };
 
 struct hal_wowl_exit_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bss_index;
 };
 
 struct hal_get_rssi_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 };
 
 struct hal_get_roam_rssi_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Valid STA Idx for per STA stats request */
 	u32 sta_id;
 };
 
 struct hal_set_uapsd_ac_params_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* STA index */
 	u8 sta_idx;
@@ -3329,28 +3329,28 @@ struct hal_set_uapsd_ac_params_req_msg {
 };
 
 struct hal_configure_rxp_filter_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 set_mcst_bcst_filter_setting;
 	u8 set_mcst_bcst_filter;
 };
 
 struct hal_enter_imps_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_exit_imps_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_enter_bmps_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3359,7 +3359,7 @@ struct hal_enter_bmps_rsp_msg {
 };
 
 struct hal_exit_bmps_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3368,7 +3368,7 @@ struct hal_exit_bmps_rsp_msg {
 };
 
 struct hal_enter_uapsd_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3377,7 +3377,7 @@ struct hal_enter_uapsd_rsp_msg {
 };
 
 struct hal_exit_uapsd_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3386,7 +3386,7 @@ struct hal_exit_uapsd_rsp_msg {
 };
 
 struct hal_rssi_notification_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 rssi_thres1_pos_cross:1;
 	u32 rssi_thres1_neg_cross:1;
@@ -3400,7 +3400,7 @@ struct hal_rssi_notification_ind_msg {
 };
 
 struct hal_get_rssio_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3409,7 +3409,7 @@ struct hal_get_rssio_rsp_msg {
 };
 
 struct hal_get_roam_rssi_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3419,7 +3419,7 @@ struct hal_get_roam_rssi_rsp_msg {
 };
 
 struct hal_wowl_enter_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3427,7 +3427,7 @@ struct hal_wowl_enter_rsp_msg {
 };
 
 struct hal_wowl_exit_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3435,21 +3435,21 @@ struct hal_wowl_exit_rsp_msg {
 };
 
 struct hal_add_bcn_filter_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_rem_bcn_filter_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_add_wowl_bcast_ptrn_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3457,7 +3457,7 @@ struct hal_add_wowl_bcast_ptrn_rsp_msg {
 };
 
 struct hal_del_wowl_bcast_ptrn_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3465,42 +3465,42 @@ struct hal_del_wowl_bcast_ptrn_rsp_msg {
 };
 
 struct hal_host_offload_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_keep_alive_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_set_rssi_thresh_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_set_uapsd_ac_params_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_configure_rxp_filter_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct set_max_tx_pwr_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* BSSID is needed to identify which session issued this request.
 	 * As the request has power constraints, this should be applied
@@ -3514,7 +3514,7 @@ struct set_max_tx_pwr_req {
 };
 
 struct set_max_tx_pwr_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* power == tx power used for management frames */
 	u8 power;
@@ -3524,7 +3524,7 @@ struct set_max_tx_pwr_rsp_msg {
 };
 
 struct set_tx_pwr_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* TX Power in milli watts */
 	u32 tx_power;
@@ -3533,20 +3533,20 @@ struct set_tx_pwr_req_msg {
 };
 
 struct set_tx_pwr_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct get_tx_pwr_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 sta_id;
 };
 
 struct get_tx_pwr_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3556,7 +3556,7 @@ struct get_tx_pwr_rsp_msg {
 };
 
 struct set_p2p_gonoa_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 opp_ps;
 	u32 ct_window;
@@ -3568,21 +3568,21 @@ struct set_p2p_gonoa_req_msg {
 };
 
 struct set_p2p_gonoa_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct add_sta_self_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 self_addr[ETH_ALEN];
 	u32 status;
 };
 
 struct add_sta_self_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3598,13 +3598,13 @@ struct add_sta_self_rsp_msg {
 };
 
 struct del_sta_self_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 self_addr[ETH_ALEN];
 };
 
 struct del_sta_self_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*success or failure */
 	u32 status;
@@ -3613,7 +3613,7 @@ struct del_sta_self_rsp_msg {
 };
 
 struct aggr_add_ts_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
 	u16 sta_idx;
@@ -3644,7 +3644,7 @@ struct aggr_add_ts_req {
 };
 
 struct aggr_add_ts_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status0;
@@ -3654,20 +3654,20 @@ struct aggr_add_ts_rsp_msg {
 };
 
 struct hal_configure_apps_cpu_wakeup_state_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 is_apps_cpu_awake;
 };
 
 struct hal_configure_apps_cpu_wakeup_state_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_dump_cmd_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 argument1;
 	u32 argument2;
@@ -3677,7 +3677,7 @@ struct hal_dump_cmd_req_msg {
 };
 
 struct hal_dump_cmd_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -3695,7 +3695,7 @@ struct hal_dump_cmd_rsp_msg {
 #define WLAN_COEX_IND_TYPE_ENABLE_HB_MONITOR (1)
 
 struct coex_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Coex Indication Type */
 	u32 type;
@@ -3705,28 +3705,28 @@ struct coex_ind_msg {
 };
 
 struct tx_compl_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Tx Complete Indication Success or Failure */
 	u32 status;
 };
 
 struct hal_wlan_host_suspend_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 configured_mcst_bcst_filter_setting;
 	u32 active_session_count;
 };
 
 struct hal_wlan_exclude_unencrpted_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 dot11_exclude_unencrypted;
 	u8 bssid[ETH_ALEN];
 };
 
 struct noa_attr_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 index;
 	u8 opp_ps_flag;
@@ -3748,27 +3748,27 @@ struct noa_attr_ind_msg {
 };
 
 struct noa_start_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 status;
 	u32 bss_index;
 };
 
 struct hal_wlan_host_resume_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 configured_mcst_bcst_filter_setting;
 };
 
 struct hal_host_resume_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
 };
 
 struct hal_del_ba_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u16 sta_idx;
 
@@ -3913,7 +3913,7 @@ struct scan_timers_type {
 
 /* Preferred network list request */
 struct set_pref_netw_list_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Enable PNO */
 	u32 enable;
@@ -3964,7 +3964,7 @@ struct network_type_new {
 
 /* Preferred network list request new */
 struct set_pref_netw_list_req_new {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Enable PNO */
 	u32 enable;
@@ -3992,7 +3992,7 @@ struct set_pref_netw_list_req_new {
 
 /* Preferred network list response */
 struct set_pref_netw_list_resp {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request - just to indicate that PNO has
 	 * acknowledged the request and will start scanning */
@@ -4002,7 +4002,7 @@ struct set_pref_netw_list_resp {
 /* Preferred network found indication */
 struct pref_netw_found_ind {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Network that was found with the highest RSSI */
 	struct wcn36xx_hal_mac_ssid ssid;
@@ -4013,7 +4013,7 @@ struct pref_netw_found_ind {
 
 /* RSSI Filter request */
 struct set_rssi_filter_req {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* RSSI Threshold */
 	u8 rssi_threshold;
@@ -4021,7 +4021,7 @@ struct set_rssi_filter_req {
 
 /* Set RSSI filter resp */
 struct set_rssi_filter_resp {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
@@ -4031,7 +4031,7 @@ struct set_rssi_filter_resp {
  * scanningx */
 struct update_scan_params_req {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Host setting for 11d */
 	u8 dot11d_enabled;
@@ -4063,7 +4063,7 @@ struct update_scan_params_req {
  * scanningx */
 struct update_scan_params_req_ex {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Host setting for 11d */
 	u8 dot11d_enabled;
@@ -4095,14 +4095,14 @@ struct update_scan_params_req_ex {
  * scanningx */
 struct update_scan_params_resp {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
 };
 
 struct hal_set_tx_per_tracking_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* 0: disable, 1:enable */
 	u8 tx_per_tracking_enable;
@@ -4119,7 +4119,7 @@ struct hal_set_tx_per_tracking_req_msg {
 };
 
 struct hal_set_tx_per_tracking_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -4127,7 +4127,7 @@ struct hal_set_tx_per_tracking_rsp_msg {
 };
 
 struct tx_per_hit_ind_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 };
 
 /* Packet Filtering Definitions Begin */
@@ -4191,7 +4191,7 @@ struct hal_sessionized_rcv_pkt_filter_cfg_type {
 };
 
 struct hal_set_rcv_pkt_filter_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 id;
 	u8 type;
@@ -4210,7 +4210,7 @@ struct hal_rcv_flt_mc_addr_list_type {
 };
 
 struct hal_set_pkt_filter_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -4219,7 +4219,7 @@ struct hal_set_pkt_filter_rsp_msg {
 };
 
 struct hal_rcv_flt_pkt_match_cnt_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u8 bss_index;
 };
@@ -4230,7 +4230,7 @@ struct hal_rcv_flt_pkt_match_cnt {
 };
 
 struct hal_rcv_flt_pkt_match_cnt_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Success or Failure */
 	u32 status;
@@ -4248,22 +4248,22 @@ struct hal_rcv_flt_pkt_clear_param {
 };
 
 struct hal_rcv_flt_pkt_clear_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_rcv_flt_pkt_clear_param param;
 };
 
 struct hal_rcv_flt_pkt_clear_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_rcv_flt_pkt_clear_param param;
 };
 
 struct hal_rcv_flt_pkt_set_mc_list_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	struct hal_rcv_flt_mc_addr_list_type mc_addr_list;
 };
 
 struct hal_rcv_flt_pkt_set_mc_list_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u32 status;
 	u8 bss_index;
 };
@@ -4271,7 +4271,7 @@ struct hal_rcv_flt_pkt_set_mc_list_rsp_msg {
 /* Packet Filtering Definitions End */
 
 struct set_power_params_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/*  Ignore DTIM */
 	u32 ignore_dtim;
@@ -4294,7 +4294,7 @@ struct set_power_params_req_msg {
 
 struct set_power_params_resp {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
@@ -4331,7 +4331,7 @@ enum place_holder_in_cap_bitmap {
 
 struct wlan_feat_caps_msg {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	u32 feat_caps[4];
 };
@@ -4413,7 +4413,7 @@ enum wake_reason_type {
 
 /* Wake reason indication */
 struct hal_wake_reason_ind {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* see tWakeReasonType */
 	u32 reason;
@@ -4445,7 +4445,7 @@ struct hal_wake_reason_ind {
 #define GTK_SET_BSS_KEY_TAG  0x1234AA55
 
 struct hal_gtk_offload_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* optional flags */
 	u32 flags;
@@ -4463,7 +4463,7 @@ struct hal_gtk_offload_req_msg {
 };
 
 struct hal_gtk_offload_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -4472,12 +4472,12 @@ struct hal_gtk_offload_rsp_msg {
 };
 
 struct hal_gtk_offload_get_info_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 	u8 bss_index;
 };
 
 struct hal_gtk_offload_get_info_rsp_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -4508,7 +4508,7 @@ struct dhcp_info {
 };
 
 struct dhcp_ind_status {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
@@ -4561,7 +4561,7 @@ enum hal_thermal_mitigation_level_type {
 
 /* WCN36XX_HAL_SET_THERMAL_MITIGATION_REQ */
 struct set_thermal_mitigation_req_msg {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Thermal Mitigation Operation Mode */
 	enum hal_thermal_mitigation_mode_type mode;
@@ -4572,7 +4572,7 @@ struct set_thermal_mitigation_req_msg {
 
 struct set_thermal_mitigation_resp {
 
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
@@ -4581,7 +4581,7 @@ struct set_thermal_mitigation_resp {
 /* Per STA Class B Statistics. Class B statistics are STA TX/RX stats
  * provided to FW from Host via periodic messages */
 struct stats_class_b_ind {
-	struct hal_msg_header header;
+	struct wcn36xx_hal_msg_header header;
 
 	/* Duration over which this stats was collected */
 	u32 duration;
