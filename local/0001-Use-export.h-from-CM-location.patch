@@ -1,0 +1,25 @@
+From c059e8b803550c7b76cc102d6c1fb1d8a0fa6fa9 Mon Sep 17 00:00:00 2001
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+Date: Tue, 9 Apr 2013 18:28:38 +0200
+Subject: [PATCH] Use export.h from CM location
+
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ include/linux/compat-2.6.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index 1e9effb..47f7434 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -43,6 +43,7 @@ void backport_dependency_symbol(void);
+  * Each compat file represents compatibility code for new kernel
+  * code introduced for *that* kernel revision.
+  */
++#include <CM_ROOT/kernel/sony/msm8x60/include/linux/export.h>
+ 
+ #include <linux/compat-2.6.22.h>
+ #include <linux/compat-2.6.23.h>
+-- 
+1.7.10
+

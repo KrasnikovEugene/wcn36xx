@@ -1,0 +1,26 @@
+From f349e2a4409868edec8cc656d8a7684224dc3794 Mon Sep 17 00:00:00 2001
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+Date: Tue, 9 Apr 2013 17:51:15 +0200
+Subject: [PATCH] Suppress warning -Waddress in net/wireless/reg.c
+
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ net/wireless/reg.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index e6df52d..1e7fb0e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -208,7 +208,7 @@ static char user_alpha2[2];
+ 
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+-
++#pragma GCC diagnostic ignored "-Waddress"
+ static void reset_regdomains(bool full_reset,
+ 			     const struct ieee80211_regdomain *new_regdom)
+ {
+-- 
+1.7.10
+
