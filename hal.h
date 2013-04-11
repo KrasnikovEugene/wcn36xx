@@ -51,8 +51,6 @@
 /* The maximum value of access category */
 #define WCN36XX_HAL_MAX_AC  4
 
-typedef u8 tHalIpv4Addr[4];
-
 #define HAL_MAC_ADDR_LEN        6
 #define HAL_IPV4_ADDR_LEN       4
 
@@ -3133,8 +3131,8 @@ struct hal_keep_alive_req_msg {
 
 	u8 packet_type;
 	u32 time_period;
-	tHalIpv4Addr host_ipv4_addr;
-	tHalIpv4Addr dest_ipv4_addr;
+	u8 host_ipv4_addr[HAL_IPV4_ADDR_LEN];
+	u8 dest_ipv4_addr[HAL_IPV4_ADDR_LEN];
 	u8 dest_addr[ETH_ALEN];
 	u8 bss_index;
 };
