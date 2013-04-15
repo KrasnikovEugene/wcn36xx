@@ -292,6 +292,7 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 	msg_body.ch = ch;
 	msg_body.link_state = 1;
 
+	msg_body.max_power = 0xbf;
 	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
@@ -310,34 +311,57 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 		rsp->status, rsp->power);
 	return 0;
 }
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn)
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
 {
 	struct wcn36xx_fw_msg_config_bss_req msg_body;
 	struct wcn36xx_fw_msg_header msg_header;
 
 	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ)
 
-	memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
-	memcpy(&msg_body.self_mac, &wcn->addresses[0], ETH_ALEN);
+	if(sta_mode) {
+		memcpy(&msg_body.bssid, bssid, ETH_ALEN);
+		memcpy(&msg_body.self_mac, &wcn->addresses[0], ETH_ALEN);
+		msg_body.bss_type = WCN36XX_FW_MSG_BSS_TYPE_STA;
+		msg_body.oper_mode = 1;  //0 - AP,  1-STA
+		msg_body.net_type = WCN36XX_FW_MSG_NET_TYPE_11G;
+		msg_body.coex_11g = 1;
+		msg_body.beacon_interval = 0x64;
+		msg_body.dtim_period = 1;
+		msg_body.cur_op_ch = wcn->ch;
+		memcpy(&msg_body.sta_context.bssid, bssid, ETH_ALEN);
+		msg_body.sta_context.sta_type = 1;
+		msg_body.sta_context.listen_int = 0x64;
+		msg_body.sta_context.wmm_en = 1;
 
-	//TODO do all this configurabel
-	msg_body.bss_type = WCN36XX_FW_MSG_BSS_TYPE_AP;
-	msg_body.oper_mode = 0; //0 - AP,  1-STA
-	msg_body.net_type = WCN36XX_FW_MSG_NET_TYPE_11G;
-	msg_body.short_slot_time = 1;
-	msg_body.beacon_interval = 0x64;
-	msg_body.dtim_period = 2;
-	msg_body.cur_op_ch = 1;
-	msg_body.ssid.len = 1;
-	msg_body.ssid.ssid[0] = 'K';
-	msg_body.obss_prot = 1;
-	msg_body.hal_pers = 1;
-	msg_body.max_tx_power = 0x10;
+		msg_body.sta_context.max_ampdu_size = 3;
+		msg_body.sta_context.max_ampdu_dens = 5;
+		msg_body.sta_context.dsss_cck_mode_40mhz = 1;
+		msg_body.max_tx_power = 0x14;
+	} else {
+		memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
+		memcpy(&msg_body.self_mac, &wcn->addresses[0], ETH_ALEN);
 
-	memcpy(&msg_body.sta_context.bssid, &wcn->addresses[0], ETH_ALEN);
-	msg_body.sta_context.short_pream_sup = 1;
-	memcpy(&msg_body.sta_context.sta_mac, &wcn->addresses[0], ETH_ALEN);
-	msg_body.sta_context.listen_int = 8;
+		//TODO do all this configurabel
+		msg_body.bss_type = WCN36XX_FW_MSG_BSS_TYPE_AP;
+		msg_body.oper_mode = 0; //0 - AP,  1-STA
+		msg_body.net_type = WCN36XX_FW_MSG_NET_TYPE_11G;
+		msg_body.short_slot_time = 1;
+		msg_body.beacon_interval = 0x64;
+		msg_body.dtim_period = 2;
+		msg_body.cur_op_ch = 1;
+		msg_body.ssid.len = 1;
+		msg_body.ssid.ssid[0] = 'K';
+		msg_body.obss_prot = 1;
+		msg_body.hal_pers = 1;
+		msg_body.max_tx_power = 0x10;
+
+		memcpy(&msg_body.sta_context.bssid, &wcn->addresses[0], ETH_ALEN);
+		msg_body.sta_context.short_pream_sup = 1;
+		memcpy(&msg_body.sta_context.sta_mac, &wcn->addresses[0], ETH_ALEN);
+		msg_body.sta_context.listen_int = 8;
+
+	}
+
 	msg_body.sta_context.ht_cap = 1;
 	msg_body.sta_context.short_gi40mhz = 1;
 	msg_body.sta_context.short_gi20mhz = 1;

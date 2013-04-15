@@ -421,7 +421,7 @@ int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_exit_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch);
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn);
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off);
 
 // WCN36XX configuration parameters
