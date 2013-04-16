@@ -101,7 +101,7 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	struct wcn36xx *wcn = hw->priv;
 	ENTER();
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-		wcn->ch = ieee80211_frequency_to_channel(hw->conf.channel->center_freq);
+		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
 	}
 
 	return 0;
