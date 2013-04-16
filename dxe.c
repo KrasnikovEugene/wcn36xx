@@ -63,7 +63,7 @@ static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 	wmb();
 }
 
-int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
+static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *prev_dxe_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
@@ -121,7 +121,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	return ret;
 }
 
-int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
+static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 {
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
 	struct wcn36xx_dxe_desc *prev_dxe_desc = NULL;
@@ -179,7 +179,7 @@ int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	}
 	return 0;
 }
-int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
+static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 {
 	int reg_data = 0;
 	wcn36xx_dxe_read_register(wcn,
@@ -191,7 +191,7 @@ int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 		(int)reg_data);
 	return 0;
 }
-int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wcn_ch)
+static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wcn_ch)
 {
 	int i;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
