@@ -101,7 +101,7 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	struct wcn36xx *wcn = hw->priv;
 	ENTER();
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-		wcn->ch = ieee80211_frequency_to_channel(hw->conf.channel->center_freq);
+		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
 	}
 
 	return 0;
@@ -127,7 +127,7 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
 
-static void wcn36xx_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *control, struct sk_buff *skb)
 {
 	struct ieee80211_mgmt *mgmt;
 	ENTER();
@@ -158,9 +158,9 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 	wcn36xx_smd_update_scan_params(wcn);
 	wcn36xx_smd_exit_imps(wcn);
 	if (req->n_ssids > 0) {
-		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie, req->ie_len);
+		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie_len);
 	} else {
-		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie, req->ie_len);
+		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie_len);
 	}
 	for(i = 0; i < req->n_channels; i++) {
 		wcn36xx_smd_init_scan(wcn);
