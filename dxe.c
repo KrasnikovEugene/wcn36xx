@@ -19,7 +19,6 @@
 // through low channels data packets are transfered
 // through high channels managment packets are transfered
 
-#include <linux/vmalloc.h>
 #include <linux/interrupt.h>
 #include "dxe.h"
 #include "txrx.h"
@@ -70,7 +69,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 	int i;
 	for (i = 0; i < ch->desc_num; i++)
 	{
-		cur_dxe_ctl = vmalloc(sizeof(*cur_dxe_ctl));
+		cur_dxe_ctl = kmalloc(sizeof(*cur_dxe_ctl), GFP_KERNEL);
 		if (!cur_dxe_ctl) {
 			return -ENOMEM;
 		}
@@ -404,11 +403,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		(void**)&wcn->mgmt_mem_pool.phy_addr);
 
 	wcn->mgmt_mem_pool.bitmap =
-		vmalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32));
-	memset(wcn->mgmt_mem_pool.bitmap, 0,
-		(WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32));
+		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
+		sizeof(u32), GFP_KERNEL);
 
 	/* Allocate BD headers for DATA frames */
 
@@ -420,11 +416,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		(void**)&wcn->data_mem_pool.phy_addr);
 
 	wcn->data_mem_pool.bitmap =
-		vmalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(u32));
-	memset(wcn->data_mem_pool.bitmap, 0,
-		(WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(int));
+		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
+		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
 int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)

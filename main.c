@@ -18,7 +18,6 @@
 #include <linux/qcomwlan_pwrif.h>
 #include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
-#include <linux/vmalloc.h>
 #include <linux/etherdevice.h>
 #include "wcn36xx.h"
 #include "dxe.h"
@@ -60,7 +59,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("request FM %d", ret);
 	}
 	// maximu SMD message size is 4k
-	wcn->smd_buf = vmalloc(4096);
+	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
 
 	//TODO pass configuration to FW
 	wcn36xx_smd_load_nv(wcn);
@@ -80,7 +79,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	wcn36xx_smd_close(wcn);
 
-	vfree(wcn->smd_buf);
+	kfree(wcn->smd_buf);
 }
 
 static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
