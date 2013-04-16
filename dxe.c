@@ -50,16 +50,14 @@ static void * wcn36xx_dma_alloc(size_t size, void **paddr)
 
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
-	wmb();
 	wcn36xx_dbg("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
-	writel_relaxed(data, wcn->mmio + addr);
+	writel(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 {
-	*data = readl_relaxed(wcn->mmio + addr);
+	*data = readl(wcn->mmio + addr);
 	wcn36xx_dbg("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
-	wmb();
 }
 
 static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
