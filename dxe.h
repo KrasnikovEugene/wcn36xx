@@ -209,7 +209,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_rx_ready_work(struct work_struct *work);
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn);
 int wcn36xx_dxe_init(struct wcn36xx *wcn);
+void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
-int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn);
 int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast);
 #endif	/* _DXE_H_ */
