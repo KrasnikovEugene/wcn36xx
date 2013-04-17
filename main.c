@@ -67,7 +67,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 
 	// DMA chanel initialization
 	wcn36xx_dxe_init(wcn);
-	wcn36xx_dxe_request_irqs(wcn);
 
 	return 0;
 }
@@ -77,6 +76,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	ENTER();
 
+	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
 
 	kfree(wcn->smd_buf);
