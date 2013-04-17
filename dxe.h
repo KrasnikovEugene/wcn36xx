@@ -149,20 +149,20 @@ struct wcn36xx_dxe_desc
 {
    union
    {
-      int                   ctrl;
-      int                   valid		:1;     //0 = DMA stop, 1 = DMA continue with this descriptor
-      int                   transfer_type	:2;     //0 = Host to Host space
-      int                   eop			:1;     //End of Packet
-      int                   bd_handling		:1;          //if transferType = Host to BMU, then 0 means first 128 bytes contain BD, and 1 means create new empty BD
-      int                   siq			:1;     // SIQ
-      int                   diq			:1;     // DIQ
-      int                   pdu_rel		:1;     //0 = don't release BD and PDUs when done, 1 = release them
-      int                   bthld_sel		:4;     //BMU Threshold Select
-      int                   prio		:3;     //Specifies the priority level to use for the transfer
-      int                   stop_channel	:1;     //1 = DMA stops processing further, channel requires re-enabling after this
-      int                   intr		:1;     //Interrupt on Descriptor Done
-      int                   rsvd		:1;     //reserved
-      int                   size		:14;    //14 bits used - ignored for BMU transfers, only used for host to host transfers?
+      u32                   ctrl;
+      u32                   valid		:1;     //0 = DMA stop, 1 = DMA continue with this descriptor
+      u32                   transfer_type	:2;     //0 = Host to Host space
+      u32                   eop			:1;     //End of Packet
+      u32                   bd_handling		:1;          //if transferType = Host to BMU, then 0 means first 128 bytes contain BD, and 1 means create new empty BD
+      u32                   siq			:1;     // SIQ
+      u32                   diq			:1;     // DIQ
+      u32                   pdu_rel		:1;     //0 = don't release BD and PDUs when done, 1 = release them
+      u32                   bthld_sel		:4;     //BMU Threshold Select
+      u32                   prio		:3;     //Specifies the priority level to use for the transfer
+      u32                   stop_channel	:1;     //1 = DMA stops processing further, channel requires re-enabling after this
+      u32                   intr		:1;     //Interrupt on Descriptor Done
+      u32                   rsvd		:1;     //reserved
+      u32                   size		:14;    //14 bits used - ignored for BMU transfers, only used for host to host transfers?
    } desc_ctl;
    int                      fr_len;
    struct wcn36xx_dxe_desc_data desc;

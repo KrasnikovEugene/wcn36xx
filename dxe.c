@@ -19,7 +19,6 @@
 // through low channels data packets are transfered
 // through high channels managment packets are transfered
 
-#include <linux/vmalloc.h>
 #include <linux/interrupt.h>
 #include "dxe.h"
 #include "txrx.h"
@@ -51,26 +50,24 @@ static void * wcn36xx_dma_alloc(size_t size, void **paddr)
 
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
-	wmb();
 	wcn36xx_dbg("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
-	writel_relaxed(data, wcn->mmio + addr);
+	writel(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 {
-	*data = readl_relaxed(wcn->mmio + addr);
+	*data = readl(wcn->mmio + addr);
 	wcn36xx_dbg("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
-	wmb();
 }
 
-int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
+static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *prev_dxe_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
 	int i;
 	for (i = 0; i < ch->desc_num; i++)
 	{
-		cur_dxe_ctl = vmalloc(sizeof(*cur_dxe_ctl));
+		cur_dxe_ctl = kmalloc(sizeof(*cur_dxe_ctl), GFP_KERNEL);
 		if (!cur_dxe_ctl) {
 			return -ENOMEM;
 		}
@@ -121,7 +118,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	return ret;
 }
 
-int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
+static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 {
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
 	struct wcn36xx_dxe_desc *prev_dxe_desc = NULL;
@@ -179,7 +176,7 @@ int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	}
 	return 0;
 }
-int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
+static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 {
 	int reg_data = 0;
 	wcn36xx_dxe_read_register(wcn,
@@ -191,7 +188,7 @@ int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 		(int)reg_data);
 	return 0;
 }
-int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wcn_ch)
+static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wcn_ch)
 {
 	int i;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
@@ -404,11 +401,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		(void**)&wcn->mgmt_mem_pool.phy_addr);
 
 	wcn->mgmt_mem_pool.bitmap =
-		vmalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32));
-	memset(wcn->mgmt_mem_pool.bitmap, 0,
-		(WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32));
+		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
+		sizeof(u32), GFP_KERNEL);
 
 	/* Allocate BD headers for DATA frames */
 
@@ -420,11 +414,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		(void**)&wcn->data_mem_pool.phy_addr);
 
 	wcn->data_mem_pool.bitmap =
-		vmalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(u32));
-	memset(wcn->data_mem_pool.bitmap, 0,
-		(WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(int));
+		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
+		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
 int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)

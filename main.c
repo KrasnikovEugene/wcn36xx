@@ -18,7 +18,6 @@
 #include <linux/qcomwlan_pwrif.h>
 #include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
-#include <linux/vmalloc.h>
 #include <linux/etherdevice.h>
 #include "wcn36xx.h"
 #include "dxe.h"
@@ -60,7 +59,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("request FM %d", ret);
 	}
 	// maximu SMD message size is 4k
-	wcn->smd_buf = vmalloc(4096);
+	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
 
 	//TODO pass configuration to FW
 	wcn36xx_smd_load_nv(wcn);
@@ -80,7 +79,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	wcn36xx_smd_close(wcn);
 
-	vfree(wcn->smd_buf);
+	kfree(wcn->smd_buf);
 }
 
 static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
@@ -441,20 +440,36 @@ static int __init wcn36xx_init(void)
 	struct resource *wcnss_memory;
 	int ret;
 
-	/* FIXME: the whole function needs proper error handling */
-
 	hw = wcn36xx_alloc_hw();
+	if (!hw) {
+		wcn36xx_error("failed to alloc hw");
+		ret = -ENOMEM;
+		goto out_err;
+	}
+
 	wcn = hw->priv;
 	wcn->hw = hw;
 
 	wcn->dev = wcnss_wlan_get_device();
 	if (wcn->dev == NULL) {
 		wcn36xx_error("failed to get wcnss wlan device");
-		return -EINVAL;
+		ret = -ENOENT;
+		goto out_err;
 	}
 
 	wcn->wq = create_freezable_workqueue("wcn36xx_wq");
+	if (!wcn->wq) {
+		wcn36xx_error("failed to allocate wq");
+		ret = -ENOMEM;
+		goto out_err;
+	}
+
 	wcn->ctl_wq = create_freezable_workqueue("wcn36xx_ctl_wq");
+	if (!wcn->ctl_wq) {
+		wcn36xx_error("failed to allocate ctl wq");
+		ret = -ENOMEM;
+		goto out_wq;
+	}
 
 	wcn36xx_init_ieee80211(wcn);
 	// TODO read me from config
@@ -475,13 +490,11 @@ static int __init wcn36xx_init(void)
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
 
-	/* FIXME: register should be last */
-	ret = ieee80211_register_hw(wcn->hw);
-
 	wcnss_memory = wcnss_wlan_get_memory_map(wcn->dev);
 	if (wcnss_memory == NULL) {
 		wcn36xx_error("failed to get wcnss wlan memory map");
-		return -EINVAL;
+		ret = -ENOMEM;
+		goto out_wq_ctl;
 	}
 
 	wcn->tx_irq = wcnss_wlan_get_dxe_tx_irq(wcn->dev);
@@ -490,13 +503,27 @@ static int __init wcn36xx_init(void)
 	wcn->mmio = ioremap(wcnss_memory->start, resource_size(wcnss_memory));
 	if (NULL == wcn->mmio) {
 		wcn36xx_error("failed to map io memory");
-		return -EINVAL;
+		ret = -ENOMEM;
+		goto out_wq_ctl;
 	}
 
 	private_hw = hw;
 	wcn->beacon_enable = false;
 
+	ret = ieee80211_register_hw(wcn->hw);
+	if (ret)
+		goto out_unmap;
+
 	return 0;
+
+out_unmap:
+	iounmap(wcn->mmio);
+out_wq_ctl:
+	destroy_workqueue(wcn->ctl_wq);
+out_wq:
+	destroy_workqueue(wcn->wq);
+out_err:
+	return ret;
 }
 
 module_init(wcn36xx_init);
@@ -504,11 +531,12 @@ module_init(wcn36xx_init);
 static void __exit wcn36xx_exit(void)
 {
 	struct ieee80211_hw *hw = private_hw;
+	struct wcn36xx *wcn = hw->priv;
 
 	ieee80211_unregister_hw(hw);
-
-	/* FIXME: iounmap */
-
+	destroy_workqueue(wcn->ctl_wq);
+	destroy_workqueue(wcn->wq);
+	iounmap(wcn->mmio);
 	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);
