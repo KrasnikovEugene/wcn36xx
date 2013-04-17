@@ -14,7 +14,6 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <linux/vmalloc.h>
 #include "smd.h"
 
 int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
@@ -471,7 +470,7 @@ static void wcn36xx_smd_work(struct work_struct *work)
 			complete(&wcn->smd_compl);
 			return;
 		}
-		msg = vmalloc(msg_len);
+		msg = kmalloc(msg_len, GFP_KERNEL);
 		if (NULL == msg) {
 			complete(&wcn->smd_compl);
 			return;
@@ -482,7 +481,7 @@ static void wcn36xx_smd_work(struct work_struct *work)
 			return;
 		}
 		wcn36xx_smd_rsp_process(msg, msg_len);
-		vfree(msg);
+		kfree(msg);
 	}
 }
 
