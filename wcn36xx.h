@@ -40,17 +40,6 @@
 #define wcn36xx_dbg(fmt, arg...) \
 	pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
 
-#define DEFINE_DYNAMIC_DEBUG_METADATA(name, fmt)		\
-	static struct _ddebug __used __aligned(8)		\
-	__attribute__((section("__verbose"))) name = {		\
-		.modname = KBUILD_MODNAME,			\
-		.function = __func__,				\
-		.filename = __FILE__,				\
-		.format = (fmt),				\
-		.lineno = __LINE__,				\
-		.flags =  _DPRINTK_FLAGS_DEFAULT,		\
-	}
-
 #define wcn36xx_dbg_dump(prefix_str, buf, len)			\
 do {									\
 	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);		\
