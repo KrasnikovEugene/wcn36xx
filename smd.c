@@ -246,6 +246,17 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
 }
+static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
+{
+	struct  wcn36xx_fw_msg_status_rsp * rsp;
+
+	rsp = (struct wcn36xx_fw_msg_status_rsp *)
+		(buf + sizeof(struct wcn36xx_fw_msg_header));
+
+	wcn36xx_info("Scan params stattus=%d",rsp->status);
+	return 0;
+}
+
 int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status)
 {
 	struct wcn36xx_fw_msg_add_sta_req msg_body;
@@ -311,6 +322,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 		rsp->status, rsp->power);
 	return 0;
 }
+
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
 {
 	struct wcn36xx_fw_msg_config_bss_req msg_body;
@@ -451,7 +463,6 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_START_SCAN_RSP:
 	case WCN36XX_FW_MSG_TYPE_END_SCAN_RSP:
 	case WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP:
-	case WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP:
 	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
@@ -464,6 +475,9 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 		break;
 	case WCN36XX_FW_MSG_TYPE_JOIN_RSP:
 		wcn36xx_smd_join_rsp(buf, len);
+		break;
+	case WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP:
+		wcn36xx_smd_update_scan_params_rsp(buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT not supported");
