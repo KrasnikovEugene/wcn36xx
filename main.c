@@ -282,15 +282,12 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		switch (vif->type) {
 		case NL80211_IFTYPE_STATION:
 			wcn36xx_info("Add station interface");
-			wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
+			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
 			wcn36xx_smd_enter_imps(wcn);
 			wcn36xx_smd_exit_imps(wcn);
-			//TODO Need to find do we really need to add second station? Doubt that
-			wcn36xx_smd_add_sta(wcn, wcn->addresses[1], 1);
 			break;
 		case NL80211_IFTYPE_AP:
 			wcn36xx_info("Add AP interface");
-			wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
 			break;
 		default:
 			wcn36xx_info("Add interface=%d", vif->type);
