@@ -174,7 +174,6 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 		wcn36xx_smd_deinit_scan(wcn);
 	}
 
-	ieee80211_sched_scan_results(wcn->hw);
 	ieee80211_scan_completed(wcn->hw, false);
 	return 0;
 }
