@@ -176,23 +176,10 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 		wcn36xx_smd_deinit_scan(wcn);
 	}
 
-	ieee80211_sched_scan_results(wcn->hw);
 	ieee80211_scan_completed(wcn->hw, false);
 	return 0;
 }
-static int wcn36xx_sched_scan_start(struct ieee80211_hw *hw,
-				      struct ieee80211_vif *vif,
-				      struct cfg80211_sched_scan_request *req,
-				      struct ieee80211_sched_scan_ies *ies)
-{
-	ENTER();
-	return 0;
-}
-static void wcn36xx_sched_scan_stop(struct ieee80211_hw *hw,
-				      struct ieee80211_vif *vif)
-{
-	ENTER();
-}
+
 static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				       struct ieee80211_vif *vif,
 				       struct ieee80211_bss_conf *bss_conf,
@@ -316,8 +303,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.tx 			= wcn36xx_tx,
 	.set_key 		= wcn36xx_set_key,
 	.hw_scan 		= wcn36xx_hw_scan,
-	.sched_scan_start 	= wcn36xx_sched_scan_start,
-	.sched_scan_stop 	= wcn36xx_sched_scan_stop,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
 	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
 	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
