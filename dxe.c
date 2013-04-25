@@ -361,6 +361,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 
 	wcn36xx_dbg_dump("DESC2 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
 	wcn36xx_dbg_dump("SKB   >>> ", (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
+
+	// Move the head of the ring to the next empty descriptor
+	wcn->dxe_tx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 	//indicate End Of Packet and generate interrupt on descriptor Done
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_REG_CTL_TX_H,
