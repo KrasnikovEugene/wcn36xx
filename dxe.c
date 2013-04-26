@@ -281,12 +281,20 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	wcn36xx_dxe_write_register(wcn, 0x202034, 0x8);
 	cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
 	cur_dxe_desc = cur_dxe_ctl->desc;
+	wcn36xx_dbg("wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+
 
 	dma_unmap_single( NULL,
 		(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
 		cur_dxe_ctl->skb->len,
 		DMA_FROM_DEVICE );
 	wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
+
+	// Release RX descriptor
+	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
+	wcn36xx_dxe_write_register(wcn, 0x202004, 0x8);
+	wcn36xx_dxe_write_register(wcn, 0x202440, 0x847ead2f);
+
 	wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 
 	enable_irq(wcn->rx_irq);
