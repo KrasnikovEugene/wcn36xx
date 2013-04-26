@@ -56,14 +56,12 @@ enum wcn36xx_debug_mask {
 	if (debug_mask & mask)				\
 		pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
 
-#define wcn36xx_dbg_dump(prefix_str, buf, len)			\
-do {									\
-	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, prefix_str);		\
-	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))		\
-		print_hex_dump(KERN_DEBUG, prefix_str,			\
-			       DUMP_PREFIX_ADDRESS, 32, 1,		\
-			       buf, len, false);			\
-} while (0)
+#define wcn36xx_dbg_dump(mask, prefix_str, buf, len)		\
+	if (debug_mask & mask)					\
+		print_hex_dump(KERN_DEBUG, prefix_str,		\
+			       DUMP_PREFIX_ADDRESS, 32, 1,	\
+			       buf, len, false);
+
 
 #define ENTER() pr_info(DRIVER_PREFIX "%s\n", __func__)
 
