@@ -425,8 +425,11 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX");
 
-	wcn36xx_dbg_dump("DESC1 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
-	wcn36xx_dbg_dump("BD   >>> ", (char*)mem_pool->virt_addr, sizeof(struct wcn36xx_tx_bd));
+	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
+			 (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
+			 "BD   >>> ", (char*)mem_pool->virt_addr,
+			 sizeof(struct wcn36xx_tx_bd));
 
 	// Set source address of the SKB we send
 	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
@@ -443,8 +446,10 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 	// set it to VALID
 	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_skb;
 
-	wcn36xx_dbg_dump("DESC2 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
-	wcn36xx_dbg_dump("SKB   >>> ", (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
+	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
+			 (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
+			 (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
 
 	// Move the head of the ring to the next empty descriptor
 	 cur_ch->head_blk_ctl = cur_dxe_ctl->next;

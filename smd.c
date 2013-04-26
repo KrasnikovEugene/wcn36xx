@@ -23,7 +23,7 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 	init_completion(&wcn->smd_compl);
 	avail = smd_write_avail(wcn->smd_ch);
 
-	wcn36xx_dbg_dump("SMD >>> ", wcn->smd_buf, len);
+	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD >>> ", wcn->smd_buf, len);
 	if (avail >= len) {
 		avail = smd_write(wcn->smd_ch, wcn->smd_buf, len);
 		if (avail != len) {
@@ -527,7 +527,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_header * msg_header = buf;
 
-	wcn36xx_dbg_dump("SMD <<< ", buf, len);
+	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {
 	case WCN36XX_FW_MSG_TYPE_START_RSP:
 		wcn36xx_smd_start_rsp(buf, len);
