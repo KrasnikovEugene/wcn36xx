@@ -308,6 +308,61 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
 }
+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
+{
+	struct set_link_state_req_msg msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
+
+	INIT_MSG(msg_header, &msg_body, WCN36XX_HAL_SET_LINK_ST_REQ)
+
+	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
+	memcpy(&msg_body.self_mac_addr, sta_mac, ETH_ALEN);
+	msg_body.state = state;
+
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
+
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac)
+{
+	struct wcn36xx_fw_msg_config_sta msg_body;
+	struct wcn36xx_fw_msg_header msg_header;
+
+	INIT_MSG(msg_header, &msg_body, WCN36XX_HAL_CONFIG_STA_REQ)
+
+	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
+	memcpy(&msg_body.sta_mac, sta_mac, ETH_ALEN);
+	msg_body.ass_id = 1;
+	msg_body.sta_type = 0;
+	msg_body.listen_int = 0x8;
+	msg_body.ht_cap = 1;
+
+	msg_body.max_ampdu_size = 3;
+	msg_body.max_ampdu_dens = 5;
+	msg_body.short_gi40mhz = 1;
+	msg_body.short_gi20mhz = 1;
+	msg_body.supported_rates.sta_rate_mode = WCN36XX_FW_MSG_STA_RATE_MODE_11N;
+	msg_body.supported_rates.rates_11b[0] = 0x82;
+	msg_body.supported_rates.rates_11b[1] = 0x84;
+	msg_body.supported_rates.rates_11b[2] = 0x8b;
+	msg_body.supported_rates.rates_11b[3] = 0x96;
+
+	msg_body.supported_rates.rates_11a[0] = 0x0C;
+	msg_body.supported_rates.rates_11a[1] = 0x12;
+	msg_body.supported_rates.rates_11a[2] = 0x18;
+	msg_body.supported_rates.rates_11a[3] = 0x24;
+	msg_body.supported_rates.rates_11a[4] = 0x30;
+	msg_body.supported_rates.rates_11a[5] = 0x48;
+	msg_body.supported_rates.rates_11a[6] = 0x60;
+	msg_body.supported_rates.rates_11a[7] = 0x6C;
+	msg_body.supported_rates.supported_mcs_set[0] = 0xFF;
+	msg_body.sta_id = 1;
+
+	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+}
 static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 {
 	struct  wcn36xx_fw_msg_join_rsp * rsp;
@@ -323,7 +378,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 	return 0;
 }
 
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update)
 {
 	struct wcn36xx_fw_msg_config_bss_req msg_body;
 	struct wcn36xx_fw_msg_header msg_header;
@@ -338,7 +393,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
 		msg_body.net_type = WCN36XX_FW_MSG_NET_TYPE_11G;
 		msg_body.coex_11g = 1;
 		msg_body.beacon_interval = 0x64;
-		msg_body.dtim_period = 1;
+
 		msg_body.cur_op_ch = wcn->ch;
 		memcpy(&msg_body.sta_context.bssid, bssid, ETH_ALEN);
 		msg_body.sta_context.sta_type = 1;
@@ -348,7 +403,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
 		msg_body.sta_context.max_ampdu_size = 3;
 		msg_body.sta_context.max_ampdu_dens = 5;
 		msg_body.sta_context.dsss_cck_mode_40mhz = 1;
-		msg_body.max_tx_power = 0x14;
 	} else {
 		memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
 		memcpy(&msg_body.self_mac, &wcn->addresses[0], ETH_ALEN);
@@ -371,14 +425,25 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid)
 		msg_body.sta_context.short_pream_sup = 1;
 		memcpy(&msg_body.sta_context.sta_mac, &wcn->addresses[0], ETH_ALEN);
 		msg_body.sta_context.listen_int = 8;
-
 	}
-
 	msg_body.sta_context.ht_cap = 1;
 	msg_body.sta_context.short_gi40mhz = 1;
 	msg_body.sta_context.short_gi20mhz = 1;
+	if (update == 1) {
+		msg_body.short_slot_time = 1;
+		msg_body.coex_11n_non_gf = 1;
+		msg_body.dtim_period = 0;
+		msg_body.sta_context.ass_id = 1;
+		msg_body.sta_context.bss_id = 0;
+		msg_body.action = 1;
+		msg_body.tx_mgmt_power = 6;
+		msg_body.max_tx_power = 0x10;
+	} else {
+		msg_body.max_tx_power = 0x14;
+		msg_body.dtim_period = 1;
+		msg_body.sta_context.bss_id = 0xff;
+	}
 	msg_body.sta_context.sta_id = 0xff;
-	msg_body.sta_context.bss_id = 0xff;
 
 	msg_body.sta_context.supported_rates.sta_rate_mode = WCN36XX_FW_MSG_STA_RATE_MODE_11N;
 	msg_body.sta_context.supported_rates.rates_11b[0] = 0x82;
