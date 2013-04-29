@@ -19,6 +19,7 @@
 
 #include <mach/msm_smd.h>
 #include "wcn36xx.h"
+#include "hal.h"
 
 //Max shared size is 4k but we take less.
 #define WCN36XX_NV_FRAGMENT_SIZE 			3072
@@ -48,6 +49,9 @@ enum wcn36xx_fw_msg_type {
 
 	WCN36XX_FW_MSG_TYPE_JOIN_REQ			= 20,
 	WCN36XX_FW_MSG_TYPE_JOIN_RSP			= 21,
+
+	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_REQ		= 44,
+	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_RSP		= 45,
 
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ	= 151,
 	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP	= 152,
@@ -262,6 +266,7 @@ struct wcn36xx_fw_msg_supported_rates {
 	u8                                      supported_mcs_set[16];
 	u16                                     rx_highes_rate;
 } __packed;
+
 struct wcn36xx_fw_msg_config_sta {
 	u8                                      bssid[ETH_ALEN];
 	u16                                     ass_id;
@@ -421,7 +426,9 @@ int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_exit_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch);
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid);
+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state);
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update);
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off);
 
 // WCN36XX configuration parameters

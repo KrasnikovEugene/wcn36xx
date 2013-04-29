@@ -21,7 +21,7 @@
 #include <linux/etherdevice.h>
 #include "wcn36xx.h"
 #include "dxe.h"
-
+#include "hal.h"
 
 /*
  * provide hw to module exit function
@@ -195,12 +195,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	if(changed & BSS_CHANGED_BSSID) {
 		wcn36xx_info("wcn36xx_bss_info_changed BSS_CHANGED_BSSID=%pM", bss_conf->bssid);
 		wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
-		wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid);
+		wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
 	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
 		if(!wcn->beacon_enable) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
-			wcn36xx_smd_config_bss(wcn, false, NULL);
+			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 		}
 	} else {
@@ -294,7 +294,11 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		       struct ieee80211_sta *sta)
 {
+	struct wcn36xx *wcn = hw->priv;
 	ENTER();
+	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_POSTASSOC_STATE);
+	wcn36xx_smd_config_sta(wcn, sta->addr, sta->aid, vif->addr);
+	wcn36xx_smd_config_bss(wcn, true, sta->addr, 1);
 	return 0;
 }
 static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
