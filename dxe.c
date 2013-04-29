@@ -103,6 +103,21 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	wcn->dxe_rx_l_ch.desc_num = WCN36XX_DXE_CH_DESC_NUMB_RX_L;
 	wcn->dxe_rx_h_ch.desc_num = WCN36XX_DXE_CH_DESC_NUMB_RX_H;
 
+	wcn->dxe_tx_l_ch.dxe_wq =  WCN36XX_DXE_WQ_TX_L;
+	wcn->dxe_tx_h_ch.dxe_wq =  WCN36XX_DXE_WQ_TX_H;
+
+	wcn->dxe_tx_l_ch.ctrl_bd = WCN36XX_DXE_CTRL_TX_L_BD;
+	wcn->dxe_tx_h_ch.ctrl_bd = WCN36XX_DXE_CTRL_TX_H_BD;
+
+	wcn->dxe_tx_l_ch.ctrl_skb = WCN36XX_DXE_CTRL_TX_L_SKB;
+	wcn->dxe_tx_h_ch.ctrl_skb = WCN36XX_DXE_CTRL_TX_H_SKB;
+
+	wcn->dxe_tx_l_ch.reg_ctrl = WCN36XX_DXE_REG_CTL_TX_L;
+	wcn->dxe_tx_h_ch.reg_ctrl = WCN36XX_DXE_REG_CTL_TX_H;
+
+	wcn->dxe_tx_l_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_L;
+	wcn->dxe_tx_h_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_H;
+
 	//DEX control block allocation
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
@@ -371,31 +386,41 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
-int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
+int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool is_high)
 {
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
+	struct wcn36xx_dxe_mem_pool * mem_pool = NULL;
+	struct wcn36xx_dxe_ch * cur_ch = NULL;
+	if(is_high) {
+		wcn36xx_dbg("DXE TX: MGMT");
+		mem_pool = &wcn->mgmt_mem_pool;
+		cur_ch = &wcn->dxe_tx_h_ch;
+	} else {
+		wcn36xx_dbg("DXE TX: DATA");
+		mem_pool = &wcn->data_mem_pool;
+		cur_ch = &wcn->dxe_tx_l_ch;
+	}
 
-	wcn36xx_prepare_tx_bd(wcn->mgmt_mem_pool.virt_addr, skb->len);
-	wcn36xx_fill_tx_bd(wcn->mgmt_mem_pool.virt_addr, broadcast);
+	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len);
+	wcn36xx_fill_tx_bd(mem_pool->virt_addr, broadcast);
 
-	cur_dxe_ctl = wcn->dxe_tx_h_ch.head_blk_ctl;
+	cur_dxe_ctl = cur_ch->head_blk_ctl;
 	cur_dxe_desc = cur_dxe_ctl->desc;
 
 	// Let's not forget the frame we are sending
-	cur_dxe_ctl->frame = wcn->mgmt_mem_pool.virt_addr;
+	cur_dxe_ctl->frame = mem_pool->virt_addr;
 
 	// Set source address of the BD we send
+	cur_dxe_desc->desc.src_addr_l = (int)mem_pool->phy_addr;
 
-	cur_dxe_desc->desc.src_addr_l = (int)wcn->mgmt_mem_pool.phy_addr;
-	// TODO fix me, if data then set it to WCN36XX_DXE_WQ_TX_L
-	cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
 	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
-	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_BD;
+	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_bd;
 
-	wcn36xx_dbg("DXE TX");
 	wcn36xx_dbg_dump("DESC1 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
-	wcn36xx_dbg_dump("BD   >>> ", (char*)wcn->mgmt_mem_pool.virt_addr, sizeof(struct wcn36xx_tx_bd));
+	wcn36xx_dbg_dump("BD   >>> ", (char*)mem_pool->virt_addr, sizeof(struct wcn36xx_tx_bd));
+
 	// Set source address of the SKB we send
 	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
 	cur_dxe_ctl->skb = skb;
@@ -404,20 +429,22 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 		cur_dxe_ctl->skb->data,
 		cur_dxe_ctl->skb->len,
 		DMA_TO_DEVICE );
-	cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+
+	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
 	cur_dxe_desc->fr_len = cur_dxe_ctl->skb->len;
+
 	// set it to VALID
-	cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H_SKB;
+	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_skb;
 
 	wcn36xx_dbg_dump("DESC2 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
 	wcn36xx_dbg_dump("SKB   >>> ", (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
 
 	// Move the head of the ring to the next empty descriptor
-	wcn->dxe_tx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
+	 cur_ch->head_blk_ctl = cur_dxe_ctl->next;
+
 	//indicate End Of Packet and generate interrupt on descriptor Done
 	wcn36xx_dxe_write_register(wcn,
-		WCN36XX_DXE_REG_CTL_TX_H,
-		WCN36XX_DXE_CH_DEFAULT_CTL_TX_H);
+		cur_ch->reg_ctrl, cur_ch->def_ctrl);
 	return 0;
 }
 int wcn36xx_dxe_init(struct wcn36xx *wcn)
