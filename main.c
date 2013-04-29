@@ -154,9 +154,7 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 	int ch;
 	int i;
 	ENTER();
-	wcn36xx_smd_enter_imps(wcn);
 	wcn36xx_smd_update_scan_params(wcn);
-	wcn36xx_smd_exit_imps(wcn);
 	if (req->n_ssids > 0) {
 		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie_len);
 	} else {
@@ -273,8 +271,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		case NL80211_IFTYPE_STATION:
 			wcn36xx_info("Add station interface");
 			wcn36xx_smd_add_sta(wcn, wcn->addresses[0], 0);
-			wcn36xx_smd_enter_imps(wcn);
-			wcn36xx_smd_exit_imps(wcn);
 			//TODO Need to find do we really need to add second station? Doubt that
 			wcn36xx_smd_add_sta(wcn, wcn->addresses[1], 1);
 			break;
