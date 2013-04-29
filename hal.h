@@ -2357,7 +2357,7 @@ struct set_link_state_req_msg {
 	enum wcn36xx_hal_link_state state;
 	u8 self_mac_addr[ETH_ALEN];
 
-};
+} __packed;
 
 struct set_link_state_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
