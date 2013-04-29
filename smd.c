@@ -43,6 +43,16 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 	return 0;
 }
 
+#define INIT_HAL_MSG(msg_body, type) \
+	memset(&msg_body, 0, sizeof(msg_body)); \
+	msg_body.header.msgType = type; \
+	msg_body.header.msgVersion = WCN36XX_HAL_MSG_VERSION0; \
+	msg_body.header.len = sizeof(msg_body);
+
+#define PREPARE_HAL_BUF(send_buf, msg_body) \
+	memset(send_buf, 0, msg_body.header.len); \
+	memcpy(send_buf, &msg_body, sizeof(msg_body));
+
 int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_status_rsp * rsp;
@@ -311,17 +321,16 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
 {
 	struct set_link_state_req_msg msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_HAL_SET_LINK_ST_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_LINK_ST_REQ)
 
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.self_mac_addr, sta_mac, ETH_ALEN);
 	msg_body.state = state;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac)
