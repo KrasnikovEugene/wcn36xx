@@ -39,6 +39,8 @@ RX_HIGH	= DMA3
 #define WCN36XX_DXE_CTRL_RX_H			0x12d12f
 #define WCN36XX_DXE_CTRL_TX_H_BD		0x32ce45
 #define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
+#define WCN36XX_DXE_CTRL_TX_L_BD		0x328a45
+#define WCN36XX_DXE_CTRL_TX_L_SKB		0x328a4d
 
 // TODO This must calculated properly but not hardcoded
 #define WCN36XX_DXE_WQ_TX_L			0x17
@@ -51,6 +53,8 @@ RX_HIGH	= DMA3
 #define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L		0x847EAD2F
 #define WCN36XX_DXE_CH_DEFAULT_CTL_RX_H		0x84FED12F
 #define WCN36XX_DXE_CH_DEFAULT_CTL_TX_H		0x853ECF4D
+#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_L		0x843e8b4d
+
 // Common DXE registers
 #define WCN36XX_DXE_MEM_CSR          		WCN36XX_DXE_MEM_REG + 0x00
 #define WCN36XX_DXE_ENCH_ADDR          		WCN36XX_DXE_MEM_REG + 0x04
@@ -103,6 +107,7 @@ RX_HIGH	= DMA3
 #define WCN36XX_DXE_REG_CTL_RX_L		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_RX_LOW_OFFSET
 #define WCN36XX_DXE_REG_CTL_RX_H		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_RX_HIGH_OFFSET
 #define WCN36XX_DXE_REG_CTL_TX_H		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_TX_HIGH_OFFSET
+#define WCN36XX_DXE_REG_CTL_TX_L		WCN36XX_DXE_MEM_REG + WCN36XX_DXE_TX_LOW_OFFSET
 
 #define WCN36XX_SMSM_WLAN_TX_ENABLE 		0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY	0x00000200
@@ -206,6 +211,13 @@ struct wcn36xx_dxe_ch {
 	struct wcn36xx_dxe_ctl		*head_blk_ctl;
 	struct wcn36xx_dxe_ctl		*tail_blk_ctl;
 	uint				num_free_desc;
+
+	// DXE channel specific configs
+	u32				dxe_wq;
+	u32				ctrl_bd;
+	u32				ctrl_skb;
+	u32				reg_ctrl;
+	u32				def_ctrl;
 };
 
 // Memory Pool for BD headers
@@ -222,5 +234,5 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn);
 int wcn36xx_dxe_init(struct wcn36xx *wcn);
 void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
-int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast);
+int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool is_high);
 #endif	/* _DXE_H_ */

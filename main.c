@@ -132,7 +132,12 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *co
 	struct ieee80211_mgmt *mgmt;
 	ENTER();
 	mgmt = (struct ieee80211_mgmt *)skb->data;
-	wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da));
+	wcn36xx_dbg("wcn36xx_tx: = %x", mgmt->frame_control);
+	if (ieee80211_is_data(mgmt->frame_control) || (ieee80211_is_data_qos(mgmt->frame_control))) {
+		wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), false);
+	} else {
+		wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), true);
+	}
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
@@ -168,7 +173,7 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
 		wcn36xx_smd_start_scan(wcn, ch);
 		// do this as timer
 		msleep(60);
-		wcn36xx_dxe_tx(hw->priv, prb_req, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da));
+		wcn36xx_dxe_tx(hw->priv, prb_req, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), true);
 		msleep(60);
 
 		wcn36xx_smd_end_scan(wcn, ch);
