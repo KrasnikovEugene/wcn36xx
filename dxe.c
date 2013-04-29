@@ -269,25 +269,75 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	// TODO read which channel generated INT by checking mask
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &intSrc);
 
+	wcn36xx_dbg("wcn36xx_rx_ready_work: Channel=%x", intSrc);
 	// check if this channel is High or Low. Assume high
+	if (intSrc & WCN36XX_INT_MASK_CHAN_RX_H) {
+		wcn36xx_dbg("wcn36xx_rx_ready_work: MGMT Frame");
 
-	/* Read Channel Status Register to know why INT Happen */
-	wcn36xx_dxe_read_register(wcn, 0x2024C4, &int_reason);
+		/* Read Channel Status Register to know why INT Happen */
+		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_H, &int_reason);
+		// TODO if status says erro handle that
 
-	/* Clean up all the INT within this channel */
-	wcn36xx_dxe_write_register(wcn, 0x202030, 0x8);
+		/* Clean up all the INT within this channel */
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_CLR_ADDR ,  WCN36XX_INT_MASK_CHAN_RX_H);
 
-	/* Clean up ED INT Bit */
-	wcn36xx_dxe_write_register(wcn, 0x202034, 0x8);
-	cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
-	cur_dxe_desc = cur_dxe_ctl->desc;
+		/* Clean up ED INT Bit */
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_END_CLR_ADDR, WCN36XX_INT_MASK_CHAN_RX_H);
 
-	dma_unmap_single( NULL,
-		(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
-		cur_dxe_ctl->skb->len,
-		DMA_FROM_DEVICE );
-	wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
-	wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
+		cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
+		cur_dxe_desc = cur_dxe_ctl->desc;
+
+		wcn36xx_dbg("wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+
+		dma_unmap_single( NULL,
+			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
+			cur_dxe_ctl->skb->len,
+			DMA_FROM_DEVICE );
+		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
+
+		// Release RX descriptor
+		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_H);
+
+		// Reenable RX Low not high
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CTL_RX_L, WCN36XX_DXE_CH_DEFAULT_CTL_RX_L);
+
+		wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
+	} else if (intSrc & WCN36XX_INT_MASK_CHAN_RX_L) {
+		wcn36xx_dbg("wcn36xx_rx_ready_work: DATA Frame");
+
+		/* Read Channel Status Register to know why INT Happen */
+		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_L, &int_reason);
+		// TODO if status says erro handle that
+
+		/* Clean up all the INT within this channel */
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_CLR_ADDR ,  WCN36XX_INT_MASK_CHAN_RX_L);
+
+		/* Clean up ED INT Bit */
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_END_CLR_ADDR, WCN36XX_INT_MASK_CHAN_RX_L);
+
+		cur_dxe_ctl = wcn->dxe_rx_l_ch.head_blk_ctl;
+		cur_dxe_desc = cur_dxe_ctl->desc;
+
+		wcn36xx_dbg("wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+
+		dma_unmap_single( NULL,
+			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
+			cur_dxe_ctl->skb->len,
+			DMA_FROM_DEVICE );
+		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
+
+		// Release RX descriptor
+		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_L);
+
+		// Reenable RX Low not high
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CTL_RX_H, WCN36XX_DXE_CH_DEFAULT_CTL_RX_H);
+
+		wcn->dxe_rx_l_ch.head_blk_ctl = cur_dxe_ctl->next;
+	}
 
 	enable_irq(wcn->rx_irq);
 }
@@ -361,6 +411,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast)
 
 	wcn36xx_dbg_dump("DESC2 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
 	wcn36xx_dbg_dump("SKB   >>> ", (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
+
+	// Move the head of the ring to the next empty descriptor
+	wcn->dxe_tx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 	//indicate End Of Packet and generate interrupt on descriptor Done
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_REG_CTL_TX_H,
