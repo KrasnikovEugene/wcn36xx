@@ -75,8 +75,8 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_REQ		= 84,
 	WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_RSP		= 104,
 
-	WCN36XX_FW_MSG_TYPE_ADD_STA_REQ			= 125,
-	WCN36XX_FW_MSG_TYPE_ADD_STA_RSP			= 126,
+	WCN36XX_FW_MSG_TYPE_ADD_STA_SELF_REQ		= 125,
+	WCN36XX_FW_MSG_TYPE_ADD_STA_SELF_RSP		= 126,
 
 	WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_REQ		= 175,
 	WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_RSP		= 176
@@ -243,11 +243,12 @@ struct wcn36xx_fw_msg_ex_capabilities_req {
 #define wcn36xx_fw_msg_ex_capabilities_rsp wcn36xx_fw_msg_ex_capabilities_req
 
 /* WCN36XX_FW_MSG_TYPE_ADD_STA_REQ */
-struct wcn36xx_fw_msg_add_sta_req {
+struct wcn36xx_fw_msg_add_sta_self_req {
 	u8	mac[ETH_ALEN];
 	u32 	status;
 } __packed;
-struct wcn36xx_fw_msg_add_sta_rsp {
+
+struct wcn36xx_fw_msg_add_sta_self_rsp {
 	u32 	status;
 	u8	sta_id;
 	u8	dpu_id;
@@ -422,7 +423,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch);
 int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch);
 int wcn36xx_smd_deinit_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status);
+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 status);
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_exit_imps(struct wcn36xx *wcn);
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch);
