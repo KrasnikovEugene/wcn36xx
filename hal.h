@@ -3571,14 +3571,14 @@ struct set_p2p_gonoa_rsp_msg {
 	u32 status;
 };
 
-struct add_sta_self_req {
+struct wcn36xx_hal_add_sta_self_req {
 	struct wcn36xx_hal_msg_header header;
 
 	u8 self_addr[ETH_ALEN];
 	u32 status;
-};
+} __packed;
 
-struct add_sta_self_rsp_msg {
+struct wcn36xx_hal_add_sta_self_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
@@ -3592,7 +3592,7 @@ struct add_sta_self_rsp_msg {
 
 	/* DPU Signature */
 	u8 dpu_signature;
-};
+} __packed;
 
 struct del_sta_self_req_msg {
 	struct wcn36xx_hal_msg_header header;
