@@ -28,19 +28,7 @@
 #define WCN36XX_SMSM_WLAN_TX_ENABLE	 		0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 
-#define SMD_MSG_SCAN_MODE 				2
-
 enum wcn36xx_fw_msg_type {
-	/* Scan */
-	WCN36XX_FW_MSG_TYPE_INIT_SCAN_REQ		= 4,
-	WCN36XX_FW_MSG_TYPE_INIT_SCAN_RSP		= 5,
-	WCN36XX_FW_MSG_TYPE_START_SCAN_REQ		= 6,
-	WCN36XX_FW_MSG_TYPE_START_SCAN_RSP		= 7,
-	WCN36XX_FW_MSG_TYPE_END_SCAN_REQ		= 8,
-	WCN36XX_FW_MSG_TYPE_END_SCAN_RSP		= 9,
-	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ		= 10,
-	WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP		= 11,
-
 	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ              = 16,
 	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_RSP              = 17,
 
@@ -49,9 +37,6 @@ enum wcn36xx_fw_msg_type {
 
 	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_REQ		= 44,
 	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_RSP		= 45,
-
-	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ	= 151,
-	WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP	= 152,
 
 	/* CFG */
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ		= 48,
@@ -138,7 +123,6 @@ struct wcn36xx_fw_msg_status_rsp {
 #define wcn36xx_fw_msg_exit_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_init_scan_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_end_scan_rsp 		wcn36xx_fw_msg_status_rsp
-#define wcn36xx_fw_msg_scan_params_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_ex_caps_rsp 		wcn36xx_fw_msg_ex_caps_req
 
 /* WCN36XX_FW_MSG_TYPE_LOAD_NV_REQ */
@@ -152,60 +136,6 @@ struct wcn36xx_fw_msg_nv_load_header {
 struct wcn36xx_fw_msg_update_cfg_req {
 	u32 	conf_len;
 	 // config buffer must start in TLV format just here
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_INIT_SCAN_REQ */
-struct wcn36xx_fw_msg_init_scan_req {
-	u32 				scan_mode;
-	u8 				bssid[ETH_ALEN];
-	u8				notify_bss;
-	u8				frame_type;
-	u8				frame_len;
-	struct ieee80211_hdr_3addr 	hdr;
-	u8				bssidx[2];
-	u8				active_bss;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_START_SCAN_REQ */
-struct wcn36xx_fw_msg_start_scan_req {
-	u8	ch;
-} __packed;
-struct wcn36xx_fw_msg_start_scan_rsp {
-	u32 	status;
-	u32	start_TSF[2];
-	u8	mgmt_power;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_END_SCAN_REQ */
-struct wcn36xx_fw_msg_end_scan_req {
-	u8	ch;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ */
-struct wcn36xx_fw_msg_deinit_scan_req {
-	u32 				scan_mode;
-	u8				cur_ch;
-	u32				bon_state;
-	u8 				bssid[ETH_ALEN];
-	u8				notify_bss;
-	u8				frame_type;
-	u8				frame_len;
-	struct ieee80211_hdr_3addr 	hdr;
-	u8				bssidx[2];
-	u8				active_bss;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ */
-struct wcn36xx_fw_msg_update_scan_params_req {
-	u8	enable_11d;
-	u8	resolved_11d;
-	u8	ch_count;
-	u8	ch[26];
-	u16	active_min_ch_time;
-	u16	active_max_ch_time;
-	u16	passive_min_ch_time;
-	u16	passive_max_ch_time;
-	u32	phy_ch_state;
 } __packed;
 
 /* WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_REQ */
@@ -392,7 +322,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn);
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch);
 int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch);
-int wcn36xx_smd_deinit_scan(struct wcn36xx *wcn);
+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
 int wcn36xx_smd_add_sta(struct wcn36xx *wcn, struct mac_address addr, u32 status);
 int wcn36xx_smd_enter_imps(struct wcn36xx *wcn);
