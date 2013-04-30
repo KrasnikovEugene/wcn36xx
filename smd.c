@@ -153,33 +153,30 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 int wcn36xx_smd_start(struct wcn36xx *wcn)
 {
-	struct wcn36xx_fw_msg_header msg_header;
-	struct wcn36xx_fw_msg_start_req msg_body;
+	struct wcn36xx_hal_mac_start_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_START_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_REQ)
 
-	msg_body.driver_type = WCN36XX_FW_MSG_DRIVER_TYPE_PROD;
-	msg_body.conf_len = 0;
+	msg_body.params.type = DRIVER_TYPE_PRODUCTION;
+	msg_body.params.len = 0;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 static int wcn36xx_smd_start_rsp(void *buf, size_t len)
 {
-	struct wcn36xx_fw_msg_start_rsp * rsp;
+	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
 
-	if (len < sizeof(struct wcn36xx_fw_msg_header) +
-		sizeof(struct wcn36xx_fw_msg_status_rsp))
+	if (len < sizeof(*rsp))
 		return -EIO;
 
-	rsp = (struct wcn36xx_fw_msg_start_rsp *)
-		(buf + sizeof(struct wcn36xx_fw_msg_header));
+	rsp = (struct wcn36xx_hal_mac_start_rsp_msg *)buf;
 
-	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->start_rsp_params.status)
 		return -EIO;
 	wcn36xx_info("WLAN ver=%s, CRM ver=%s",
-		rsp->wlan_ver, rsp->crm_ver);
+		rsp->start_rsp_params.wlan_version, rsp->start_rsp_params.crm_version);
 	return 0;
 }
 
@@ -529,7 +526,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 
 	wcn36xx_dbg_dump("SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {
-	case WCN36XX_FW_MSG_TYPE_START_RSP:
+	case WCN36XX_HAL_START_RSP:
 		wcn36xx_smd_start_rsp(buf, len);
 		break;
 	case WCN36XX_FW_MSG_TYPE_ADD_STA_RSP:
