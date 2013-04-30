@@ -31,9 +31,6 @@
 #define SMD_MSG_SCAN_MODE 				2
 
 enum wcn36xx_fw_msg_type {
-	WCN36XX_FW_MSG_TYPE_START_REQ			= 0,
-	WCN36XX_FW_MSG_TYPE_START_RSP			= 1,
-
 	/* Scan */
 	WCN36XX_FW_MSG_TYPE_INIT_SCAN_REQ		= 4,
 	WCN36XX_FW_MSG_TYPE_INIT_SCAN_RSP		= 5,
@@ -95,10 +92,6 @@ enum wcn36xx_fw_msg_ver {
 	WCN36XX_FW_MSG_VER0				= 0
 };
 
-enum wcn36xx_fw_msg_driver_type {
-	WCN36XX_FW_MSG_DRIVER_TYPE_PROD 		= 0
-};
-
 enum wcn36xx_fw_msg_bss_type {
 	WCN36XX_FW_MSG_BSS_TYPE_STA                     = 0,
 	WCN36XX_FW_MSG_BSS_TYPE_AP                      = 1
@@ -153,27 +146,6 @@ struct wcn36xx_fw_msg_nv_load_header {
 	u16 	frag_num;
 	u16 	is_last;
 	u32 	msg_len;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_START_REQ */
-struct wcn36xx_fw_msg_start_req {
-	enum wcn36xx_fw_msg_driver_type 	driver_type;
-	u32 	conf_len;
-	 // config buffer must start in TLV format just here
-} __packed;
-struct wcn36xx_fw_msg_api_ver {
-	u8	rev;
-	u8	ver;
-	u8	minor;
-	u8	major;
-} __packed;
-struct wcn36xx_fw_msg_start_rsp {
-	u16 				status;
-	u8 				max_sta;
-	u8 				max_bss;
-	struct wcn36xx_fw_msg_api_ver 	api_ver;
-	u8				crm_ver[64];
-	u8				wlan_ver[64];
 } __packed;
 
 /* WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ */
