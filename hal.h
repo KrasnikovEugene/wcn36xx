@@ -661,7 +661,7 @@ struct wcn36xx_hal_msg_header {
 	enum wcn36xx_hal_host_msg_type msgType:16;
 	enum wcn36xx_hal_host_msg_version msgVersion:16;
 	u32 len;
-};
+} __packed;
 
 /* Config format required by HAL for each CFG item*/
 struct wcn36xx_hal_cfg {
@@ -691,7 +691,7 @@ struct wcn36xx_hal_mac_start_parameters {
 	u32 len;
 
 	/* Following this there is a TLV formatted buffer of length 
-	 * "uConfigBufferLen" bytes containing all config values. 
+	 * "len" bytes containing all config values.
 	 * The TLV is expected to be formatted like this:
 	 * 0           15            31           31+CFG_LEN-1        length-1
 	 * |   CFG_ID   |   CFG_LEN   |   CFG_BODY    |  CFG_ID  |......|
@@ -699,11 +699,10 @@ struct wcn36xx_hal_mac_start_parameters {
 } __packed;
 
 struct wcn36xx_hal_mac_start_req_msg {
-	/* Note: The length specified in tHalMacStartReqMsg messages should be
-	 * header.msgLen = sizeof(tHalMacStartReqMsg) + uConfigBufferLen */
+	/* config buffer must start in TLV format just here */
 	struct wcn36xx_hal_msg_header header;
 	struct wcn36xx_hal_mac_start_parameters params;
-};
+} __packed;
 
 struct wcn36xx_hal_mac_start_rsp_params {
 	/* success or failure */
@@ -724,12 +723,12 @@ struct wcn36xx_hal_mac_start_rsp_params {
 	/* hardware/chipset/misc version information */
 	u8 wlan_version[WCN36XX_HAL_VERSION_LENGTH];
 
-};
+} __packed;
 
 struct wcn36xx_hal_mac_start_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct wcn36xx_hal_mac_start_rsp_params startRspParams;
-};
+	struct wcn36xx_hal_mac_start_rsp_params start_rsp_params;
+} __packed;
 
 struct wcn36xx_hal_mac_stop_req_params {
 	/* The reason for which the device is being stopped */
