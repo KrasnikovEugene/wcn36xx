@@ -915,16 +915,16 @@ struct wcn36xx_hal_init_scan_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-};
+} __packed;
 
 struct wcn36xx_hal_start_scan_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Indicates the channel to scan */
 	u8 scan_channel;
-};
+} __packed;
 
-struct wcn36xx_hal_start_rsm_msg {
+struct wcn36xx_hal_start_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
@@ -933,7 +933,7 @@ struct wcn36xx_hal_start_rsm_msg {
 	u32 start_tsf[2];
 	u8 tx_mgmt_power;
 
-};
+} __packed;
 
 struct wcn36xx_hal_end_scan_req_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -942,14 +942,14 @@ struct wcn36xx_hal_end_scan_req_msg {
 	 * retained for symmetry with "start Scan" message. It can also
 	 * help in error check if needed. */
 	u8 scan_channel;
-};
+} __packed;
 
 struct wcn36xx_hal_end_scan_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 struct wcn36xx_hal_finish_scan_req_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -989,7 +989,7 @@ struct wcn36xx_hal_finish_scan_req_msg {
 	/* Entry to hold number of active BSS idx's */
 	struct wcn36xx_hal_scan_entry scan_entry;
 
-};
+} __packed;
 
 struct wcn36xx_hal_finish_scan_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -4026,7 +4026,7 @@ struct set_rssi_filter_resp {
 
 /* Update scan params - sent from host to PNO to be used during PNO
  * scanningx */
-struct update_scan_params_req {
+struct wcn36xx_hal_update_scan_params_req {
 
 	struct wcn36xx_hal_msg_header header;
 
@@ -4054,7 +4054,7 @@ struct update_scan_params_req {
 
 	/* Cb State */
 	enum phy_chan_bond_state state;
-};
+} __packed;
 
 /* Update scan params - sent from host to PNO to be used during PNO
  * scanningx */
@@ -4090,13 +4090,13 @@ struct update_scan_params_req_ex {
 
 /* Update scan params - sent from host to PNO to be used during PNO
  * scanningx */
-struct update_scan_params_resp {
+struct wcn36xx_hal_update_scan_params_resp {
 
 	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
-};
+} __packed;
 
 struct wcn36xx_hal_set_tx_per_tracking_req_msg {
 	struct wcn36xx_hal_msg_header header;

@@ -182,85 +182,79 @@ static int wcn36xx_smd_start_rsp(void *buf, size_t len)
 
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 {
-	struct wcn36xx_fw_msg_init_scan_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_init_scan_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_INIT_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ)
 
-	msg_body.scan_mode = SMD_MSG_SCAN_MODE;
+	msg_body.mode = HAL_SYS_MODE_SCAN;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
 int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch)
 {
-	struct wcn36xx_fw_msg_start_scan_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_start_scan_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_START_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ)
 
-	msg_body.ch = ch;
+	msg_body.scan_channel = ch;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch)
 {
-	struct wcn36xx_fw_msg_end_scan_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_end_scan_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_END_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ)
 
-	msg_body.ch = ch;
+	msg_body.scan_channel = ch;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_deinit_scan(struct wcn36xx *wcn)
+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 {
-	struct wcn36xx_fw_msg_deinit_scan_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_finish_scan_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ)
 
-	msg_body.scan_mode = SMD_MSG_SCAN_MODE;
+	msg_body.mode = HAL_SYS_MODE_SCAN;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
-	struct wcn36xx_fw_msg_update_scan_params_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_update_scan_params_req msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ)
 
 	// TODO read this from config
-	msg_body.enable_11d	= 0;
-	msg_body.resolved_11d = 0;
-	msg_body.ch_count = 26;
+	msg_body.dot11d_enabled	= 0;
+	msg_body.dot11d_resolved = 0;
+	msg_body.channel_count = 26;
 	msg_body.active_min_ch_time = 60;
 	msg_body.active_max_ch_time = 120;
 	msg_body.passive_min_ch_time = 60;
 	msg_body.passive_max_ch_time = 110;
-	msg_body.phy_ch_state = 0;
+	msg_body.state = 0;
 
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 {
-	struct  wcn36xx_fw_msg_status_rsp * rsp;
+	struct  wcn36xx_hal_update_scan_params_resp * rsp;
 
-	rsp = (struct wcn36xx_fw_msg_status_rsp *)
-		(buf + sizeof(struct wcn36xx_fw_msg_header));
+	rsp = (struct wcn36xx_hal_update_scan_params_resp *)buf;
 
-	wcn36xx_info("Scan params stattus=%d",rsp->status);
+	wcn36xx_info("Scan params stattus=0x%x",rsp->status);
 	return 0;
 }
 
@@ -530,10 +524,10 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 		wcn36xx_smd_start_rsp(buf, len);
 		break;
 	case WCN36XX_FW_MSG_TYPE_ADD_STA_RSP:
-	case WCN36XX_FW_MSG_TYPE_INIT_SCAN_RSP:
-	case WCN36XX_FW_MSG_TYPE_START_SCAN_RSP:
-	case WCN36XX_FW_MSG_TYPE_END_SCAN_RSP:
-	case WCN36XX_FW_MSG_TYPE_DEINIT_SCAN_RSP:
+	case WCN36XX_HAL_INIT_SCAN_RSP:
+	case WCN36XX_HAL_START_SCAN_RSP:
+	case WCN36XX_HAL_END_SCAN_RSP:
+	case WCN36XX_HAL_FINISH_SCAN_RSP:
 	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
@@ -547,7 +541,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_JOIN_RSP:
 		wcn36xx_smd_join_rsp(buf, len);
 		break;
-	case WCN36XX_FW_MSG_TYPE_UPDATE_SCAN_PARAM_RSP:
+	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
 		wcn36xx_smd_update_scan_params_rsp(buf, len);
 		break;
 	default:
