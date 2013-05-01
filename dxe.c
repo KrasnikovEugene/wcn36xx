@@ -50,14 +50,18 @@ static void * wcn36xx_dma_alloc(size_t size, void **paddr)
 
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
-	wcn36xx_dbg("wcn36xx_dxe_write_register: addr=%x, data=%x", addr, data);
+	wcn36xx_dbg(WCN36XX_DBG_DXE,
+		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
+		    addr, data);
 	writel(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 {
 	*data = readl(wcn->mmio + addr);
-	wcn36xx_dbg("wcn36xx_dxe_read_register: addr=%x, data=%x", addr, *data);
+	wcn36xx_dbg(WCN36XX_DBG_DXE,
+		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
+		    addr, *data);
 }
 
 static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
@@ -284,10 +288,11 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	// TODO read which channel generated INT by checking mask
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &intSrc);
 
-	wcn36xx_dbg("wcn36xx_rx_ready_work: Channel=%x", intSrc);
+	wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: Channel=%x", intSrc);
+
 	// check if this channel is High or Low. Assume high
 	if (intSrc & WCN36XX_INT_MASK_CHAN_RX_H) {
-		wcn36xx_dbg("wcn36xx_rx_ready_work: MGMT Frame");
+		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: MGMT Frame");
 
 		/* Read Channel Status Register to know why INT Happen */
 		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_H, &int_reason);
@@ -302,7 +307,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
 		cur_dxe_desc = cur_dxe_ctl->desc;
 
-		wcn36xx_dbg("wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
 
 		dma_unmap_single( NULL,
 			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
@@ -320,7 +325,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 
 		wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 	} else if (intSrc & WCN36XX_INT_MASK_CHAN_RX_L) {
-		wcn36xx_dbg("wcn36xx_rx_ready_work: DATA Frame");
+		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: DATA Frame");
 
 		/* Read Channel Status Register to know why INT Happen */
 		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_L, &int_reason);
@@ -335,7 +340,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		cur_dxe_ctl = wcn->dxe_rx_l_ch.head_blk_ctl;
 		cur_dxe_desc = cur_dxe_ctl->desc;
 
-		wcn36xx_dbg("wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
 
 		dma_unmap_single( NULL,
 			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
@@ -393,11 +398,11 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 	struct wcn36xx_dxe_mem_pool * mem_pool = NULL;
 	struct wcn36xx_dxe_ch * cur_ch = NULL;
 	if(is_high) {
-		wcn36xx_dbg("DXE TX: MGMT");
+		wcn36xx_dbg(WCN36XX_DBG_TX, "DXE TX: MGMT");
 		mem_pool = &wcn->mgmt_mem_pool;
 		cur_ch = &wcn->dxe_tx_h_ch;
 	} else {
-		wcn36xx_dbg("DXE TX: DATA");
+		wcn36xx_dbg(WCN36XX_DBG_TX, "DXE TX: DATA");
 		mem_pool = &wcn->data_mem_pool;
 		cur_ch = &wcn->dxe_tx_l_ch;
 	}
@@ -417,6 +422,8 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
 	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
 	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_bd;
+
+	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX");
 
 	wcn36xx_dbg_dump("DESC1 >>> ", (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
 	wcn36xx_dbg_dump("BD   >>> ", (char*)mem_pool->virt_addr, sizeof(struct wcn36xx_tx_bd));
