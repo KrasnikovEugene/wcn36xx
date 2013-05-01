@@ -30,6 +30,20 @@
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
 
+extern unsigned int debug_mask;
+
+enum wcn36xx_debug_mask {
+	WCN36XX_DBG_DXE		= 0x00000001,
+	WCN36XX_DBG_DXE_DUMP	= 0x00000002,
+	WCN36XX_DBG_SMD		= 0x00000004,
+	WCN36XX_DBG_SMD_DUMP	= 0x00000008,
+	WCN36XX_DBG_RX		= 0x00000010,
+	WCN36XX_DBG_RX_DUMP	= 0x00000020,
+	WCN36XX_DBG_TX		= 0x00000040,
+	WCN36XX_DBG_TX_DUMP	= 0x00000080,
+	WCN36XX_DBG_ANY		= 0xffffffff,
+};
+
 #define wcn36xx_error(fmt, arg...) \
 	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg); \
 	__WARN()
@@ -37,8 +51,9 @@
 #define wcn36xx_info(fmt, arg...) \
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
 
-#define wcn36xx_dbg(fmt, arg...) \
-	pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
+#define wcn36xx_dbg(mask, fmt, arg...)			\
+	if (debug_mask & mask)				\
+		pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
 
 #define wcn36xx_dbg_dump(prefix_str, buf, len)			\
 do {									\
