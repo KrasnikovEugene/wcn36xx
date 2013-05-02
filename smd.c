@@ -91,64 +91,51 @@ int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 {
 	struct nv_data *nv_d;
-	struct wcn36xx_fw_msg_header msg_header;
-	struct wcn36xx_fw_msg_nv_load_header msg_body;
+	struct wcn36xx_hal_nv_img_download_req_msg msg_body;
 	int fw_bytes_left;
 	int ret = 0, fw_size, i = 0;
-
 	u16 fm_offset = 0;
-	u16 send_buf_offset = 0;
-
 	i = 0;
 
 	nv_d = (struct nv_data *)wcn->nv->data;
 	fw_size = wcn->nv->size;
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ)
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_LOAD_NV_REQ)
-	msg_header.msg_len += WCN36XX_NV_FRAGMENT_SIZE;
+	msg_body.header.len += WCN36XX_NV_FRAGMENT_SIZE;
 
-	// First add message header
-	memcpy(wcn->smd_buf, &msg_header, sizeof(msg_header));
-	msg_body.frag_num = 0;
+	msg_body.frag_number = 0;
 	do {
-		// Do not forget that we already copied general msg header
-		send_buf_offset = sizeof(msg_header);
-
 		fw_bytes_left = wcn->nv->size - fm_offset - 4;
 		if (fw_bytes_left > WCN36XX_NV_FRAGMENT_SIZE) {
-			msg_body.is_last = 0;
-			msg_body.msg_len = WCN36XX_NV_FRAGMENT_SIZE;
+			msg_body.last_fragment = 0;
+			msg_body.nv_img_buffer_size = WCN36XX_NV_FRAGMENT_SIZE;
 		} else {
-			msg_body.is_last = 1;
-			msg_body.msg_len = fw_bytes_left;
+			msg_body.last_fragment = 1;
+			msg_body.nv_img_buffer_size = fw_bytes_left;
 
 			// Do not forget update general message len
-			msg_header.msg_len = sizeof(msg_header)
-				+ sizeof(msg_body) + fw_bytes_left;
-			memcpy(wcn->smd_buf, &msg_header, sizeof(msg_header));
+			msg_body.header.len = sizeof(msg_body) + fw_bytes_left;
+
 		}
 
 		// Add load NV request message header
-		memcpy((void*)(wcn->smd_buf + send_buf_offset), &msg_body,
+		memcpy((void*)(wcn->smd_buf), &msg_body,
 			sizeof(msg_body));
-
-		send_buf_offset += sizeof(msg_body);
 
 		// Add NV body itself
 		// Rework me
-		memcpy((void*)(wcn->smd_buf + send_buf_offset),
-			(void*)((void*)(&nv_d->table) + fm_offset), msg_body.msg_len);
+		memcpy((void*)(wcn->smd_buf + sizeof(msg_body)),
+			(void*)((void*)(&nv_d->table) + fm_offset), msg_body.nv_img_buffer_size);
 
-		ret = wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+		ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 		if(ret)	return ret;
 
-		msg_body.frag_num++;
+		msg_body.frag_number++;
 		fm_offset += WCN36XX_NV_FRAGMENT_SIZE;
 
-	} while(msg_body.is_last != 1);
+	} while(msg_body.last_fragment != 1);
 
 	return ret;
-
 }
 
 int wcn36xx_smd_start(struct wcn36xx *wcn)
@@ -310,7 +297,7 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 }
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
 {
-	struct set_link_state_req_msg msg_body;
+	struct wcn36xx_hal_set_link_state_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_LINK_ST_REQ)
 
@@ -526,7 +513,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_HAL_START_SCAN_RSP:
 	case WCN36XX_HAL_END_SCAN_RSP:
 	case WCN36XX_HAL_FINISH_SCAN_RSP:
-	case WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP:
+	case WCN36XX_HAL_DOWNLOAD_NV_RSP:
 	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
 	case WCN36XX_FW_MSG_TYPE_CONFIG_BSS_RSP:
