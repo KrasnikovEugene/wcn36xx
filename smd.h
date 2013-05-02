@@ -39,9 +39,6 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ		= 48,
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_RSP		= 49,
 
-	WCN36XX_FW_MSG_TYPE_LOAD_NV_REQ			= 55,
-	WCN36XX_FW_MSG_TYPE_LOAD_NV_RSP			= 56,
-
 	WCN36XX_FW_MSG_TYPE_SEND_BEACON_REQ             = 63,
 	WCN36XX_FW_MSG_TYPE_SEND_BEACON_RSP             = 64,
 
@@ -112,17 +109,9 @@ struct wcn36xx_fw_msg_status_rsp {
 	u32 	status;
 } __packed;
 
-#define wcn36xx_fw_msg_nv_load_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_enter_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_exit_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_ex_caps_rsp 		wcn36xx_fw_msg_ex_caps_req
-
-/* WCN36XX_FW_MSG_TYPE_LOAD_NV_REQ */
-struct wcn36xx_fw_msg_nv_load_header {
-	u16 	frag_num;
-	u16 	is_last;
-	u32 	msg_len;
-} __packed;
 
 /* WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ */
 struct wcn36xx_fw_msg_update_cfg_req {

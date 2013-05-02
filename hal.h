@@ -2349,7 +2349,7 @@ struct wcn36xx_hal_stats_rsp_msg {
 	u16 msg_len;
 };
 
-struct set_link_state_req_msg {
+struct wcn36xx_hal_set_link_state_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	u8 bssid[ETH_ALEN];
@@ -2693,9 +2693,9 @@ struct set_key_done_msg {
 };
 
 struct wcn36xx_hal_nv_img_download_req_msg {
-	/* Note: The length specified in tHalNvImgDownloadReqMsg messages
-	 * should be header.msgLen = sizeof(tHalNvImgDownloadReqMsg) +
-	 * nvImgBufferSize */
+	/* Note: The length specified in wcn36xx_hal_nv_img_download_req_msg messages
+	 * should be header.len = sizeof(wcn36xx_hal_nv_img_download_req_msg) +
+	 * nv_img_buffer_size */
 	struct wcn36xx_hal_msg_header header;
 
 	/* Fragment sequence number of the NV Image. Note that NV Image
@@ -2718,10 +2718,10 @@ struct wcn36xx_hal_nv_img_download_req_msg {
 	/* NV Image size (number of bytes) */
 	u32 nv_img_buffer_size;
 
-	/* Following the 'nvImageBufferSize', there should be
-	 * nvImageBufferSize bytes of NV Image i.e.
-	 * u8[nvImageBufferSize] */
-};
+	/* Following the 'nv_img_buffer_size', there should be
+	 * nv_img_buffer_size bytes of NV Image i.e.
+	 * u8[nv_img_buffer_size] */
+} __packed;
 
 struct wcn36xx_hal_nv_img_download_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -2729,7 +2729,7 @@ struct wcn36xx_hal_nv_img_download_rsp_msg {
 	/* Success or Failure. HAL would generate a
 	 * WCN36XX_HAL_DOWNLOAD_NV_RSP after each fragment */
 	u32 status;
-};
+} __packed;
 
 struct wcn36xx_hal_nv_store_ind {
 	/* Note: The length specified in tHalNvStoreInd messages should be
