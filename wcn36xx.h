@@ -26,6 +26,7 @@
 
 #include "smd.h"
 #include "dxe.h"
+#include "hal.h"
 
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
@@ -84,6 +85,9 @@ struct wcn36xx {
 	int 			tx_irq; 	// TX complete irq
 	int 			rx_irq; 	// RX ready irq
 	void __iomem    	*mmio;
+
+	// Rates
+	struct wcn36xx_hal_supported_rates supported_rates;
 
 	// SMD related
 	smd_channel_t 		*smd_ch;
