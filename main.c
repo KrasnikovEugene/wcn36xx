@@ -23,6 +23,10 @@
 #include "dxe.h"
 #include "hal.h"
 
+unsigned int debug_mask;
+module_param(debug_mask, uint, 0644);
+MODULE_PARM_DESC(debug_mask, "Debugging mask");
+
 /*
  * provide hw to module exit function
  *
@@ -132,7 +136,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *co
 	struct ieee80211_mgmt *mgmt;
 	ENTER();
 	mgmt = (struct ieee80211_mgmt *)skb->data;
-	wcn36xx_dbg("wcn36xx_tx: = %x", mgmt->frame_control);
+	wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_tx: = %x", mgmt->frame_control);
 	if (ieee80211_is_data(mgmt->frame_control) || (ieee80211_is_data_qos(mgmt->frame_control))) {
 		wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), false);
 	} else {
