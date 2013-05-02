@@ -629,10 +629,10 @@ struct wcn36xx_hal_keys {
 
 	u16 length;
 	u8 key[WCN36XX_HAL_MAC_MAX_KEY_LENGTH];
-};
+} __packed;
 
 /* SetStaKeyParams Moving here since it is shared by configbss/setstakey msgs */
-struct set_sta_key_params {
+struct wcn36xx_hal_set_sta_key_params {
 	/* STA Index */
 	u16 index;
 
@@ -654,7 +654,7 @@ struct set_sta_key_params {
 	 */
 	u8 single_tid_rc;
 
-};
+} __packed;
 
 /* 4-byte control message header used by HAL*/
 struct wcn36xx_hal_msg_header {
@@ -997,7 +997,7 @@ struct wcn36xx_hal_finish_scan_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-};
+} __packed;
 
 struct wcn36xx_hal_supported_rates {
 	/*
@@ -1049,9 +1049,9 @@ struct wcn36xx_hal_supported_rates {
 	 */
 	u16 rx_highest_data_rate;
 
-};
+} __packed;
 
-struct config_sta_params {
+struct wcn36xx_hal_config_sta_params {
 	/* BSSID of STA */
 	u8 bssid[ETH_ALEN];
 
@@ -1103,6 +1103,10 @@ struct config_sta_params {
 	/* Short GI support for 20Mhz packets */
 	u8 sgi_20Mhz;
 
+	// TODO move this parameter to the end for 3680
+	/* These rates are the intersection of peer and self capabilities. */
+	struct wcn36xx_hal_supported_rates supported_rates;
+
 	/* Robust Management Frame (RMF) enabled/disabled */
 	u8 rmf;
 
@@ -1152,13 +1156,10 @@ struct config_sta_params {
 
 	u8 p2p;
 
+	// TODO add this parameter for 3680.
 	/* Reserved to align next field on a dword boundary */
-	u8 reserved;
-
-	/* These rates are the intersection of peer and self capabilities. */
-	struct wcn36xx_hal_supported_rates supported_rates;
-
-};
+	//u8 reserved;
+} __packed;
 
 struct wcn36xx_hal_supported_rates_v1 {
 	/*
@@ -1227,9 +1228,9 @@ struct wcn36xx_hal_supported_rates_v1 {
 	 * transmit */
 	u16 vht_tx_highest_data_rate;
 
-};
+} __packed;
 
-struct config_sta_params_v1 {
+struct wcn36xx_hal_config_sta_params_v1 {
 	/* BSSID of STA */
 	u8 bssid[ETH_ALEN];
 
@@ -1342,15 +1343,16 @@ struct config_sta_params_v1 {
 	u8 vht;
 	u8 vht_tx_channel_width_set;
 
-};
+} __packed;
 
-struct config_sta_req_msg {
+struct wcn36xx_hal_config_sta_req_msg {
 	struct wcn36xx_hal_msg_header header;
 	union {
-		struct config_sta_params sta_params;
-		struct config_sta_params_v1 sta_params_v1;
+		struct wcn36xx_hal_config_sta_params sta_params;
+		//TODO Not used so far
+		//struct wcn36xx_hal_config_sta_params_v1 sta_params_v1;
 	} u;
-};
+} __packed;
 
 struct config_sta_rsp_params {
 	/* success or failure */
@@ -1382,12 +1384,12 @@ struct config_sta_rsp_params {
 
 	u8 p2p;
 
-};
+} __packed;
 
-struct config_sta_rsp_msg {
+struct wcn36xx_hal_config_sta_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 	struct config_sta_rsp_params configStaRspParams;
-};
+} __packed;
 
 /* Delete STA Request message */
 struct delete_sta_req_msg {
@@ -1414,7 +1416,7 @@ struct delete_sta_rsp_msg {
 struct wcn36xx_hal_rate_set {
 	u8 num_rates;
 	u8 rate[WCN36XX_HAL_MAC_RATESET_EID_MAX];
-};
+} __packed;
 
 /* access category record */
 struct wcn36xx_hal_aci_aifsn {
@@ -1429,7 +1431,7 @@ struct wcn36xx_hal_aci_aifsn {
 	u8 aci:2;
 	u8 rsvd:1;
 #endif
-};
+} __packed;
 
 /* contention window size */
 struct wcn36xx_hal_mac_cw {
@@ -1440,18 +1442,18 @@ struct wcn36xx_hal_mac_cw {
 	u8 min:4;
 	u8 max:4;
 #endif
-};
+} __packed;
 
 struct wcn36xx_hal_edca_param_record {
 	struct wcn36xx_hal_aci_aifsn aci;
 	struct wcn36xx_hal_mac_cw cw;
 	u16 txop_limit;
-};
+} __packed;
 
 struct wcn36xx_hal_mac_ssid {
 	u8 length;
 	u8 ssid[32];
-};
+} __packed;
 
 /* Concurrency role. These are generic IDs that identify the various roles
  *  in the software system. */
@@ -1483,7 +1485,7 @@ enum wcn36xx_hal_concurrency_mode {
 	HAL_MAX_CONCURRENCY_PERSONA = 4
 };
 
-struct config_bss_params {
+struct wcn36xx_hal_config_bss_params {
 	/* BSSID */
 	u8 bssid[ETH_ALEN];
 
@@ -1541,6 +1543,16 @@ struct config_bss_params {
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
 
+	//TODO move sta to the end for 3680
+	/* Context of the station being added in HW
+	 *  Add a STA entry for "itself" -
+	 *
+	 *  On AP  - Add the AP itself in an "STA context"
+	 *
+	 *  On STA - Add the AP to which this STA is joining in an
+	 *  "STA context"
+	 */
+	struct wcn36xx_hal_config_sta_params sta;
 	/* SSID of the BSS */
 	struct wcn36xx_hal_mac_ssid ssid;
 
@@ -1595,13 +1607,11 @@ struct config_bss_params {
 	/* EDCA Parameters for Voice Access Category */
 	struct wcn36xx_hal_edca_param_record acvo;
 
-#ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
 	u8 ext_set_sta_key_param_valid;
 
 	/* SetStaKeyParams for ext bss msg */
-	tSetStaKeyParams ext_set_sta_key_param;
-#endif
+	struct wcn36xx_hal_set_sta_key_params ext_set_sta_key_param;
 
 	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum
 	 * wcn36xx_hal_con_mode */
@@ -1615,19 +1625,9 @@ struct config_bss_params {
 	/* maxTxPower has max power to be used after applying the power
 	 * constraint if any */
 	s8 max_tx_power;
+} __packed;
 
-	/* Context of the station being added in HW
-	 *  Add a STA entry for "itself" -
-	 *
-	 *  On AP  - Add the AP itself in an "STA context"
-	 *
-	 *  On STA - Add the AP to which this STA is joining in an
-	 *  "STA context"
-	 */
-	struct config_sta_params sta;
-};
-
-struct config_bss_params_v1 {
+struct wcn36xx_hal_config_bss_params_v1 {
 	/* BSSID */
 	u8 bssid[ETH_ALEN];
 
@@ -1739,13 +1739,11 @@ struct config_bss_params_v1 {
 	/* EDCA Parameters for Voice Access Category */
 	struct wcn36xx_hal_edca_param_record acvo;
 
-#ifdef WLAN_FEATURE_VOWIFI_11R
 	/* Ext Bss Config Msg if set */
 	u8 ext_set_sta_key_param_valid;
 
 	/* SetStaKeyParams for ext bss msg */
-	tSetStaKeyParams ext_set_sta_key_param;
-#endif
+	struct wcn36xx_hal_set_sta_key_params ext_set_sta_key_param;
 
 	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum wcn36xx_hal_con_mode */
 	u8 wcn36xx_hal_persona;
@@ -1763,21 +1761,22 @@ struct config_bss_params_v1 {
 	   Add a STA entry for "itself" -
 	   On AP  - Add the AP itself in an "STA context"
 	   On STA - Add the AP to which this STA is joining in an "STA context" */
-	struct config_sta_params_v1 sta;
+	struct wcn36xx_hal_config_sta_params_v1 sta;
 
 	u8 vht;
 	u8 vht_tx_channel_width_set;
-};
+} __packed;
 
-struct config_bss_req_msg {
+struct wcn36xx_hal_config_bss_req_msg {
 	struct wcn36xx_hal_msg_header header;
 	union {
-		struct config_bss_params bss_params;
-		struct config_bss_params_v1 bss_params_v1;
+		struct wcn36xx_hal_config_bss_params bss_params;
+		//TODO Not used so far
+		//struct wcn36xx_hal_config_bss_params_v1 bss_params_v1;
 	} u;
-};
+} __packed;
 
-struct config_bss_rsp_params {
+struct wcn36xx_hal_config_bss_rsp_params {
 	/* Success or Failure */
 	u32 status;
 
@@ -1817,12 +1816,12 @@ struct config_bss_rsp_params {
 	/* HAL fills in the tx power used for mgmt frames in this field. */
 	s8 tx_mgmt_power;
 
-};
+} __packed;
 
-struct config_bss_rsp_msg {
+struct wcn36xx_hal_config_bss_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct config_bss_rsp_params bss_rsp_params;
-};
+	struct wcn36xx_hal_config_bss_rsp_params bss_rsp_params;
+} __packed;
 
 struct delete_bss_req_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -1881,14 +1880,14 @@ struct wcn36xx_hal_join_rsp_msg {
 struct post_assoc_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
-	struct config_sta_params sta_params;
-	struct config_bss_params bss_params;
+	struct wcn36xx_hal_config_sta_params sta_params;
+	struct wcn36xx_hal_config_bss_params bss_params;
 };
 
 struct post_assoc_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 	struct config_sta_rsp_params sta_rsp_params;
-	struct config_bss_rsp_params bss_rsp_params;
+	struct wcn36xx_hal_config_bss_rsp_params bss_rsp_params;
 };
 
 /* This is used by PE to create a set of WEP keys for a given BSS. */
@@ -1933,7 +1932,7 @@ struct set_bss_key_rsp_msg {
  */
 struct set_sta_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct set_sta_key_params setStaKeyParams;
+	struct wcn36xx_hal_set_sta_key_params set_sta_key_params;
 };
 
 struct set_sta_key_rsp_msg {
