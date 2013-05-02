@@ -2825,7 +2825,7 @@ struct update_beacon_rsp_msg {
 	u32 status;
 };
 
-struct send_beacon_req_msg {
+struct wcn36xx_hal_send_beacon_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* length of the template. */
@@ -2841,12 +2841,12 @@ struct send_beacon_req_msg {
 
 	/* P2P IE offset from the begining of the template */
 	u16 p2p_ie_offset;
-};
+} __packed;
 
 struct send_beacon_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 	u32 status;
-};
+} __packed;
 
 struct enable_radar_req_msg {
 	struct wcn36xx_hal_msg_header header;
