@@ -293,20 +293,20 @@ int wcn36xx_smd_exit_imps(struct wcn36xx *wcn)
 }
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 {
-	struct wcn36xx_fw_msg_join_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
+	struct wcn36xx_hal_join_req_msg msg_body;
 
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_JOIN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_JOIN_REQ)
+
 
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
-	memcpy(&msg_body.sta_mac, vif, ETH_ALEN);
-	msg_body.ch = ch;
-	msg_body.link_state = 1;
+	memcpy(&msg_body.self_sta_mac_addr, vif, ETH_ALEN);
+	msg_body.channel = ch;
+	msg_body.link_state = WCN36XX_HAL_LINK_PREASSOC_STATE;
 
-	msg_body.max_power = 0xbf;
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	msg_body.max_tx_power = 0xbf;
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
 {
@@ -364,16 +364,15 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 }
 static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 {
-	struct  wcn36xx_fw_msg_join_rsp * rsp;
+	struct wcn36xx_hal_join_rsp_msg * rsp;
 
 	if(wcn36xx_smd_rsp_status_check(buf, len))
 		return -EIO;
 
-	rsp = (struct wcn36xx_fw_msg_join_rsp *)
-		(buf + sizeof(struct wcn36xx_fw_msg_header));
+	rsp = (struct wcn36xx_hal_join_rsp_msg *)buf;
 
 	wcn36xx_info("Join stattus=%d, Power ver=%d",
-		rsp->status, rsp->power);
+		rsp->status, rsp->tx_mgmt_power);
 	return 0;
 }
 
@@ -537,7 +536,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 			wcn36xx_error("response failed");
 		}
 		break;
-	case WCN36XX_FW_MSG_TYPE_JOIN_RSP:
+	case WCN36XX_HAL_JOIN_RSP:
 		wcn36xx_smd_join_rsp(buf, len);
 		break;
 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
