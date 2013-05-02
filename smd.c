@@ -424,30 +424,28 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off){
-	struct wcn36xx_fw_msg_send_bcn_req msg_body;
-	struct wcn36xx_fw_msg_header msg_header;
-
-	INIT_MSG(msg_header, &msg_body, WCN36XX_FW_MSG_TYPE_SEND_BEACON_REQ)
+	struct wcn36xx_hal_send_beacon_req_msg msg_body;
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ)
 
 	// TODO need to find out why this is needed?
-	msg_body.beacon_len = skb_beacon->len+6;
-	msg_body.beacon_len2 = skb_beacon->len;
+	msg_body.beacon_length = skb_beacon->len + 6;
 
 	// TODO make this as a const
-	if (0x17C > msg_body.beacon_len) {
-		memcpy(&msg_body.beacon, skb_beacon->data, skb_beacon->len);
+	if (BEACON_TEMPLATE_SIZE > msg_body.beacon_length) {
+		memcpy(&msg_body.beacon, &skb_beacon->len, sizeof(u32));
+		memcpy(&(msg_body.beacon[4]), skb_beacon->data, skb_beacon->len);
 	} else {
-		wcn36xx_error("Beacon is to big: beacon size=%d", msg_body.beacon_len);
+		wcn36xx_error("Beacon is to big: beacon size=%d", msg_body.beacon_length);
 		return -ENOMEM;
 	}
-	memcpy(&msg_body.mac, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
 
 	// TODO need to find out why this is needed?
 	msg_body.tim_ie_offset = tim_off+4;
 	msg_body.p2p_ie_offset = p2p_off;
-	PREPARE_BUF(wcn->smd_buf, msg_header, &msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 };
 
 static void wcn36xx_smd_notify(void *data, unsigned event)
@@ -491,7 +489,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
 	case WCN36XX_HAL_CONFIG_BSS_RSP:
 	case WCN36XX_HAL_CONFIG_STA_RSP:
-	case WCN36XX_FW_MSG_TYPE_SEND_BEACON_RSP:
+	case WCN36XX_HAL_SEND_BEACON_REQ:
 
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_error("response failed");

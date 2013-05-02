@@ -33,9 +33,6 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ		= 48,
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_RSP		= 49,
 
-	WCN36XX_FW_MSG_TYPE_SEND_BEACON_REQ             = 63,
-	WCN36XX_FW_MSG_TYPE_SEND_BEACON_RSP             = 64,
-
 	WCN36XX_FW_MSG_TYPE_ENTER_IMPS_REQ		= 76,
 	WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP		= 95,
 
@@ -96,17 +93,6 @@ struct wcn36xx_fw_msg_add_bcn_filter_req {
 	u16	passive_min_ch_time;
 	u16	passive_max_ch_time;
 	u32	phy_ch_state;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_SEND_BEACON_REQ */
-struct wcn36xx_fw_msg_send_bcn_req {
-	u32             beacon_len;
-	//TODO What is the purpose of having two len?
-	u32             beacon_len2;
-	u8              beacon[0x17C];
-	u8              mac[ETH_ALEN];
-	u32             tim_ie_offset;
-	u16             p2p_ie_offset;
 } __packed;
 
 struct wcn36xx_fw_msg_header {
