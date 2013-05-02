@@ -259,25 +259,6 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 s
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_enter_imps(struct wcn36xx *wcn)
-{
-	struct wcn36xx_fw_msg_header msg_header;
-
-	INIT_MSG_S(msg_header, WCN36XX_FW_MSG_TYPE_ENTER_IMPS_REQ)
-	PREPARE_BUF_S(wcn->smd_buf, msg_header)
-
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
-}
-
-int wcn36xx_smd_exit_imps(struct wcn36xx *wcn)
-{
-	struct wcn36xx_fw_msg_header msg_header;
-
-	INIT_MSG_S(msg_header, WCN36XX_FW_MSG_TYPE_EXIT_IMPS_REQ)
-	PREPARE_BUF_S(wcn->smd_buf, msg_header)
-
-	return wcn36xx_smd_send_and_wait(wcn, msg_header.msg_len);
-}
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 {
 	struct wcn36xx_hal_join_req_msg msg_body;
@@ -485,8 +466,6 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_HAL_END_SCAN_RSP:
 	case WCN36XX_HAL_FINISH_SCAN_RSP:
 	case WCN36XX_HAL_DOWNLOAD_NV_RSP:
-	case WCN36XX_FW_MSG_TYPE_ENTER_IMPS_RSP:
-	case WCN36XX_FW_MSG_TYPE_EXIT_IMPS_RSP:
 	case WCN36XX_HAL_CONFIG_BSS_RSP:
 	case WCN36XX_HAL_CONFIG_STA_RSP:
 	case WCN36XX_HAL_SEND_BEACON_REQ:
