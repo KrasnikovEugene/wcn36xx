@@ -32,9 +32,6 @@ enum wcn36xx_fw_msg_type {
 	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ              = 16,
 	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_RSP              = 17,
 
-	WCN36XX_FW_MSG_TYPE_JOIN_REQ			= 20,
-	WCN36XX_FW_MSG_TYPE_JOIN_RSP			= 21,
-
 	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_REQ		= 44,
 	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_RSP		= 45,
 
@@ -118,8 +115,6 @@ struct wcn36xx_fw_msg_status_rsp {
 #define wcn36xx_fw_msg_nv_load_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_enter_imps_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_exit_imps_rsp 		wcn36xx_fw_msg_status_rsp
-#define wcn36xx_fw_msg_init_scan_rsp 		wcn36xx_fw_msg_status_rsp
-#define wcn36xx_fw_msg_end_scan_rsp 		wcn36xx_fw_msg_status_rsp
 #define wcn36xx_fw_msg_ex_caps_rsp 		wcn36xx_fw_msg_ex_caps_req
 
 /* WCN36XX_FW_MSG_TYPE_LOAD_NV_REQ */
@@ -273,23 +268,6 @@ struct wcn36xx_fw_msg_send_bcn_req {
 	u8              mac[ETH_ALEN];
 	u32             tim_ie_offset;
 	u16             p2p_ie_offset;
-} __packed;
-
-
-/* WCN36XX_FW_MSG_TYPE_JOIN_REQ */
-struct wcn36xx_fw_msg_join_req {
-	u8	bssid[ETH_ALEN];
-	u8	ch;
-	u8	sta_mac[ETH_ALEN];
-	u8	power;
-	u32	chan_off;
-	u32	link_state;
-	u8	max_power;
-} __packed;
-
-struct wcn36xx_fw_msg_join_rsp {
-	u32	status;
-	u8	power;
 } __packed;
 
 struct wcn36xx_fw_msg_header {

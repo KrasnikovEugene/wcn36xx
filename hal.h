@@ -1866,7 +1866,7 @@ struct wcn36xx_hal_join_req_msg {
 
 	/* Max TX power */
 	s8 max_tx_power;
-};
+} __packed;
 
 struct wcn36xx_hal_join_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -1876,7 +1876,7 @@ struct wcn36xx_hal_join_rsp_msg {
 
 	/* HAL fills in the tx power used for mgmt frames in this field */
 	u8 tx_mgmt_power;
-};
+} __packed;
 
 struct post_assoc_req_msg {
 	struct wcn36xx_hal_msg_header header;
