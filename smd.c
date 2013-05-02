@@ -45,8 +45,8 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 
 #define INIT_HAL_MSG(msg_body, type) \
 	memset(&msg_body, 0, sizeof(msg_body)); \
-	msg_body.header.msgType = type; \
-	msg_body.header.msgVersion = WCN36XX_HAL_MSG_VERSION0; \
+	msg_body.header.msg_type = type; \
+	msg_body.header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
 	msg_body.header.len = sizeof(msg_body);
 
 #define PREPARE_HAL_BUF(send_buf, msg_body) \
@@ -56,37 +56,17 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_status_rsp * rsp;
-	if (len < sizeof(struct wcn36xx_fw_msg_header) +
+	if (len < sizeof(struct wcn36xx_hal_msg_header) +
 		sizeof(struct wcn36xx_fw_msg_status_rsp))
 		return -EIO;
 	rsp = (struct wcn36xx_fw_msg_status_rsp *)
-		(buf + sizeof(struct wcn36xx_fw_msg_header));
+		(buf + sizeof(struct wcn36xx_hal_msg_header));
 
 	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
 		return -EIO;
 	}
 	return 0;
 }
-
-#define INIT_MSG(msg_header, msg_body, type) \
-	msg_header.msg_type = type; \
-	msg_header.msg_ver = WCN36XX_FW_MSG_VER0; \
-	msg_header.msg_len = sizeof(msg_header)+sizeof(*msg_body); \
-	memset(msg_body, 0, sizeof(*msg_body));
-
-#define INIT_MSG_S(msg_header, type) \
-	msg_header.msg_type = type; \
-	msg_header.msg_ver = WCN36XX_FW_MSG_VER0; \
-	msg_header.msg_len = sizeof(msg_header);
-
-#define PREPARE_BUF(send_buf, msg_header, msg_body) \
-	memset(send_buf, 0, msg_header.msg_len); \
-	memcpy(send_buf, &msg_header, sizeof(msg_header)); \
-	memcpy((void*)(send_buf + sizeof(msg_header)), msg_body, sizeof(*msg_body));		\
-
-#define PREPARE_BUF_S(send_buf, msg_header) \
-	memset(send_buf, 0, msg_header.msg_len); \
-	memcpy(send_buf, &msg_header, sizeof(msg_header)); \
 
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 {
@@ -453,7 +433,7 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 }
 static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 {
-	struct wcn36xx_fw_msg_header * msg_header = buf;
+	struct wcn36xx_hal_msg_header * msg_header = buf;
 
 	wcn36xx_dbg_dump("SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {

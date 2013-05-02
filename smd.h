@@ -28,29 +28,11 @@
 #define WCN36XX_SMSM_WLAN_TX_ENABLE	 		0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 
-enum wcn36xx_fw_msg_type {
-	/* CFG */
-	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ		= 48,
-	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_RSP		= 49,
-
-	WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_REQ		= 84,
-	WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_RSP		= 104,
-
-	WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_REQ		= 175,
-	WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_RSP		= 176
-
-};
-
-
 enum wcn36xx_fw_msg_result {
 	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
 	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
 
 	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
-};
-
-enum wcn36xx_fw_msg_ver {
-	WCN36XX_FW_MSG_VER0				= 0
 };
 
 /******************************/
@@ -60,38 +42,6 @@ struct wcn36xx_fw_msg_status_rsp {
 	u32 	status;
 } __packed;
 
-#define wcn36xx_fw_msg_ex_caps_rsp 		wcn36xx_fw_msg_ex_caps_req
-
-/* WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ */
-struct wcn36xx_fw_msg_update_cfg_req {
-	u32 	conf_len;
-	 // config buffer must start in TLV format just here
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_EX_CAPABILITIES_REQ */
-struct wcn36xx_fw_msg_ex_capabilities_req {
-	u32	caps[4];
-} __packed;
-#define wcn36xx_fw_msg_ex_capabilities_rsp wcn36xx_fw_msg_ex_capabilities_req
-
-/* WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_REQ */
-struct wcn36xx_fw_msg_add_bcn_filter_req {
-	u8	enable_11d;
-	u8	resolved_11d;
-	u8	ch_count;
-	u8	ch[26];
-	u16	active_min_ch_time;
-	u16	active_max_ch_time;
-	u16	passive_min_ch_time;
-	u16	passive_max_ch_time;
-	u32	phy_ch_state;
-} __packed;
-
-struct wcn36xx_fw_msg_header {
-	enum wcn36xx_fw_msg_type	msg_type:16;
-	enum wcn36xx_fw_msg_ver		msg_ver:16;
-	u32				msg_len;
-};
 struct wcn36xx;
 
 int wcn36xx_smd_open(struct wcn36xx *wcn);
