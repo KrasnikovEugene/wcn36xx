@@ -658,8 +658,8 @@ struct wcn36xx_hal_set_sta_key_params {
 
 /* 4-byte control message header used by HAL*/
 struct wcn36xx_hal_msg_header {
-	enum wcn36xx_hal_host_msg_type msgType:16;
-	enum wcn36xx_hal_host_msg_version msgVersion:16;
+	enum wcn36xx_hal_host_msg_type msg_type:16;
+	enum wcn36xx_hal_host_msg_version msg_version:16;
 	u32 len;
 } __packed;
 
