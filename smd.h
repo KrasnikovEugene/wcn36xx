@@ -29,12 +29,6 @@
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 
 enum wcn36xx_fw_msg_type {
-	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ              = 16,
-	WCN36XX_FW_MSG_TYPE_CONFIG_BSS_RSP              = 17,
-
-	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_REQ		= 44,
-	WCN36XX_FW_MSG_TYPE_SET_LINK_ST_RSP		= 45,
-
 	/* CFG */
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_REQ		= 48,
 	WCN36XX_FW_MSG_TYPE_UPDATE_CFG_RSP		= 49,
@@ -68,40 +62,6 @@ enum wcn36xx_fw_msg_ver {
 	WCN36XX_FW_MSG_VER0				= 0
 };
 
-enum wcn36xx_fw_msg_bss_type {
-	WCN36XX_FW_MSG_BSS_TYPE_STA                     = 0,
-	WCN36XX_FW_MSG_BSS_TYPE_AP                      = 1
-};
-enum wcn36xx_fw_msg_bss_oper_mode {
-	WCN36XX_FW_MSG_BSS_MODE_AP                      = 0,
-	WCN36XX_FW_MSG_BSS_MODE_STA                     = 1
-};
-enum wcn36xx_fw_msg_network_type {
-	WCN36XX_FW_MSG_NET_TYPE_11A                     = 0,
-	WCN36XX_FW_MSG_NET_TYPE_11B                     = 1,
-	WCN36XX_FW_MSG_NET_TYPE_11G                     = 2,
-	WCN36XX_FW_MSG_NET_TYPE_11N                     = 3
-};
-enum wcn36xx_fw_msg_ht_op_mode {
-	WCN36XX_FW_MSG_HT_OP_MODE_PURE                  = 0,
-	WCN36XX_FW_MSG_HT_OP_MODE_OVERLAP_LEG           = 1,
-	WCN36XX_FW_MSG_HT_OP_MODE_NO_LEG                = 2,
-	WCN36XX_FW_MSG_HT_OP_MODE_MIXED                 = 3
-};
-enum wcn36xx_fw_msg_ht_mimo_ps {
-	WCN36XX_FW_MSG_HT_MIMO_PS_STATIC                = 0,
-	WCN36XX_FW_MSG_HT_MIMO_PS_DYNAMIC               = 1
-};
-enum wcn36xx_fw_msg_sta_rate_mode {
-	WCN36XX_FW_MSG_STA_RATE_MODE_TAURUS             = 0,
-	WCN36XX_FW_MSG_STA_RATE_MODE_TITAN              = 1,
-	WCN36XX_FW_MSG_STA_RATE_MODE_POLARIS            = 2,
-	WCN36XX_FW_MSG_STA_RATE_MODE_11B                = 3,
-	WCN36XX_FW_MSG_STA_RATE_MODE_11BG               = 4,
-	WCN36XX_FW_MSG_STA_RATE_MODE_11A                = 5,
-	WCN36XX_FW_MSG_STA_RATE_MODE_11N                = 6
-};
-
 /******************************/
 /* SMD requests and responses */
 /******************************/
@@ -124,116 +84,6 @@ struct wcn36xx_fw_msg_ex_capabilities_req {
 	u32	caps[4];
 } __packed;
 #define wcn36xx_fw_msg_ex_capabilities_rsp wcn36xx_fw_msg_ex_capabilities_req
-
-//TODO
-/* WCN36XX_FW_MSG_TYPE_CONFIG_STA_REQ */
-struct wcn36xx_fw_msg_supported_rates {
-	enum wcn36xx_fw_msg_sta_rate_mode       sta_rate_mode;
-	u16                                     rates_11b[4];
-	u16                                     rates_11a[8];
-	u16                                     ani_leg_rate[3];
-	u16                                     reserved;
-	u32                                     enhan_rate_bitmap;
-	u8                                      supported_mcs_set[16];
-	u16                                     rx_highes_rate;
-} __packed;
-
-struct wcn36xx_fw_msg_config_sta {
-	u8                                      bssid[ETH_ALEN];
-	u16                                     ass_id;
-	u8                                      sta_type;
-	u8                                      short_pream_sup;
-	u8                                      sta_mac[ETH_ALEN];
-	u16                                     listen_int;
-	u8                                      wmm_en;
-	u8                                      ht_cap;
-	u8                                      tx_ch_width;
-	u8                                      rifs_mode;
-	u8                                      lsig_txop_prot;
-	u8                                      max_ampdu_size;
-	u8                                      max_ampdu_dens;
-	u8                                      max_amsdu_size;
-	u8                                      short_gi40mhz;
-	u8                                      short_gi20mhz;
-	struct wcn36xx_fw_msg_supported_rates   supported_rates;
-	u8                                      rmf_en;         // robust management frame
-	u32                                     encrypt_type;
-	u8                                      action;
-	u8                                      uapsd;
-	u8                                      max_sp_len;
-	u8                                      gf_cap;
-	enum wcn36xx_fw_msg_ht_mimo_ps          mimo_ps;
-	u8                                      delayed_ba;
-	u8                                      max_ampdu_dur;
-	u8                                      dsss_cck_mode_40mhz;
-	u8                                      sta_id;
-	u8                                      bss_id;
-	u8                                      p2p_cap;
-	// TODO add this parameter for 3680.
-	//u8                                      reserved;
-} __packed;
-
-/* WCN36XX_FW_MSG_TYPE_CONFIG_BSS_REQ */
-struct wcn36xx_fw_msg_ssid {
-	u8 len;
-	u8 ssid[IEEE80211_MAX_SSID_LEN];
-} __packed;
-
-struct wcn36xx_fw_msg_rate_set {
-	u8 num;
-	u8 rate[12];
-} __packed;
-
-struct wcn36xx_fw_msg_edca_param {
-	u8      ac;             //access category
-	u8      cw;             // contention window size
-	u16     tx_op_limit;
-} __packed;
-
-struct wcn36xx_fw_msg_config_bss_req {
-	u8                                      bssid[ETH_ALEN];
-	u8                                      self_mac[ETH_ALEN];
-	enum wcn36xx_fw_msg_bss_type            bss_type;
-	u8                                      oper_mode;
-	enum wcn36xx_fw_msg_network_type        net_type;
-	u8                                      short_slot_time;
-	u8                                      coex_11a;
-	u8                                      coex_11b;
-	u8                                      coex_11g;
-	u8                                      coex_ht20;
-	u8                                      coex_11n_non_gf;
-	u8                                      lsig_txop_prot;
-	u8                                      rifs_mode;
-	u16                                     beacon_interval;
-	u8                                      dtim_period;
-	u8                                      tx_ch_width;
-	u8                                      cur_op_ch;
-	u8                                      cur_ext_ch;
-	u8                                      reserved;
-	struct wcn36xx_fw_msg_config_sta        sta_context;
-	struct wcn36xx_fw_msg_ssid              ssid;
-	u8                                      action;
-	struct wcn36xx_fw_msg_rate_set          rate_set;
-	u8                                      ht_caps;
-	u8                                      obss_prot;
-	u8                                      rmf;
-	enum wcn36xx_fw_msg_ht_op_mode          ht_op_mode;
-	u8                                      dual_cts_prot;
-	u8                                      prb_resp_max_ret;
-	u8                                      hidden_ssid_en;
-	u8                                      proxy_prb_rsp_en;
-	u8                                      edca_params_valid;
-	struct wcn36xx_fw_msg_edca_param        acbe;
-	struct wcn36xx_fw_msg_edca_param        acbk;
-	struct wcn36xx_fw_msg_edca_param        acvi;
-	struct wcn36xx_fw_msg_edca_param        acvo;
-	// TODO So far support only open network
-	u8                                      sta_key_params[241];
-	u8                                      hal_pers;
-	u8                                      spec_mgmt_en;
-	u8                                      tx_mgmt_power;
-	u8                                      max_tx_power;
-} __packed;
 
 /* WCN36XX_FW_MSG_TYPE_ADD_BCN_FILTER_REQ */
 struct wcn36xx_fw_msg_add_bcn_filter_req {
