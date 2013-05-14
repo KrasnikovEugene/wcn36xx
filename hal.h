@@ -1392,16 +1392,16 @@ struct wcn36xx_hal_config_sta_rsp_msg {
 } __packed;
 
 /* Delete STA Request message */
-struct delete_sta_req_msg {
+struct wcn36xx_hal_delete_sta_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Index of STA to delete */
 	u8 sta_index;
 
-};
+} __packed;
 
 /* Delete STA Response message */
-struct delete_sta_rsp_msg {
+struct wcn36xx_hal_delete_sta_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
@@ -1409,7 +1409,7 @@ struct delete_sta_rsp_msg {
 
 	/* Index of STA deleted */
 	u8 sta_id;
-};
+} __packed;
 
 /* 12 Bytes long because this structure can be used to represent rate and
  * extended rate set IEs. The parser assume this to be at least 12 */
@@ -1823,15 +1823,15 @@ struct wcn36xx_hal_config_bss_rsp_msg {
 	struct wcn36xx_hal_config_bss_rsp_params bss_rsp_params;
 } __packed;
 
-struct delete_bss_req_msg {
+struct wcn36xx_hal_delete_bss_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* BSS index to be deleted */
 	u8 bss_index;
 
-};
+} __packed;
 
-struct delete_bss_rsp_msg {
+struct wcn36xx_hal_delete_bss_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Success or Failure */
@@ -1840,7 +1840,7 @@ struct delete_bss_rsp_msg {
 	/* BSS index that has been deleted */
 	u8 bss_index;
 
-};
+} __packed;
 
 struct wcn36xx_hal_join_req_msg {
 	struct wcn36xx_hal_msg_header header;

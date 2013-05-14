@@ -238,7 +238,19 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 s
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_delete_sta_req_msg msg_body;
 
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_STA_REQ)
+
+	msg_body.sta_index = 1;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+
+}
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 {
 	struct wcn36xx_hal_join_req_msg msg_body;
@@ -384,6 +396,18 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_delete_bss_req_msg  msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ)
+
+	msg_body.bss_index = 0;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off){
 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ)
@@ -441,15 +465,17 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 		wcn36xx_smd_start_rsp(buf, len);
 		break;
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
+	case WCN36XX_HAL_DELETE_STA_RSP:
 	case WCN36XX_HAL_INIT_SCAN_RSP:
 	case WCN36XX_HAL_START_SCAN_RSP:
 	case WCN36XX_HAL_END_SCAN_RSP:
 	case WCN36XX_HAL_FINISH_SCAN_RSP:
 	case WCN36XX_HAL_DOWNLOAD_NV_RSP:
 	case WCN36XX_HAL_CONFIG_BSS_RSP:
+	case WCN36XX_HAL_DELETE_BSS_RSP:
 	case WCN36XX_HAL_CONFIG_STA_RSP:
-	case WCN36XX_HAL_SEND_BEACON_REQ:
-
+	case WCN36XX_HAL_SEND_BEACON_RSP:
+	case WCN36XX_HAL_SET_LINK_ST_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_error("response failed");
 		}

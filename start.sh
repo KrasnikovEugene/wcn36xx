@@ -1,6 +1,7 @@
-adb shell "insmod /system/lib/modules/cfg80211.ko"
+adb shell "insmod /data/compat.ko"
+adb shell "insmod /data/cfg80211.ko"
 adb shell "insmod /data/mac80211.ko"
-adb shell "insmod /data/wcn36xx.ko"
+adb shell "insmod /data/wcn36xx.ko debug_mask=0xffffffff"
 
 # Enable dynamic debugging
 adb shell "echo file dxe.c +p > /sys/kernel/debug/dynamic_debug/control"
@@ -19,4 +20,8 @@ adb shell "netcfg wlan0 up"
 #adb shell "iw dev wlan0 scan freq 2412"
 #adb shell "iw dev wlan0 scan"
 #adb shell "iw dev wlan0 connect kosmoskatten 2437 00:18:e7:8a:7d:9c"
-adb shell "iw dev wlan0 connect ost3 2412 00:25:9c:42:0a:bf"
+adb shell "iw dev wlan0 connect ASUS_24GHz4 2452 54:04:a6:8f:e9:ce"
+adb shell "iw dev wlan0 disconnect"
+sleep 15
+adb shell "iw dev wlan0 connect ASUS_24GHz4 2452 54:04:a6:8f:e9:ce"
+adb shell "dhcpcd wlan0"
