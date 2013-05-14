@@ -55,9 +55,11 @@ int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch);
 int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
 int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 status);
+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn);
 int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch);
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state);
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update);
+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off);
 

@@ -201,8 +201,10 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 	if(changed & BSS_CHANGED_BSSID) {
 		wcn36xx_info("wcn36xx_bss_info_changed BSS_CHANGED_BSSID=%pM", bss_conf->bssid);
-		wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
-		wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
+		if(!is_zero_ether_addr(bss_conf->bssid)) {
+			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
+			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
+		}
 	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
 		if(!wcn->beacon_enable) {
 			wcn->beacon_enable = true;
@@ -307,7 +309,11 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 			  struct ieee80211_sta *sta)
 {
+	struct wcn36xx *wcn = hw->priv;
 	ENTER();
+	wcn36xx_smd_delete_sta(wcn);
+	wcn36xx_smd_delete_bss(wcn);
+	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_IDLE_STATE);
 	return 0;
 }
 
@@ -418,8 +424,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 		IEEE80211_HW_AP_LINK_PS |
 		/* Need ?*/
 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
-		/* Need ?*/
-		IEEE80211_HW_CONNECTION_MONITOR |
 		IEEE80211_HW_HAS_RATE_CONTROL |
 		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
 
