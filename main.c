@@ -280,8 +280,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		case NL80211_IFTYPE_STATION:
 			wcn36xx_info("Add station interface");
 			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
-			//TODO Need to find do we really need to add second station? Doubt that
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[1], 1);
 			break;
 		case NL80211_IFTYPE_AP:
 			wcn36xx_info("Add AP interface");
@@ -446,6 +444,44 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 	return ret;
 }
 
+static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
+{
+	const struct firmware *addr_file = NULL;
+	int status;
+	u8 tmp[18];
+	u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
+	char *files[1] = {MAC_ADDR_0};
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(files); i++) {
+		status = request_firmware(&addr_file, files[i], wcn->dev);
+
+		if (status) {
+			wcn36xx_error("Failed to read macaddress file %s",
+				      files[i]);
+			/* Assign a random mac address with Qualcomm oui */
+			memcpy(wcn->addresses[i].addr, qcom_oui, 3);
+			get_random_bytes(wcn->addresses[i].addr + 3, 3);
+
+		} else {
+			memset(tmp, 0, sizeof(tmp));
+			memcpy(tmp, addr_file->data, sizeof(tmp) - 1);
+			sscanf(tmp, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+			       &wcn->addresses[i].addr[0],
+			       &wcn->addresses[i].addr[1],
+			       &wcn->addresses[i].addr[2],
+			       &wcn->addresses[i].addr[3],
+			       &wcn->addresses[i].addr[4],
+			       &wcn->addresses[i].addr[5]);
+
+			release_firmware(addr_file);
+		}
+		wcn36xx_info("mac%d: %pM", i, wcn->addresses[i].addr);
+	}
+
+	return 0;
+}
+
 static int __init wcn36xx_init(void)
 {
 	struct ieee80211_hw *hw;
@@ -485,20 +521,6 @@ static int __init wcn36xx_init(void)
 	}
 
 	wcn36xx_init_ieee80211(wcn);
-	// TODO read me from config
-	wcn->addresses[0].addr[0] = 0xD0;
-	wcn->addresses[0].addr[1] = 0x51;
-	wcn->addresses[0].addr[2] = 0x62;
-	wcn->addresses[0].addr[3] = 0x27;
-	wcn->addresses[0].addr[4] = 0x26;
-	wcn->addresses[0].addr[5] = 0x4C;
-
-	wcn->addresses[1].addr[0] = 0xD0;
-	wcn->addresses[1].addr[1] = 0x51;
-	wcn->addresses[1].addr[2] = 0x62;
-	wcn->addresses[1].addr[3] = 0x27;
-	wcn->addresses[1].addr[4] = 0x26;
-	wcn->addresses[1].addr[5] = 0x4D;
 
 	// Configuring supported rates
 	wcn->supported_rates.op_rate_mode = STA_11n;
@@ -541,6 +563,9 @@ static int __init wcn36xx_init(void)
 	private_hw = hw;
 	wcn->beacon_enable = false;
 
+	wcn36xx_read_mac_addresses(wcn);
+	SET_IEEE80211_PERM_ADDR(wcn->hw, (u8*)(wcn->addresses[0].addr));
+
 	ret = ieee80211_register_hw(wcn->hw);
 	if (ret)
 		goto out_unmap;
@@ -574,3 +599,4 @@ module_exit(wcn36xx_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
+MODULE_FIRMWARE(MAC_ADDR_0);
