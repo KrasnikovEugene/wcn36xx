@@ -30,6 +30,7 @@
 
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
+#define MAC_ADDR_0 "wlan/macaddr0"
 
 extern unsigned int debug_mask;
 
