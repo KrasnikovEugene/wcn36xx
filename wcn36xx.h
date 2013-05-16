@@ -56,7 +56,7 @@ enum wcn36xx_debug_mask {
 
 #define wcn36xx_dbg(mask, fmt, arg...)			\
 	if (debug_mask & mask)				\
-		pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
+		printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg)
 
 #define wcn36xx_dbg_dump(mask, prefix_str, buf, len)		\
 	if (debug_mask & mask)					\
