@@ -288,12 +288,13 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	// TODO read which channel generated INT by checking mask
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &intSrc);
 
-	wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: Channel=%x", intSrc);
+	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe rx ready channel %x %s%s",
+		    intSrc,
+		    intSrc & WCN36XX_INT_MASK_CHAN_RX_H ? "high " : "",
+		    intSrc & WCN36XX_INT_MASK_CHAN_RX_L ? "low " : "");
 
 	// check if this channel is High or Low. Assume high
 	if (intSrc & WCN36XX_INT_MASK_CHAN_RX_H) {
-		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: MGMT Frame");
-
 		/* Read Channel Status Register to know why INT Happen */
 		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_H, &int_reason);
 		// TODO if status says erro handle that
@@ -307,7 +308,10 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
 		cur_dxe_desc = cur_dxe_ctl->desc;
 
-		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+		wcn36xx_dbg(WCN36XX_DBG_DXE,
+			    "dxe rx ready order %d ctl %x",
+			    cur_dxe_ctl->ctl_blk_order,
+			    cur_dxe_desc->desc_ctl.ctrl);
 
 		dma_unmap_single( NULL,
 			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
@@ -325,8 +329,6 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 
 		wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
 	} else if (intSrc & WCN36XX_INT_MASK_CHAN_RX_L) {
-		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: DATA Frame");
-
 		/* Read Channel Status Register to know why INT Happen */
 		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_L, &int_reason);
 		// TODO if status says erro handle that
@@ -340,7 +342,10 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		cur_dxe_ctl = wcn->dxe_rx_l_ch.head_blk_ctl;
 		cur_dxe_desc = cur_dxe_ctl->desc;
 
-		wcn36xx_dbg(WCN36XX_DBG_RX, "wcn36xx_rx_ready_work: order=%d ctl=%x", cur_dxe_ctl->ctl_blk_order, cur_dxe_desc->desc_ctl.ctrl);
+		wcn36xx_dbg(WCN36XX_DBG_DXE,
+			    "dxe rx ready order %d ctl %x",
+			    cur_dxe_ctl->ctl_blk_order,
+			    cur_dxe_desc->desc_ctl.ctrl);
 
 		dma_unmap_single( NULL,
 			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
