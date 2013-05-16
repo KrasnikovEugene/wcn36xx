@@ -397,12 +397,11 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
 	struct wcn36xx_dxe_mem_pool * mem_pool = NULL;
 	struct wcn36xx_dxe_ch * cur_ch = NULL;
+
 	if(is_high) {
-		wcn36xx_dbg(WCN36XX_DBG_TX, "DXE TX: MGMT");
 		mem_pool = &wcn->mgmt_mem_pool;
 		cur_ch = &wcn->dxe_tx_h_ch;
 	} else {
-		wcn36xx_dbg(WCN36XX_DBG_TX, "DXE TX: DATA");
 		mem_pool = &wcn->data_mem_pool;
 		cur_ch = &wcn->dxe_tx_l_ch;
 	}
