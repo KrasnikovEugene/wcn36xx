@@ -532,7 +532,8 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
-			wcn36xx_error("response failed");
+			wcn36xx_warn("error response from hal request %d",
+				     msg_header->msg_type);
 		}
 		break;
 	case WCN36XX_HAL_JOIN_RSP:
