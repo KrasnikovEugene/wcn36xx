@@ -140,17 +140,29 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
 
-static void wcn36xx_tx(struct ieee80211_hw *hw,  struct ieee80211_tx_control *control, struct sk_buff *skb)
+static void wcn36xx_tx(struct ieee80211_hw *hw,
+		       struct ieee80211_tx_control *control,
+		       struct sk_buff *skb)
 {
 	struct ieee80211_mgmt *mgmt;
-	ENTER();
+	bool high, bcast;
+
 	mgmt = (struct ieee80211_mgmt *)skb->data;
-	wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_tx: = %x", mgmt->frame_control);
-	if (ieee80211_is_data(mgmt->frame_control) || (ieee80211_is_data_qos(mgmt->frame_control))) {
-		wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), false);
-	} else {
-		wcn36xx_dxe_tx(hw->priv, skb, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), true);
-	}
+
+	high = !(ieee80211_is_data(mgmt->frame_control) ||
+		 ieee80211_is_data_qos(mgmt->frame_control));
+
+	bcast = is_broadcast_ether_addr(mgmt->da) ||
+		is_multicast_ether_addr(mgmt->da);
+
+	wcn36xx_dbg(WCN36XX_DBG_TX,
+		    "tx skb %p len %d fc %02x %s %s",
+		    skb, skb->len, __le16_to_cpu(mgmt->frame_control),
+		    high ? "high" : "low", bcast ? "bcast" : "ucast");
+
+	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
+
+	wcn36xx_dxe_tx(hw->priv, skb, bcast, high);
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
