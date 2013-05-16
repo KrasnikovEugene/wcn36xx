@@ -20,6 +20,7 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 {
 	struct sk_buff *skb2 ;
 	struct ieee80211_rx_status status;
+	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd * bd;
 
 	skb2 = skb_clone(skb, GFP_ATOMIC);
@@ -38,9 +39,15 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.flag = 0;
 	status.rx_flags = 0;
 	memcpy(skb2->cb, &status, sizeof(struct ieee80211_rx_status));
-	wcn36xx_dbg(WCN36XX_DBG_RX, "RX");
+
+	hdr = (struct ieee80211_hdr *) skb2->data;
+
+	wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %02x",
+		    skb2, skb2->len, __le16_to_cpu(hdr->frame_control));
+
 	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
 			 (char*)skb2->data, skb2->len);
+
 	ieee80211_rx_ni(wcn->hw, skb2);
 
 	return 0;
