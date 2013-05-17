@@ -99,6 +99,7 @@ static int wcn36xx_change_interface(struct ieee80211_hw *hw,
 	ENTER();
 	return 0;
 }
+
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
@@ -106,10 +107,18 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
 		wcn36xx_info("wcn36xx_config channel switch=%d", wcn->ch);
+		if (wcn->is_scanning) {
+			if (wcn->prev_channel) {
+				wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
+			}
+			wcn36xx_smd_start_scan(wcn, wcn->ch);
+			wcn->prev_channel = wcn->ch;
+		}
 	}
 
 	return 0;
 }
+
 static u64 wcn36xx_prepare_multicast(struct ieee80211_hw *hw,
 				       struct netdev_hw_addr_list *mc_list)
 {
@@ -152,40 +161,27 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	ENTER();
 	return 0;
 }
-static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
-			     struct ieee80211_vif *vif,
-			     struct cfg80211_scan_request *req)
+
+static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct sk_buff *prb_req;
-	struct ieee80211_mgmt *mgmt;
-
-	int ch;
-	int i;
 	ENTER();
-	wcn36xx_smd_update_scan_params(wcn);
-	if (req->n_ssids > 0) {
-		prb_req = ieee80211_probereq_get(hw, vif, req->ssids[0].ssid, req->ssids[0].ssid_len, req->ie_len);
-	} else {
-		prb_req = ieee80211_probereq_get(hw, vif, NULL, 0, req->ie_len);
+	wcn36xx_smd_init_scan(wcn);
+	wcn->is_scanning = 1;
+	wcn36xx_smd_start_scan(wcn, wcn->ch);
+	wcn->prev_channel = wcn->ch;
+}
+
+static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
+{
+	struct wcn36xx *wcn = hw->priv;
+	ENTER();
+	if (wcn->prev_channel) {
+		wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
+		wcn->prev_channel = 0;
 	}
-	for(i = 0; i < req->n_channels; i++) {
-		wcn36xx_smd_init_scan(wcn);
-		ch = ieee80211_frequency_to_channel(req->channels[i]->center_freq);
-		mgmt = (struct ieee80211_mgmt *)prb_req->data;
-
-		wcn36xx_smd_start_scan(wcn, ch);
-		// do this as timer
-		msleep(60);
-		wcn36xx_dxe_tx(hw->priv, prb_req, is_broadcast_ether_addr(mgmt->da) || is_multicast_ether_addr(mgmt->da), true);
-		msleep(60);
-
-		wcn36xx_smd_end_scan(wcn, ch);
-		wcn36xx_smd_finish_scan(wcn);
-	}
-
-	ieee80211_scan_completed(wcn->hw, false);
-	return 0;
+	wcn36xx_smd_finish_scan(wcn);
+	wcn->is_scanning = 0;
 }
 
 static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
@@ -255,11 +251,13 @@ static int wcn36xx_set_bitrate_mask(struct ieee80211_hw *hw,
 	ENTER();
 	return 0;
 }
+
 static void wcn36xx_channel_switch(struct ieee80211_hw *hw,
-				     struct ieee80211_channel_switch *ch_switch)
+				   struct ieee80211_channel_switch *ch_switch)
 {
 	ENTER();
 }
+
 static int wcn36xx_suspend(struct ieee80211_hw *hw,
 			    struct cfg80211_wowlan *wow)
 {
@@ -332,7 +330,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
 	.set_key 		= wcn36xx_set_key,
-	.hw_scan 		= wcn36xx_hw_scan,
+	.sw_scan_start          = wcn36xx_sw_scan_start,
+	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
 	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
 	.set_rts_threshold 	= wcn36xx_set_rts_threshold,

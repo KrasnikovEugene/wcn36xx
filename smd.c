@@ -160,25 +160,25 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 ch)
+int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
 {
 	struct wcn36xx_hal_start_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ)
 
-	msg_body.scan_channel = ch;
+	msg_body.scan_channel = (u8)ch;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 ch)
+int wcn36xx_smd_end_scan(struct wcn36xx *wcn, int ch)
 {
 	struct wcn36xx_hal_end_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ)
 
-	msg_body.scan_channel = ch;
+	msg_body.scan_channel = (u8)ch;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
 
@@ -451,7 +451,7 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 	case SMD_EVENT_REOPEN_READY:
 		break;
 	default:
-		wcn36xx_error("SMD_EVENT not supported");
+		wcn36xx_error("SMD_EVENT (%d) not supported", event);
 		break;
 	}
 }
@@ -487,7 +487,7 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 		wcn36xx_smd_update_scan_params_rsp(buf, len);
 		break;
 	default:
-		wcn36xx_error("SMD_EVENT not supported");
+		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
 	}
 }
 
