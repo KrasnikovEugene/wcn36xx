@@ -2022,7 +2022,7 @@ struct start_oem_data_rsp_msg {
 
 #endif
 
-struct switch_channel_req_msg {
+struct wcn36xx_hal_switch_channel_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Channel number */
@@ -2053,9 +2053,9 @@ struct switch_channel_req_msg {
 	 * at the end of this struct
 	 */
 	u8 bssid[ETH_ALEN];
-};
+} __packed;
 
-struct switch_channel_rsp_msg {
+struct wcn36xx_hal_switch_channel_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Status */
@@ -2070,7 +2070,7 @@ struct switch_channel_rsp_msg {
 	/* BSSID needed to identify session - same as in request */
 	u8 bssid[ETH_ALEN];
 
-};
+} __packed;
 
 struct update_edca_params_req_msg {
 	struct wcn36xx_hal_msg_header header;
