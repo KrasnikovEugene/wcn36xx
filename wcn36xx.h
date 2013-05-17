@@ -92,7 +92,7 @@ struct wcn36xx {
 	struct device 		*dev;
 	const struct firmware 	*nv;
 	struct mac_address addresses[2];
-	u8 		ch;
+	int ch;
 
 	bool            beacon_enable;
 	// IRQs
@@ -110,6 +110,10 @@ struct wcn36xx {
 	struct work_struct 	start_work;
 	struct work_struct 	rx_ready_work;
 	struct completion 	smd_compl;
+
+	//Scanning
+	int                     is_scanning;
+	int                     prev_channel;
 
 	// DXE chanels
 	struct wcn36xx_dxe_ch 	dxe_tx_l_ch;	// TX low channel
