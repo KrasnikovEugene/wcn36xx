@@ -734,19 +734,19 @@ struct wcn36xx_hal_mac_stop_req_params {
 	/* The reason for which the device is being stopped */
 	enum wcn36xx_hal_stop_type reason;
 
-};
+} __packed;
 
 struct wcn36xx_hal_mac_stop_req_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct wcn36xx_hal_mac_stop_req_params stopReqParams;
-};
+	struct wcn36xx_hal_mac_stop_req_params stop_req_params;
+} __packed;
 
 struct wcn36xx_hal_mac_stop_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 struct wcn36xx_hal_update_cfg_req_msg {
 	/*
@@ -3521,20 +3521,20 @@ struct wcn36xx_hal_add_sta_self_rsp_msg {
 	u8 dpu_signature;
 } __packed;
 
-struct del_sta_self_req_msg {
+struct wcn36xx_hal_del_sta_self_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	u8 self_addr[ETH_ALEN];
-};
+} __packed;
 
-struct del_sta_self_rsp_msg {
+struct wcn36xx_hal_del_sta_self_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/*success or failure */
 	u32 status;
 
 	u8 self_addr[ETH_ALEN];
-};
+} __packed;
 
 struct aggr_add_ts_req {
 	struct wcn36xx_hal_msg_header header;

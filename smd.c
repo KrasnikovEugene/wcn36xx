@@ -173,6 +173,19 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 	return 0;
 }
 
+int wcn36xx_smd_stop(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_mac_stop_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_STOP_REQ);
+
+	msg_body.stop_req_params.reason = HAL_STOP_TYPE_RF_KILL;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_init_scan_req_msg msg_body;
@@ -269,13 +282,13 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 	return 0;
 }
 
-int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 status)
+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status)
 {
 	struct wcn36xx_hal_add_sta_self_req msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ);
 
-	memcpy(&msg_body.self_addr, &addr, ETH_ALEN);
+	memcpy(&msg_body.self_addr, addr, ETH_ALEN);
 	msg_body.status = status;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
@@ -286,6 +299,20 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 s
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr)
+{
+	struct wcn36xx_hal_del_sta_self_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DEL_STA_SELF_REQ);
+
+	memcpy(&msg_body.self_addr, addr, ETH_ALEN);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_delete_sta_req_msg msg_body;
@@ -677,7 +704,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_START_RSP:
 		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
+	case WCN36XX_HAL_DEL_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
 	case WCN36XX_HAL_INIT_SCAN_RSP:
 	case WCN36XX_HAL_START_SCAN_RSP:

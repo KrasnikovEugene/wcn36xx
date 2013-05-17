@@ -80,16 +80,11 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop");
 
+	wcn36xx_smd_stop(wcn);
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
 
 	kfree(wcn->smd_buf);
-}
-
-static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif)
-{
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
 }
 
 static int wcn36xx_change_interface(struct ieee80211_hw *hw,
@@ -251,6 +246,15 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
 	return 0;
 }
+
+static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
+				   struct ieee80211_vif *vif)
+{
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
+	wcn36xx_smd_delete_sta_self(wcn, wcn->addresses[0].addr);
+}
+
 static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif)
 {
@@ -262,10 +266,10 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	if(vif) {
 		switch (vif->type) {
 		case NL80211_IFTYPE_STATION:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
+			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
 			break;
 		case NL80211_IFTYPE_AP:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
+			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
 			break;
 		default:
 			wcn36xx_warn("Unsupported interface type requested: %d",
