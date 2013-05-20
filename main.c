@@ -340,6 +340,14 @@ static struct ieee80211_hw *wcn36xx_alloc_hw(void)
 	.hw_value = (_idx), \
 	.max_power = 25, \
 }
+
+#define CHAN5G(_freq, _idx) { \
+	.band = IEEE80211_BAND_5GHZ, \
+	.center_freq = (_freq), \
+	.hw_value = (_idx), \
+	.max_power = 25, \
+}
+
 static struct ieee80211_channel wcn_2ghz_channels[] = {
 	CHAN2G(2412, 0), /* Channel 1 */
 	CHAN2G(2417, 1), /* Channel 2 */
@@ -357,6 +365,33 @@ static struct ieee80211_channel wcn_2ghz_channels[] = {
 	CHAN2G(2484, 13)  /* Channel 14 */
 
 };
+
+static struct ieee80211_channel wcn_5ghz_channels[] = {
+	CHAN5G(5180, 36),
+	CHAN5G(5200, 40),
+	CHAN5G(5220, 44),
+	CHAN5G(5240, 48),
+	CHAN5G(5260, 52),
+	CHAN5G(5280, 56),
+	CHAN5G(5300, 60),
+	CHAN5G(5320, 64),
+	CHAN5G(5500, 100),
+	CHAN5G(5520, 104),
+	CHAN5G(5540, 108),
+	CHAN5G(5560, 112),
+	CHAN5G(5580, 116),
+	CHAN5G(5600, 120),
+	CHAN5G(5620, 124),
+	CHAN5G(5640, 128),
+	CHAN5G(5660, 132),
+	CHAN5G(5700, 140),
+	CHAN5G(5745, 149),
+	CHAN5G(5765, 153),
+	CHAN5G(5785, 157),
+	CHAN5G(5805, 161),
+	CHAN5G(5825, 165)
+};
+
 #define RATE(_bitrate, _hw_rate, _flags) { \
 	.bitrate        = (_bitrate),                   \
 	.flags          = (_flags),                     \
@@ -377,6 +412,18 @@ static struct ieee80211_rate wcn_legacy_rates[] = {
 	RATE(480, BIT(10), 0),
 	RATE(540, BIT(11), 0)
 };
+
+static struct ieee80211_rate wcn_5ghz_rates[] = {
+	RATE(60, BIT(4), 0),
+	RATE(90, BIT(5), 0),
+	RATE(120, BIT(6), 0),
+	RATE(180, BIT(7), 0),
+	RATE(240, BIT(8), 0),
+	RATE(360, BIT(9), 0),
+	RATE(480, BIT(10), 0),
+	RATE(540, BIT(11), 0)
+};
+
 static struct ieee80211_supported_band wcn_band_2ghz = {
 	.channels 	= wcn_2ghz_channels,
 	.n_channels 	= ARRAY_SIZE(wcn_2ghz_channels),
@@ -388,6 +435,29 @@ static struct ieee80211_supported_band wcn_band_2ghz = {
 		.ht_supported = true,
 		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K,
 		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8,
+		.mcs = {
+			.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+			.rx_highest = cpu_to_le16(72),
+			.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
+		}
+	}
+};
+
+static struct ieee80211_supported_band wcn_band_5ghz = {
+	.channels 	= wcn_5ghz_channels,
+	.n_channels 	= ARRAY_SIZE(wcn_5ghz_channels),
+	.bitrates 	= wcn_5ghz_rates,
+	.n_bitrates 	= ARRAY_SIZE(wcn_5ghz_rates),
+	.ht_cap		= {
+		.cap = IEEE80211_HT_CAP_GRN_FLD
+			| IEEE80211_HT_CAP_SGI_20
+			| IEEE80211_HT_CAP_DSSSCCK40
+			| IEEE80211_HT_CAP_LSIG_TXOP_PROT
+			| IEEE80211_HT_CAP_SGI_40
+			| IEEE80211_HT_CAP_SUP_WIDTH_20_40,
+		.ht_supported = true,
+		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K,
+		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
 		.mcs = {
 			.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
 			.rx_highest = cpu_to_le16(72),
@@ -413,6 +483,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 		BIT(NL80211_IFTYPE_AP);
 
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
+	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
 
 	wcn_priv->hw->wiphy->max_scan_ssids = 1;
 
