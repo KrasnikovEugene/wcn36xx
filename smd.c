@@ -146,8 +146,19 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 
 	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->start_rsp_params.status)
 		return -EIO;
-	wcn36xx_info("WLAN ver=%s, CRM ver=%s",
-		rsp->start_rsp_params.wlan_version, rsp->start_rsp_params.crm_version);
+
+	memcpy(wcn->crm_version, rsp->start_rsp_params.crm_version,
+	       WCN36XX_HAL_VERSION_LENGTH);
+	memcpy(wcn->wlan_version, rsp->start_rsp_params.wlan_version,
+	       WCN36XX_HAL_VERSION_LENGTH);
+
+	/* null terminate the strings, just in case */
+	wcn->crm_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
+	wcn->wlan_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
+
+	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'",
+		     wcn->wlan_version, wcn->crm_version);
+
 	return 0;
 }
 
