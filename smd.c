@@ -135,7 +135,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-static int wcn36xx_smd_start_rsp(void *buf, size_t len)
+static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
 
@@ -510,14 +510,14 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 		break;
 	}
 }
-static void wcn36xx_smd_rsp_process (void *buf, size_t len)
+static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header * msg_header = buf;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {
 	case WCN36XX_HAL_START_RSP:
-		wcn36xx_smd_start_rsp(buf, len);
+		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
@@ -581,7 +581,7 @@ static void wcn36xx_smd_work(struct work_struct *work)
 			complete(&wcn->smd_compl);
 			return;
 		}
-		wcn36xx_smd_rsp_process(msg, msg_len);
+		wcn36xx_smd_rsp_process(wcn, msg, msg_len);
 		kfree(msg);
 	}
 }
