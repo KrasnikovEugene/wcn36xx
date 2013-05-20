@@ -215,8 +215,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 		}
-	} else {
-		wcn36xx_info("wcn36xx_bss_info_changed No handling for change=%x", changed);
 	}
 }
 static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
