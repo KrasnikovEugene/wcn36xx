@@ -39,6 +39,8 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 	int ret;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac start");
+
 	// SMD initialization
 	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
@@ -76,6 +78,8 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop");
+
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
 
@@ -85,12 +89,16 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif)
 {
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
 }
 
 static int wcn36xx_change_interface(struct ieee80211_hw *hw,
 				      struct ieee80211_vif *vif,
 				      enum nl80211_iftype new_type, bool p2p)
 {
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change interface vif %p new_type %d p2p %d",
+		    vif, new_type, p2p);
+
 	return 0;
 }
 
@@ -98,9 +106,12 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x", changed);
+
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
-		wcn36xx_info("wcn36xx_config channel switch=%d", wcn->ch);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change channel %d", wcn->ch);
+
 		if (wcn->is_scanning) {
 			if (wcn->prev_channel) {
 				wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
@@ -123,6 +134,8 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 				       unsigned int changed,
 				       unsigned int *total, u64 multicast)
 {
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter");
+
 	changed &= WCN36XX_SUPPORTED_FILTERS;
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
@@ -184,8 +197,13 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
+		    vif, changed);
+
 	if(changed & BSS_CHANGED_BSSID) {
-		wcn36xx_info("wcn36xx_bss_info_changed BSS_CHANGED_BSSID=%pM", bss_conf->bssid);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
+			    bss_conf->bssid);
+
 		if(!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
@@ -240,19 +258,21 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
+		    vif, vif->type);
+
 	if(vif) {
 		switch (vif->type) {
 		case NL80211_IFTYPE_STATION:
-			wcn36xx_info("Add station interface");
 			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
 			break;
 		case NL80211_IFTYPE_AP:
-			wcn36xx_info("Add AP interface");
 			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
 			break;
 		default:
-			wcn36xx_info("Add interface=%d", vif->type);
-			break;
+			wcn36xx_warn("Unsupported interface type requested: %d",
+				     vif->type);
+			return -EOPNOTSUPP;
 		}
 	}
 
@@ -264,6 +284,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 {
 	struct wcn36xx *wcn = hw->priv;
 
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM", vif, sta->addr);
+
 	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_POSTASSOC_STATE);
 	wcn36xx_smd_config_sta(wcn, sta->addr, sta->aid, vif->addr);
 	wcn36xx_smd_config_bss(wcn, true, sta->addr, 1);
@@ -273,6 +295,8 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif
 			  struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM", vif, sta->addr);
 
 	wcn36xx_smd_delete_sta(wcn);
 	wcn36xx_smd_delete_bss(wcn);
