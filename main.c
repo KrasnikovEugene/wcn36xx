@@ -445,8 +445,8 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 		status = request_firmware(&addr_file, files[i], wcn->dev);
 
 		if (status) {
-			wcn36xx_error("Failed to read macaddress file %s",
-				      files[i]);
+			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
+				     files[i]);
 			/* Assign a random mac address with Qualcomm oui */
 			memcpy(wcn->addresses[i].addr, qcom_oui, 3);
 			get_random_bytes(wcn->addresses[i].addr + 3, 3);
