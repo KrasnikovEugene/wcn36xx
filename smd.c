@@ -156,8 +156,19 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 	wcn->crm_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
 	wcn->wlan_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
 
+	wcn->fw_revision = rsp->start_rsp_params.version.revision;
+	wcn->fw_version = rsp->start_rsp_params.version.version;
+	wcn->fw_minor = rsp->start_rsp_params.version.minor;
+	wcn->fw_major = rsp->start_rsp_params.version.major;
+
 	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'",
 		     wcn->wlan_version, wcn->crm_version);
+
+	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids",
+		     wcn->fw_major, wcn->fw_minor,
+		     wcn->fw_version, wcn->fw_revision,
+		     rsp->start_rsp_params.stations,
+		     rsp->start_rsp_params.bssids);
 
 	return 0;
 }

@@ -98,6 +98,11 @@ struct wcn36xx {
 	struct mac_address addresses[2];
 	int ch;
 
+	u8 fw_revision;
+	u8 fw_version;
+	u8 fw_minor;
+	u8 fw_major;
+
 	/* extra byte for the NULL termination */
 	u8 crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
 	u8 wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
