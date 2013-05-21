@@ -39,7 +39,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 	int ret;
 
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac start");
 
 	// SMD initialization
 	ret = wcn36xx_smd_open(wcn);
@@ -78,7 +78,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop");
 
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
@@ -89,24 +89,29 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif)
 {
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
 }
 
 static int wcn36xx_change_interface(struct ieee80211_hw *hw,
 				      struct ieee80211_vif *vif,
 				      enum nl80211_iftype new_type, bool p2p)
 {
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change interface vif %p new_type %d p2p %d",
+		    vif, new_type, p2p);
+
 	return 0;
 }
 
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x", changed);
+
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
-		wcn36xx_info("wcn36xx_config channel switch=%d", wcn->ch);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change channel %d", wcn->ch);
+
 		if (wcn->is_scanning) {
 			if (wcn->prev_channel) {
 				wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
@@ -129,7 +134,8 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 				       unsigned int changed,
 				       unsigned int *total, u64 multicast)
 {
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter");
+
 	changed &= WCN36XX_SUPPORTED_FILTERS;
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
@@ -161,8 +167,9 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 
 static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 {
+
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
 	wcn36xx_smd_init_scan(wcn);
 	wcn->is_scanning = 1;
 	wcn36xx_smd_start_scan(wcn, wcn->ch);
@@ -172,7 +179,7 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
 	if (wcn->prev_channel) {
 		wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
 		wcn->prev_channel = 0;
@@ -190,10 +197,13 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
 
-	ENTER();
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
+		    vif, changed);
 
 	if(changed & BSS_CHANGED_BSSID) {
-		wcn36xx_info("wcn36xx_bss_info_changed BSS_CHANGED_BSSID=%pM", bss_conf->bssid);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
+			    bss_conf->bssid);
+
 		if(!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
@@ -205,70 +215,62 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 		}
-	} else {
-		wcn36xx_info("wcn36xx_bss_info_changed No handling for change=%x", changed);
 	}
 }
 static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
 {
-	ENTER();
 	return 0;
 }
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
-	ENTER();
 	return 0;
 }
 
 static bool wcn36xx_tx_frames_pending(struct ieee80211_hw *hw)
 {
-	ENTER();
 	return true;
 }
 static int wcn36xx_set_bitrate_mask(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif,
 				   const struct cfg80211_bitrate_mask *mask)
 {
-	ENTER();
 	return 0;
 }
 
 static void wcn36xx_channel_switch(struct ieee80211_hw *hw,
 				   struct ieee80211_channel_switch *ch_switch)
 {
-	ENTER();
 }
 
 static int wcn36xx_suspend(struct ieee80211_hw *hw,
 			    struct cfg80211_wowlan *wow)
 {
-	ENTER();
 	return 0;
 }
 static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
-	ENTER();
 	return 0;
 }
 static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 				   struct ieee80211_vif *vif)
 {
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
+		    vif, vif->type);
 
 	if(vif) {
 		switch (vif->type) {
 		case NL80211_IFTYPE_STATION:
-			wcn36xx_info("Add station interface");
 			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
 			break;
 		case NL80211_IFTYPE_AP:
-			wcn36xx_info("Add AP interface");
 			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0], 0);
 			break;
 		default:
-			wcn36xx_info("Add interface=%d", vif->type);
-			break;
+			wcn36xx_warn("Unsupported interface type requested: %d",
+				     vif->type);
+			return -EOPNOTSUPP;
 		}
 	}
 
@@ -279,7 +281,9 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		       struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM", vif, sta->addr);
+
 	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_POSTASSOC_STATE);
 	wcn36xx_smd_config_sta(wcn, sta->addr, sta->aid, vif->addr);
 	wcn36xx_smd_config_bss(wcn, true, sta->addr, 1);
@@ -289,7 +293,9 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif
 			  struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
-	ENTER();
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM", vif, sta->addr);
+
 	wcn36xx_smd_delete_sta(wcn);
 	wcn36xx_smd_delete_bss(wcn);
 	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_IDLE_STATE);
@@ -324,7 +330,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
 {
 	struct ieee80211_hw *hw;
-	ENTER();
+
 	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
 	return hw;
 }
@@ -437,8 +443,8 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 		status = request_firmware(&addr_file, files[i], wcn->dev);
 
 		if (status) {
-			wcn36xx_error("Failed to read macaddress file %s",
-				      files[i]);
+			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
+				     files[i]);
 			/* Assign a random mac address with Qualcomm oui */
 			memcpy(wcn->addresses[i].addr, qcom_oui, 3);
 			get_random_bytes(wcn->addresses[i].addr + 3, 3);

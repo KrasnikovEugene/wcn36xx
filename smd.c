@@ -135,7 +135,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-static int wcn36xx_smd_start_rsp(void *buf, size_t len)
+static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
 
@@ -146,8 +146,30 @@ static int wcn36xx_smd_start_rsp(void *buf, size_t len)
 
 	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->start_rsp_params.status)
 		return -EIO;
-	wcn36xx_info("WLAN ver=%s, CRM ver=%s",
-		rsp->start_rsp_params.wlan_version, rsp->start_rsp_params.crm_version);
+
+	memcpy(wcn->crm_version, rsp->start_rsp_params.crm_version,
+	       WCN36XX_HAL_VERSION_LENGTH);
+	memcpy(wcn->wlan_version, rsp->start_rsp_params.wlan_version,
+	       WCN36XX_HAL_VERSION_LENGTH);
+
+	/* null terminate the strings, just in case */
+	wcn->crm_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
+	wcn->wlan_version[WCN36XX_HAL_VERSION_LENGTH] = '\0';
+
+	wcn->fw_revision = rsp->start_rsp_params.version.revision;
+	wcn->fw_version = rsp->start_rsp_params.version.version;
+	wcn->fw_minor = rsp->start_rsp_params.version.minor;
+	wcn->fw_major = rsp->start_rsp_params.version.major;
+
+	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'",
+		     wcn->wlan_version, wcn->crm_version);
+
+	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids",
+		     wcn->fw_major, wcn->fw_minor,
+		     wcn->fw_version, wcn->fw_revision,
+		     rsp->start_rsp_params.stations,
+		     rsp->start_rsp_params.bssids);
+
 	return 0;
 }
 
@@ -510,14 +532,14 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 		break;
 	}
 }
-static void wcn36xx_smd_rsp_process (void *buf, size_t len)
+static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header * msg_header = buf;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {
 	case WCN36XX_HAL_START_RSP:
-		wcn36xx_smd_start_rsp(buf, len);
+		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
@@ -581,7 +603,7 @@ static void wcn36xx_smd_work(struct work_struct *work)
 			complete(&wcn->smd_compl);
 			return;
 		}
-		wcn36xx_smd_rsp_process(msg, msg_len);
+		wcn36xx_smd_rsp_process(wcn, msg, msg_len);
 		kfree(msg);
 	}
 }
