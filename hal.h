@@ -1557,6 +1557,153 @@ struct wcn36xx_hal_config_bss_req_msg {
 	struct wcn36xx_hal_config_bss_params bss_params;
 } __packed;
 
+struct wcn36xx_hal_config_bss_params_v1 {
+	/* BSSID */
+	u8 bssid[ETH_ALEN];
+
+	/* Self Mac Address */
+	u8 self_mac_addr[ETH_ALEN];
+
+	/* BSS type */
+	enum wcn36xx_hal_bss_type bss_type;
+
+	/* Operational Mode: AP =0, STA = 1 */
+	u8 oper_mode;
+
+	/* Network Type */
+	enum wcn36xx_hal_nw_type nw_type;
+
+	/* Used to classify PURE_11G/11G_MIXED to program MTU */
+	u8 short_slot_time_supported;
+
+	/* Co-exist with 11a STA */
+	u8 lla_coexist;
+
+	/* Co-exist with 11b STA */
+	u8 llb_coexist;
+
+	/* Co-exist with 11g STA */
+	u8 llg_coexist;
+
+	/* Coexistence with 11n STA */
+	u8 ht20_coexist;
+
+	/* Non GF coexist flag */
+	u8 lln_non_gf_coexist;
+
+	/* TXOP protection support */
+	u8 lsig_tx_op_protection_full_support;
+
+	/* RIFS mode */
+	u8 rifs_mode;
+
+	/* Beacon Interval in TU */
+	u16 beacon_interval;
+
+	/* DTIM period */
+	u8 dtim_period;
+
+	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
+	u8 tx_channel_width_set;
+
+	/* Operating channel */
+	u8 oper_channel;
+
+	/* Extension channel for channel bonding */
+	u8 ext_channel;
+
+	/* Reserved to align next field on a dword boundary */
+	u8 reserved;
+
+	/* SSID of the BSS */
+	struct wcn36xx_hal_mac_ssid ssid;
+
+	/* HAL should update the existing BSS entry, if this flag is set.
+	 * UMAC will set this flag in case of reassoc, where we want to
+	 * resue the the old BSSID and still return success 0 = Add, 1 =
+	 * Update */
+	u8 action;
+
+	/* MAC Rate Set */
+	struct wcn36xx_hal_rate_set rateset;
+
+	/* Enable/Disable HT capabilities of the BSS */
+	u8 ht;
+
+	/* Enable/Disable OBSS protection */
+	u8 obss_prot_enabled;
+
+	/* RMF enabled/disabled */
+	u8 rmf;
+
+	/* HT Operating Mode operating mode of the 802.11n STA */
+	enum wcn36xx_hal_ht_operating_mode ht_oper_mode;
+
+	/* Dual CTS Protection: 0 - Unused, 1 - Used */
+	u8 dual_cts_protection;
+
+	/* Probe Response Max retries */
+	u8 max_probe_resp_retry_limit;
+
+	/* To Enable Hidden ssid */
+	u8 hidden_ssid;
+
+	/* To Enable Disable FW Proxy Probe Resp */
+	u8 proxy_probe_resp;
+
+	/* Boolean to indicate if EDCA params are valid. UMAC might not
+	 * have valid EDCA params or might not desire to apply EDCA params
+	 * during config BSS. 0 implies Not Valid ; Non-Zero implies
+	 * valid */
+	u8 edca_params_valid;
+
+	/* EDCA Parameters for Best Effort Access Category */
+	struct wcn36xx_hal_edca_param_record acbe;
+
+	/* EDCA Parameters forBackground Access Category */
+	struct wcn36xx_hal_edca_param_record acbk;
+
+	/* EDCA Parameters for Video Access Category */
+	struct wcn36xx_hal_edca_param_record acvi;
+
+	/* EDCA Parameters for Voice Access Category */
+	struct wcn36xx_hal_edca_param_record acvo;
+
+	/* Ext Bss Config Msg if set */
+	u8 ext_set_sta_key_param_valid;
+
+	/* SetStaKeyParams for ext bss msg */
+	struct wcn36xx_hal_set_sta_key_params ext_set_sta_key_param;
+
+	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum
+	 * wcn36xx_hal_con_mode */
+	u8 wcn36xx_hal_persona;
+
+	u8 spectrum_mgt_enable;
+
+	/* HAL fills in the tx power used for mgmt frames in txMgmtPower */
+	s8 tx_mgmt_power;
+
+	/* maxTxPower has max power to be used after applying the power
+	 * constraint if any */
+	s8 max_tx_power;
+
+	/* Context of the station being added in HW
+	 *  Add a STA entry for "itself" -
+	 *
+	 *  On AP  - Add the AP itself in an "STA context"
+	 *
+	 *  On STA - Add the AP to which this STA is joining in an
+	 *  "STA context"
+	 */
+	struct wcn36xx_hal_config_sta_params_v1 sta;
+} __packed;
+
+struct wcn36xx_hal_config_bss_req_msg_v1 {
+	struct wcn36xx_hal_msg_header header;
+	struct wcn36xx_hal_config_bss_params_v1 bss_params;
+} __packed;
+
 struct wcn36xx_hal_config_bss_rsp_params {
 	/* Success or Failure */
 	u32 status;

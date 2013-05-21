@@ -434,6 +434,95 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 	return 0;
 }
 
+static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+				     const struct wcn36xx_hal_config_bss_req_msg *orig)
+{
+	struct wcn36xx_hal_config_bss_req_msg_v1 msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
+
+	/* convert orig to v1 */
+	memcpy(&msg_body.bss_params.bssid,
+	       &orig->bss_params.bssid, ETH_ALEN);
+	memcpy(&msg_body.bss_params.self_mac_addr,
+	       &orig->bss_params.self_mac_addr, ETH_ALEN);
+
+	msg_body.bss_params.bss_type = orig->bss_params.bss_type;
+	msg_body.bss_params.oper_mode = orig->bss_params.oper_mode;
+	msg_body.bss_params.nw_type = orig->bss_params.nw_type;
+
+	msg_body.bss_params.short_slot_time_supported =
+		orig->bss_params.short_slot_time_supported;
+	msg_body.bss_params.lla_coexist = orig->bss_params.lla_coexist;
+	msg_body.bss_params.llb_coexist = orig->bss_params.llb_coexist;
+	msg_body.bss_params.llg_coexist = orig->bss_params.llg_coexist;
+	msg_body.bss_params.ht20_coexist = orig->bss_params.ht20_coexist;
+	msg_body.bss_params.lln_non_gf_coexist = orig->bss_params.lln_non_gf_coexist;
+
+	msg_body.bss_params.lsig_tx_op_protection_full_support = orig->bss_params.lsig_tx_op_protection_full_support;
+	msg_body.bss_params.rifs_mode = orig->bss_params.rifs_mode;
+	msg_body.bss_params.beacon_interval = orig->bss_params.beacon_interval;
+	msg_body.bss_params.dtim_period = orig->bss_params.dtim_period;
+	msg_body.bss_params.tx_channel_width_set = orig->bss_params.tx_channel_width_set;
+	msg_body.bss_params.oper_channel = orig->bss_params.oper_channel;
+	msg_body.bss_params.ext_channel = orig->bss_params.ext_channel;
+
+	msg_body.bss_params.reserved = orig->bss_params.reserved;
+
+	memcpy(&msg_body.bss_params.ssid,
+	       &orig->bss_params.ssid,
+	       sizeof(orig->bss_params.ssid));
+
+	msg_body.bss_params.action = orig->bss_params.action;
+	msg_body.bss_params.rateset = orig->bss_params.rateset;
+	msg_body.bss_params.ht = orig->bss_params.ht;
+	msg_body.bss_params.obss_prot_enabled = orig->bss_params.obss_prot_enabled;
+	msg_body.bss_params.rmf = orig->bss_params.rmf;
+	msg_body.bss_params.ht_oper_mode = orig->bss_params.ht_oper_mode;
+	msg_body.bss_params.dual_cts_protection = orig->bss_params.dual_cts_protection;
+
+	msg_body.bss_params.max_probe_resp_retry_limit = orig->bss_params.max_probe_resp_retry_limit;
+	msg_body.bss_params.hidden_ssid = orig->bss_params.hidden_ssid;
+	msg_body.bss_params.proxy_probe_resp = orig->bss_params.proxy_probe_resp;
+	msg_body.bss_params.edca_params_valid = orig->bss_params.edca_params_valid;
+
+	memcpy(&msg_body.bss_params.acbe,
+	       &orig->bss_params.acbe,
+	       sizeof(orig->bss_params.acbe));
+	memcpy(&msg_body.bss_params.acbk,
+	       &orig->bss_params.acbk,
+	       sizeof(orig->bss_params.acbk));
+	memcpy(&msg_body.bss_params.acvi,
+	       &orig->bss_params.acvi,
+	       sizeof(orig->bss_params.acvi));
+	memcpy(&msg_body.bss_params.acvo,
+	       &orig->bss_params.acvo,
+	       sizeof(orig->bss_params.acvo));
+
+	msg_body.bss_params.ext_set_sta_key_param_valid =
+		orig->bss_params.ext_set_sta_key_param_valid;
+
+	memcpy(&msg_body.bss_params.ext_set_sta_key_param,
+	       &orig->bss_params.ext_set_sta_key_param,
+	       sizeof(orig->bss_params.acvo));
+
+	msg_body.bss_params.wcn36xx_hal_persona = orig->bss_params.wcn36xx_hal_persona;
+	msg_body.bss_params.spectrum_mgt_enable = orig->bss_params.spectrum_mgt_enable;
+	msg_body.bss_params.tx_mgmt_power = orig->bss_params.tx_mgmt_power;
+	msg_body.bss_params.max_tx_power = orig->bss_params.max_tx_power;
+
+	wcn36xx_smd_convert_sta_to_v1(wcn, &orig->bss_params.sta,
+				      &msg_body.bss_params.sta);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config bss v1 bss_type %d",
+		    msg_body.bss_params.bss_type);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg_body;
@@ -502,6 +591,9 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 	msg_body.bss_params.sta.sta_index = 0xff;
 
 	memcpy(&msg_body.bss_params.sta.supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
+
+	if (wcn->fw_minor <= 3)
+		return wcn36xx_smd_config_bss_v1(wcn, &msg_body);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
