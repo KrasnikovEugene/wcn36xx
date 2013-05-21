@@ -95,7 +95,6 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 {
 	int ret = 0;
-	ENTER();
 
 	wcn->dxe_tx_l_ch.ch_type = WCN36XX_DXE_CH_TX_L;
 	wcn->dxe_tx_h_ch.ch_type = WCN36XX_DXE_CH_TX_H;
@@ -231,8 +230,6 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
-	ENTER();
-
 	return IRQ_HANDLED;
 }
 
@@ -247,7 +244,6 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 {
 	int ret;
 
-	ENTER();
 	// Register TX complete irq
 	ret =request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete, IRQF_TRIGGER_HIGH,
                            "wcn36xx_tx", wcn);
@@ -368,7 +364,6 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 }
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 {
-	ENTER();
 	/* Allocate BD headers for MGMT frames */
 
 	// Where this come from ask QC
