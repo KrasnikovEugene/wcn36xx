@@ -68,8 +68,6 @@ enum wcn36xx_debug_mask {
 			       buf, len, false);
 
 
-#define ENTER() pr_info(DRIVER_PREFIX "%s\n", __func__)
-
 static inline void buff_to_be(u32 *buf, size_t len)
 {
 	int i;
