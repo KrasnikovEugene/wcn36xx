@@ -49,6 +49,7 @@ void wcn36xx_smd_close(struct wcn36xx *wcn);
 
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
 int wcn36xx_smd_start(struct wcn36xx *wcn);
+int wcn36xx_smd_stop(struct wcn36xx *wcn);
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch);
 int wcn36xx_smd_end_scan(struct wcn36xx *wcn, int ch);

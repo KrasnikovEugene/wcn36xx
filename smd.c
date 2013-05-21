@@ -138,6 +138,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
@@ -174,6 +175,22 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 		     rsp->start_rsp_params.bssids);
 
 	return 0;
+}
+
+int wcn36xx_smd_stop(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_mac_stop_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_STOP_REQ);
+
+	msg_body.reason = HAL_STOP_TYPE_SYS_RESET;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal stop reason %d",
+		    msg_body.reason);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
 int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
@@ -544,6 +561,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_START_RSP:
 		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
 	case WCN36XX_HAL_INIT_SCAN_RSP:
