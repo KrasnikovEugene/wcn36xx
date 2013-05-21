@@ -44,6 +44,8 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_TX		= 0x00000040,
 	WCN36XX_DBG_TX_DUMP	= 0x00000080,
 	WCN36XX_DBG_HAL		= 0x00000100,
+	WCN36XX_DBG_HAL_DUMP	= 0x00000200,
+	WCN36XX_DBG_MAC		= 0x00000400,
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
@@ -67,8 +69,6 @@ enum wcn36xx_debug_mask {
 			       DUMP_PREFIX_ADDRESS, 32, 1,	\
 			       buf, len, false);
 
-
-#define ENTER() pr_info(DRIVER_PREFIX "%s\n", __func__)
 
 static inline void buff_to_be(u32 *buf, size_t len)
 {
@@ -97,6 +97,15 @@ struct wcn36xx {
 	const struct firmware 	*nv;
 	struct mac_address addresses[2];
 	int ch;
+
+	u8 fw_revision;
+	u8 fw_version;
+	u8 fw_minor;
+	u8 fw_major;
+
+	/* extra byte for the NULL termination */
+	u8 crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+	u8 wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
 
 	bool            beacon_enable;
 	// IRQs
