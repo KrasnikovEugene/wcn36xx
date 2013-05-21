@@ -44,14 +44,18 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 }
 
 #define INIT_HAL_MSG(msg_body, type) \
-	memset(&msg_body, 0, sizeof(msg_body)); \
-	msg_body.header.msg_type = type; \
-	msg_body.header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
-	msg_body.header.len = sizeof(msg_body);
+	do {								\
+		memset(&msg_body, 0, sizeof(msg_body));			\
+		msg_body.header.msg_type = type;			\
+		msg_body.header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
+		msg_body.header.len = sizeof(msg_body);			\
+	} while (0)							\
 
 #define PREPARE_HAL_BUF(send_buf, msg_body) \
-	memset(send_buf, 0, msg_body.header.len); \
-	memcpy(send_buf, &msg_body, sizeof(msg_body));
+	do {							\
+		memset(send_buf, 0, msg_body.header.len);	\
+		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
+	} while (0)						\
 
 int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
@@ -79,7 +83,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 	nv_d = (struct nv_data *)wcn->nv->data;
 	fw_size = wcn->nv->size;
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ);
 
 	msg_body.header.len += WCN36XX_NV_FRAGMENT_SIZE;
 
@@ -122,12 +126,12 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_mac_start_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_REQ);
 
 	msg_body.params.type = DRIVER_TYPE_PRODUCTION;
 	msg_body.params.len = 0;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -151,11 +155,13 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_init_scan_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ);
 
 	msg_body.mode = HAL_SYS_MODE_SCAN;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal init scan mode %d", msg_body.mode);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -164,11 +170,14 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
 {
 	struct wcn36xx_hal_start_scan_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ);
 
 	msg_body.scan_channel = (u8)ch;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start scan channel %d",
+		    msg_body.scan_channel);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -176,11 +185,14 @@ int wcn36xx_smd_end_scan(struct wcn36xx *wcn, int ch)
 {
 	struct wcn36xx_hal_end_scan_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ);
 
 	msg_body.scan_channel = (u8)ch;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal end scan channel %d",
+		    msg_body.scan_channel);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -188,18 +200,21 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_finish_scan_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ);
 
 	msg_body.mode = HAL_SYS_MODE_SCAN;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal finish scan mode %d",
+		    msg_body.mode);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 	struct wcn36xx_hal_update_scan_params_req msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
 
 	// TODO read this from config
 	msg_body.dot11d_enabled	= 0;
@@ -211,7 +226,11 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 	msg_body.passive_max_ch_time = 110;
 	msg_body.state = 0;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal update scan params channel_count %d",
+		    msg_body.channel_count);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -221,7 +240,10 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 
 	rsp = (struct wcn36xx_hal_update_scan_params_resp *)buf;
 
-	wcn36xx_info("Scan params stattus=0x%x",rsp->status);
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal rsp update scan params status %d",
+		    rsp->status);
+
 	return 0;
 }
 
@@ -229,12 +251,16 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct mac_address addr, u32 s
 {
 	struct wcn36xx_hal_add_sta_self_req msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ);
 
 	memcpy(&msg_body.self_addr, &addr, ETH_ALEN);
 	msg_body.status = status;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal add sta self self_addr %pM status %d",
+		    msg_body.self_addr, msg_body.status);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -242,11 +268,15 @@ int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_delete_sta_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_STA_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_STA_REQ);
 
 	msg_body.sta_index = 1;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal delete sta sta_index %d",
+		    msg_body.sta_index);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 
@@ -255,7 +285,7 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 {
 	struct wcn36xx_hal_join_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_JOIN_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_JOIN_REQ);
 
 
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
@@ -264,7 +294,12 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 	msg_body.link_state = WCN36XX_HAL_LINK_PREASSOC_STATE;
 
 	msg_body.max_tx_power = 0xbf;
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal join req bssid %pM self_sta_mac_addr %pM channel %d link_state %d",
+		    msg_body.bssid, msg_body.self_sta_mac_addr,
+		    msg_body.channel, msg_body.link_state);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -272,13 +307,17 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wc
 {
 	struct wcn36xx_hal_set_link_state_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_LINK_ST_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_LINK_ST_REQ);
 
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.self_mac_addr, sta_mac, ETH_ALEN);
 	msg_body.state = state;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal set link state bssid %pM self_mac_addr %pM state %d",
+		    msg_body.bssid, msg_body.self_mac_addr, msg_body.state);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -287,7 +326,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 {
 	struct wcn36xx_hal_config_sta_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
 
 	memcpy(&msg_body.u.sta_params.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.u.sta_params.mac, sta_mac, ETH_ALEN);
@@ -305,7 +344,11 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 		sizeof(wcn->supported_rates));
 	msg_body.u.sta_params.sta_index = 1;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config sta bssid %pM mac %pM",
+		    msg_body.u.sta_params.bssid, msg_body.u.sta_params.mac);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -318,8 +361,10 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 
 	rsp = (struct wcn36xx_hal_join_rsp_msg *)buf;
 
-	wcn36xx_info("Join stattus=%d, Power ver=%d",
-		rsp->status, rsp->tx_mgmt_power);
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal rsp join status %d tx_mgmt_power %d",
+		    rsp->status, rsp->tx_mgmt_power);
+
 	return 0;
 }
 
@@ -327,7 +372,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 {
 	struct wcn36xx_hal_config_bss_req_msg msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
 
 	if(sta_mode) {
 		memcpy(&msg_body.u.bss_params.bssid, bssid, ETH_ALEN);
@@ -392,7 +437,11 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 
 	memcpy(&msg_body.u.bss_params.sta.supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config bss bss_type %d",
+		    msg_body.u.bss_params.bss_type);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -400,17 +449,19 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_delete_bss_req_msg  msg_body;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
 
 	msg_body.bss_index = 0;
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal delete bss %d", msg_body.bss_index);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off){
 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ)
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
 
 	// TODO need to find out why this is needed?
 	msg_body.beacon_length = skb_beacon->len + 6;
@@ -428,7 +479,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16
 	// TODO need to find out why this is needed?
 	msg_body.tim_ie_offset = tim_off+4;
 	msg_body.p2p_ie_offset = p2p_off;
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body)
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal send beacon beacon_length %d",
+		    msg_body.beacon_length);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 };
@@ -477,7 +532,8 @@ static void wcn36xx_smd_rsp_process (void *buf, size_t len)
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
-			wcn36xx_error("response failed");
+			wcn36xx_warn("error response from hal request %d",
+				     msg_header->msg_type);
 		}
 		break;
 	case WCN36XX_HAL_JOIN_RSP:
