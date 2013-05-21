@@ -1166,6 +1166,119 @@ struct wcn36xx_hal_config_sta_req_msg {
 	struct wcn36xx_hal_config_sta_params sta_params;
 } __packed;
 
+struct wcn36xx_hal_config_sta_params_v1 {
+	/* BSSID of STA */
+	u8 bssid[ETH_ALEN];
+
+	/* ASSOC ID, as assigned by UMAC */
+	u16 aid;
+
+	/* STA entry Type: 0 - Self, 1 - Other/Peer, 2 - BSSID, 3 - BCAST */
+	u8 type;
+
+	/* Short Preamble Supported. */
+	u8 short_preamble_supported;
+
+	/* MAC Address of STA */
+	u8 mac[ETH_ALEN];
+
+	/* Listen interval of the STA */
+	u16 listen_interval;
+
+	/* Support for 11e/WMM */
+	u8 wmm_enabled;
+
+	/* 11n HT capable STA */
+	u8 ht_capable;
+
+	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
+	u8 tx_channel_width_set;
+
+	/* RIFS mode 0 - NA, 1 - Allowed */
+	u8 rifs_mode;
+
+	/* L-SIG TXOP Protection mechanism 
+	   0 - No Support, 1 - Supported
+	   SG - there is global field */
+	u8 lsig_txop_protection;
+
+	/* Max Ampdu Size supported by STA. TPE programming.
+	   0 : 8k , 1 : 16k, 2 : 32k, 3 : 64k */
+	u8 max_ampdu_size;
+
+	/* Max Ampdu density. Used by RA.  3 : 0~7 : 2^(11nAMPDUdensity -4) */
+	u8 max_ampdu_density;
+
+	/* Max AMSDU size 1 : 3839 bytes, 0 : 7935 bytes */
+	u8 max_amsdu_size;
+
+	/* Short GI support for 40Mhz packets */
+	u8 sgi_40mhz;
+
+	/* Short GI support for 20Mhz packets */
+	u8 sgi_20Mhz;
+
+	/* Robust Management Frame (RMF) enabled/disabled */
+	u8 rmf;
+
+	/* The unicast encryption type in the association */
+	u32 encrypt_type;
+
+	/* HAL should update the existing STA entry, if this flag is set. UMAC
+	   will set this flag in case of RE-ASSOC, where we want to reuse the old
+	   STA ID. 0 = Add, 1 = Update */
+	u8 action;
+
+	/* U-APSD Flags: 1b per AC.  Encoded as follows:
+	   b7 b6 b5 b4 b3 b2 b1 b0 =
+	   X  X  X  X  BE BK VI VO */
+	u8 uapsd;
+
+	/* Max SP Length */
+	u8 max_sp_len;
+
+	/* 11n Green Field preamble support
+	   0 - Not supported, 1 - Supported */
+	u8 green_field_capable;
+
+	/* MIMO Power Save mode */
+	enum wcn36xx_hal_ht_mimo_state mimo_ps;
+
+	/* Delayed BA Support */
+	u8 delayed_ba_support;
+
+	/* Max AMPDU duration in 32us */
+	u8 max_ampdu_duration;
+
+	/* HT STA should set it to 1 if it is enabled in BSS. HT STA should
+	 * set it to 0 if AP does not support it. This indication is sent
+	 * to HAL and HAL uses this flag to pickup up appropriate 40Mhz
+	 * rates. */
+	u8 dsss_cck_mode_40mhz;
+
+	/* Valid STA Idx when action=Update. Set to 0xFF when invalid!
+	 * Retained for backward compalibity with existing HAL code */
+	u8 sta_index;
+
+	/* BSSID of BSS to which station is associated. Set to 0xFF when
+	 * invalid. Retained for backward compalibity with existing HAL
+	 * code */
+	u8 bssid_index;
+
+	u8 p2p;
+
+	/* Reserved to align next field on a dword boundary */
+	u8 reserved;
+
+	/* These rates are the intersection of peer and self capabilities. */
+	struct wcn36xx_hal_supported_rates supported_rates;
+} __packed;
+
+struct wcn36xx_hal_config_sta_req_msg_v1 {
+	struct wcn36xx_hal_msg_header header;
+	struct wcn36xx_hal_config_sta_params_v1 sta_params;
+} __packed;
+
 struct config_sta_rsp_params {
 	/* success or failure */
 	u32 status;

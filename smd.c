@@ -344,6 +344,47 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wc
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+					  const struct wcn36xx_hal_config_sta_params *orig,
+					  struct wcn36xx_hal_config_sta_params_v1 *v1)
+{
+	/* convert orig to v1 format */
+	memcpy(&v1->bssid, orig->bssid, ETH_ALEN);
+	memcpy(&v1->mac, orig->mac, ETH_ALEN);
+	v1->aid = orig->aid;
+	v1->type = orig->type;
+	v1->listen_interval = orig->listen_interval;
+	v1->ht_capable = orig->ht_capable;
+
+	v1->max_ampdu_size = orig->max_ampdu_size;
+	v1->max_ampdu_density = orig->max_ampdu_density;
+	v1->sgi_40mhz = orig->sgi_40mhz;
+	v1->sgi_20Mhz = orig->sgi_20Mhz;
+
+	memcpy(&v1->supported_rates, &orig->supported_rates,
+	       sizeof(orig->supported_rates));
+	v1->sta_index = orig->sta_index;
+}
+
+static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
+				     const struct wcn36xx_hal_config_sta_req_msg *orig)
+{
+	struct wcn36xx_hal_config_sta_req_msg_v1 msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
+
+	wcn36xx_smd_convert_sta_to_v1(wcn, &orig->sta_params,
+				      &msg_body.sta_params);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config sta v1 bssid %pM mac %pM",
+		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg_body;
@@ -365,6 +406,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 	memcpy(&msg_body.sta_params.supported_rates, &wcn->supported_rates,
 		sizeof(wcn->supported_rates));
 	msg_body.sta_params.sta_index = 1;
+
+	if (wcn->fw_minor <= 3)
+		return wcn36xx_smd_config_sta_v1(wcn, &msg_body);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
