@@ -43,12 +43,16 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_RX_DUMP	= 0x00000020,
 	WCN36XX_DBG_TX		= 0x00000040,
 	WCN36XX_DBG_TX_DUMP	= 0x00000080,
+	WCN36XX_DBG_HAL		= 0x00000100,
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
 #define wcn36xx_error(fmt, arg...) \
 	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg); \
 	__WARN()
+
+#define wcn36xx_warn(fmt, arg...) \
+	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg);
 
 #define wcn36xx_info(fmt, arg...) \
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
