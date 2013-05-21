@@ -119,12 +119,6 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	return 0;
 }
 
-static u64 wcn36xx_prepare_multicast(struct ieee80211_hw *hw,
-				       struct netdev_hw_addr_list *mc_list)
-{
-	ENTER();
-	return 0;
-}
 #define WCN36XX_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
 				  FIF_ALLMULTI | \
 				  FIF_FCSFAIL | \
@@ -163,15 +157,6 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
 
 	wcn36xx_dxe_tx(hw->priv, skb, bcast, high);
-}
-
-static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-			     struct ieee80211_vif *vif,
-			     struct ieee80211_sta *sta,
-			     struct ieee80211_key_conf *key_conf)
-{
-	ENTER();
-	return 0;
 }
 
 static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
@@ -235,22 +220,6 @@ static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 	return 0;
 }
 
-static int wcn36xx_get_survey(struct ieee80211_hw *hw, int idx,
-				struct survey_info *survey)
-{
-	ENTER();
-	return 0;
-}
-
-static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
-				  struct ieee80211_vif *vif,
-				  enum ieee80211_ampdu_mlme_action action,
-				  struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-				  u8 buf_size)
-{
-	ENTER();
-	return 0;
-}
 static bool wcn36xx_tx_frames_pending(struct ieee80211_hw *hw)
 {
 	ENTER();
@@ -338,10 +307,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.resume			= wcn36xx_resume,
 #endif
 	.config 		= wcn36xx_config,
-	.prepare_multicast 	= wcn36xx_prepare_multicast,
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
-	.set_key 		= wcn36xx_set_key,
 	.sw_scan_start          = wcn36xx_sw_scan_start,
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
@@ -349,8 +316,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
 	.sta_add 		= wcn36xx_sta_add,
 	.sta_remove	 	= wcn36xx_sta_remove,
-	.get_survey 		= wcn36xx_get_survey,
-	.ampdu_action 		= wcn36xx_ampdu_action,
 	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
 	.set_bitrate_mask 	= wcn36xx_set_bitrate_mask,
 	.channel_switch 	= wcn36xx_channel_switch
