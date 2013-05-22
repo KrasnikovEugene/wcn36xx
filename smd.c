@@ -233,6 +233,30 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch)
+{
+	struct wcn36xx_hal_switch_channel_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CH_SWITCH_REQ);
+
+	msg_body.channel_number = (u8)ch;
+	msg_body.tx_mgmt_power = 0xbf;
+	msg_body.max_tx_power = 0xbf;
+	memcpy(msg_body.self_sta_mac_addr, wcn->addresses[0].addr, ETH_ALEN);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
+{
+	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
+	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg*)buf;
+	wcn36xx_info("channel switched to: %d, status: %d", rsp->channel_number, rsp->status);
+}
+
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 	struct wcn36xx_hal_update_scan_params_req msg_body;
 
@@ -563,6 +587,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
 		wcn36xx_smd_update_scan_params_rsp(buf, len);
+		break;
+	case WCN36XX_HAL_CH_SWITCH_RSP:
+		wcn36xx_smd_switch_channel_rsp(buf,len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
