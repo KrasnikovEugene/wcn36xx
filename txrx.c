@@ -30,8 +30,8 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	skb_trim(skb2, bd->pdu.mpdu_len);
 	status.mactime = 10;
-	status.band = IEEE80211_BAND_2GHZ;
-	status.freq = ieee80211_channel_to_frequency(bd->rx_ch, status.band);
+	status.freq = wcn->current_channel->center_freq;
+	status.band = wcn->current_channel->band;
 	status.signal = 1;
 	status.antenna = 1;
 	status.rate_idx = 1;

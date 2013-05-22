@@ -93,6 +93,7 @@ struct wcn36xx {
 	const struct firmware 	*nv;
 	struct mac_address addresses[2];
 	int ch;
+	struct ieee80211_channel *current_channel;
 
 	bool            beacon_enable;
 	// IRQs
@@ -113,7 +114,6 @@ struct wcn36xx {
 
 	//Scanning
 	int                     is_scanning;
-	int                     prev_channel;
 
 	// DXE chanels
 	struct wcn36xx_dxe_ch 	dxe_tx_l_ch;	// TX low channel
