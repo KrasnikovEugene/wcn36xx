@@ -639,8 +639,11 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 		msg_body.bss_params.beacon_interval = 0x64;
 		msg_body.bss_params.dtim_period = 2;
 		msg_body.bss_params.oper_channel = 1;
-		msg_body.bss_params.ssid.length = 1;
-		msg_body.bss_params.ssid.ssid[0] = 'K';
+
+		msg_body.bss_params.ssid.length = wcn->ssid.length;
+		memcpy(msg_body.bss_params.ssid.ssid,
+		       wcn->ssid.ssid, wcn->ssid.length);
+
 		msg_body.bss_params.obss_prot_enabled = 1;
 		msg_body.bss_params.wcn36xx_hal_persona = 1;
 		msg_body.bss_params.max_tx_power = 0x10;

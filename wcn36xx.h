@@ -98,6 +98,7 @@ struct wcn36xx {
 	struct mac_address addresses[2];
 	int ch;
 	struct ieee80211_channel *current_channel;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	u8 fw_revision;
 	u8 fw_version;
