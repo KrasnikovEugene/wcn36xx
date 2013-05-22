@@ -201,37 +201,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 }
-static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
+
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
-
-static bool wcn36xx_tx_frames_pending(struct ieee80211_hw *hw)
-{
-	return true;
-}
-static int wcn36xx_set_bitrate_mask(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif,
-				   const struct cfg80211_bitrate_mask *mask)
-{
-	return 0;
-}
-
-static void wcn36xx_channel_switch(struct ieee80211_hw *hw,
-				   struct ieee80211_channel_switch *ch_switch)
-{
-}
-
-static int wcn36xx_suspend(struct ieee80211_hw *hw,
-			    struct cfg80211_wowlan *wow)
-{
-	return 0;
-}
-static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
 	return 0;
 }
@@ -301,23 +272,15 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface 	= wcn36xx_remove_interface,
 	.change_interface 	= wcn36xx_change_interface,
-#ifdef CONFIG_PM
-	.suspend 		= wcn36xx_suspend,
-	.resume			= wcn36xx_resume,
-#endif
 	.config 		= wcn36xx_config,
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
 	.sw_scan_start          = wcn36xx_sw_scan_start,
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
-	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
-	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
+	.set_rts_threshold	= wcn36xx_set_rts_threshold,
 	.sta_add 		= wcn36xx_sta_add,
 	.sta_remove	 	= wcn36xx_sta_remove,
-	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
-	.set_bitrate_mask 	= wcn36xx_set_bitrate_mask,
-	.channel_switch 	= wcn36xx_channel_switch
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
