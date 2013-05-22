@@ -237,6 +237,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 
+	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp");
+		skb = ieee80211_proberesp_get(hw, vif);
+		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
+	}
+
 	if (changed & BSS_CHANGED_BEACON_ENABLED){
 		if(!wcn->beacon_enable) {
 			wcn->beacon_enable = true;
