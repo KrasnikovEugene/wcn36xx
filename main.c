@@ -243,12 +243,18 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
 	}
 
-	if (changed & BSS_CHANGED_BEACON_ENABLED){
-		if(!wcn->beacon_enable) {
+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed beacon enabled %d",
+			    bss_conf->enable_beacon);
+
+		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
 			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+		} else {
+			/* FIXME: disable beaconing */
 		}
 	}
 }
