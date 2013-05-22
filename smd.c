@@ -472,6 +472,32 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+{
+	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
+	struct config_sta_rsp_params *params;
+
+	if (len < sizeof(*rsp))
+		return -EINVAL;
+
+	rsp = (struct wcn36xx_hal_config_sta_rsp_msg *)buf;
+	params = &rsp->params;
+
+	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
+		wcn36xx_warn("hal config sta response failure: %d",
+			     params->status);
+		return -EIO;
+	}
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d",
+		    params->status, params->sta_index, params->bssid_index,
+		    params->p2p);
+
+	return 0;
+}
+
 static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_join_rsp_msg * rsp;
@@ -657,6 +683,33 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+{
+	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
+	struct wcn36xx_hal_config_bss_rsp_params *params;
+
+	if (len < sizeof(*rsp))
+		return -EINVAL;
+
+	rsp = (struct wcn36xx_hal_config_bss_rsp_msg *)buf;
+	params = &rsp->bss_rsp_params;
+
+	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
+		wcn36xx_warn("hal config bss response failure: %d",
+			     params->status);
+		return -EIO;
+	}
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config bss rsp status %d bss_idx %d sta_idx %d self_idx %d bcast_idx %d mac %pM power %d",
+		    params->status, params->bss_index, params->bss_sta_index,
+		    params->bss_self_sta_index, params->bss_bcast_sta_idx,
+		    params->mac, params->tx_mgmt_power);
+
+	return 0;
+}
+
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_delete_bss_req_msg  msg_body;
@@ -762,6 +815,12 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_START_RSP:
 		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_CONFIG_STA_RSP:
+		wcn36xx_smd_config_sta_rsp(wcn, buf, len);
+		break;
+	case WCN36XX_HAL_CONFIG_BSS_RSP:
+		wcn36xx_smd_config_bss_rsp(wcn, buf, len);
+		break;
 	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 	case WCN36XX_HAL_DEL_STA_SELF_RSP:
@@ -771,9 +830,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_END_SCAN_RSP:
 	case WCN36XX_HAL_FINISH_SCAN_RSP:
 	case WCN36XX_HAL_DOWNLOAD_NV_RSP:
-	case WCN36XX_HAL_CONFIG_BSS_RSP:
 	case WCN36XX_HAL_DELETE_BSS_RSP:
-	case WCN36XX_HAL_CONFIG_STA_RSP:
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
 	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:

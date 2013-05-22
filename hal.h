@@ -1313,7 +1313,8 @@ struct config_sta_rsp_params {
 
 struct wcn36xx_hal_config_sta_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct config_sta_rsp_params configStaRspParams;
+
+	struct config_sta_rsp_params params;
 } __packed;
 
 /* Delete STA Request message */
