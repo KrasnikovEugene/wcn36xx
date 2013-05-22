@@ -700,6 +700,37 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 };
 
+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
+{
+	struct wcn36xx_hal_send_probe_resp_req_msg msg;
+
+	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
+
+	/* // TODO need to find out why this is needed? */
+	/* msg_body.beacon_length = skb_beacon->len + 6; */
+
+	if (skb->len > BEACON_TEMPLATE_SIZE) {
+		wcn36xx_warn("probe response template is too big: %d",
+			     skb->len);
+		return -E2BIG;
+	}
+
+	msg.probe_resp_template_len = skb->len;
+	memcpy(&msg.probe_resp_template, skb->data, skb->len);
+
+	memcpy(&msg.bssid, &wcn->addresses[0], ETH_ALEN);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal update probe rsp len %d bssid %pM",
+		    msg.probe_resp_template_len, msg.bssid);
+
+	dev_kfree_skb(skb);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
+};
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -745,6 +776,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_CONFIG_STA_RSP:
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
+	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
