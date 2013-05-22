@@ -237,6 +237,16 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 
+	if (changed & BSS_CHANGED_SSID) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed ssid");
+		wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "ssid ",
+				 bss_conf->ssid, bss_conf->ssid_len);
+
+		wcn->ssid.length = bss_conf->ssid_len;
+		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+	}
+
 	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp");
 		skb = ieee80211_proberesp_get(hw, vif);
