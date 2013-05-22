@@ -2827,7 +2827,7 @@ struct wcn36xx_hal_get_tpc_report_rsp_msg {
 	u32 status;
 };
 
-struct send_probe_resp_req_msg {
+struct wcn36xx_hal_send_probe_resp_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	u8 probe_resp_template[BEACON_TEMPLATE_SIZE];
