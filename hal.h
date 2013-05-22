@@ -730,15 +730,10 @@ struct wcn36xx_hal_mac_start_rsp_msg {
 	struct wcn36xx_hal_mac_start_rsp_params start_rsp_params;
 } __packed;
 
-struct wcn36xx_hal_mac_stop_req_params {
-	/* The reason for which the device is being stopped */
-	enum wcn36xx_hal_stop_type reason;
-
-};
-
 struct wcn36xx_hal_mac_stop_req_msg {
 	struct wcn36xx_hal_msg_header header;
-	struct wcn36xx_hal_mac_stop_req_params stopReqParams;
+
+	enum wcn36xx_hal_stop_type reason;
 };
 
 struct wcn36xx_hal_mac_stop_rsp_msg {

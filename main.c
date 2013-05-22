@@ -81,6 +81,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop");
 
 	wcn36xx_dxe_deinit(wcn);
+	wcn36xx_smd_stop(wcn);
 	wcn36xx_smd_close(wcn);
 
 	kfree(wcn->smd_buf);
