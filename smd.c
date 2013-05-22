@@ -344,33 +344,77 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wc
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+					  const struct wcn36xx_hal_config_sta_params *orig,
+					  struct wcn36xx_hal_config_sta_params_v1 *v1)
+{
+	/* convert orig to v1 format */
+	memcpy(&v1->bssid, orig->bssid, ETH_ALEN);
+	memcpy(&v1->mac, orig->mac, ETH_ALEN);
+	v1->aid = orig->aid;
+	v1->type = orig->type;
+	v1->listen_interval = orig->listen_interval;
+	v1->ht_capable = orig->ht_capable;
+
+	v1->max_ampdu_size = orig->max_ampdu_size;
+	v1->max_ampdu_density = orig->max_ampdu_density;
+	v1->sgi_40mhz = orig->sgi_40mhz;
+	v1->sgi_20Mhz = orig->sgi_20Mhz;
+
+	memcpy(&v1->supported_rates, &orig->supported_rates,
+	       sizeof(orig->supported_rates));
+	v1->sta_index = orig->sta_index;
+}
+
+static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
+				     const struct wcn36xx_hal_config_sta_req_msg *orig)
+{
+	struct wcn36xx_hal_config_sta_req_msg_v1 msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
+
+	wcn36xx_smd_convert_sta_to_v1(wcn, &orig->sta_params,
+				      &msg_body.sta_params);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config sta v1 bssid %pM mac %pM",
+		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
 
-	memcpy(&msg_body.u.sta_params.bssid, bssid, ETH_ALEN);
-	memcpy(&msg_body.u.sta_params.mac, sta_mac, ETH_ALEN);
-	msg_body.u.sta_params.aid = 1;
-	msg_body.u.sta_params.type = 0;
-	msg_body.u.sta_params.listen_interval = 0x8;
-	msg_body.u.sta_params.ht_capable = 1;
+	memcpy(&msg_body.sta_params.bssid, bssid, ETH_ALEN);
+	memcpy(&msg_body.sta_params.mac, sta_mac, ETH_ALEN);
+	msg_body.sta_params.aid = 1;
+	msg_body.sta_params.type = 0;
+	msg_body.sta_params.listen_interval = 0x8;
+	msg_body.sta_params.ht_capable = 1;
 
-	msg_body.u.sta_params.max_ampdu_size = 3;
-	msg_body.u.sta_params.max_ampdu_density = 5;
-	msg_body.u.sta_params.sgi_40mhz = 1;
-	msg_body.u.sta_params.sgi_20Mhz = 1;
+	msg_body.sta_params.max_ampdu_size = 3;
+	msg_body.sta_params.max_ampdu_density = 5;
+	msg_body.sta_params.sgi_40mhz = 1;
+	msg_body.sta_params.sgi_20Mhz = 1;
 
-	memcpy(&msg_body.u.sta_params.supported_rates, &wcn->supported_rates,
+	memcpy(&msg_body.sta_params.supported_rates, &wcn->supported_rates,
 		sizeof(wcn->supported_rates));
-	msg_body.u.sta_params.sta_index = 1;
+	msg_body.sta_params.sta_index = 1;
+
+	if (wcn->fw_minor <= 3)
+		return wcn36xx_smd_config_sta_v1(wcn, &msg_body);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config sta bssid %pM mac %pM",
-		    msg_body.u.sta_params.bssid, msg_body.u.sta_params.mac);
+		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -390,6 +434,95 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 	return 0;
 }
 
+static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+				     const struct wcn36xx_hal_config_bss_req_msg *orig)
+{
+	struct wcn36xx_hal_config_bss_req_msg_v1 msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
+
+	/* convert orig to v1 */
+	memcpy(&msg_body.bss_params.bssid,
+	       &orig->bss_params.bssid, ETH_ALEN);
+	memcpy(&msg_body.bss_params.self_mac_addr,
+	       &orig->bss_params.self_mac_addr, ETH_ALEN);
+
+	msg_body.bss_params.bss_type = orig->bss_params.bss_type;
+	msg_body.bss_params.oper_mode = orig->bss_params.oper_mode;
+	msg_body.bss_params.nw_type = orig->bss_params.nw_type;
+
+	msg_body.bss_params.short_slot_time_supported =
+		orig->bss_params.short_slot_time_supported;
+	msg_body.bss_params.lla_coexist = orig->bss_params.lla_coexist;
+	msg_body.bss_params.llb_coexist = orig->bss_params.llb_coexist;
+	msg_body.bss_params.llg_coexist = orig->bss_params.llg_coexist;
+	msg_body.bss_params.ht20_coexist = orig->bss_params.ht20_coexist;
+	msg_body.bss_params.lln_non_gf_coexist = orig->bss_params.lln_non_gf_coexist;
+
+	msg_body.bss_params.lsig_tx_op_protection_full_support = orig->bss_params.lsig_tx_op_protection_full_support;
+	msg_body.bss_params.rifs_mode = orig->bss_params.rifs_mode;
+	msg_body.bss_params.beacon_interval = orig->bss_params.beacon_interval;
+	msg_body.bss_params.dtim_period = orig->bss_params.dtim_period;
+	msg_body.bss_params.tx_channel_width_set = orig->bss_params.tx_channel_width_set;
+	msg_body.bss_params.oper_channel = orig->bss_params.oper_channel;
+	msg_body.bss_params.ext_channel = orig->bss_params.ext_channel;
+
+	msg_body.bss_params.reserved = orig->bss_params.reserved;
+
+	memcpy(&msg_body.bss_params.ssid,
+	       &orig->bss_params.ssid,
+	       sizeof(orig->bss_params.ssid));
+
+	msg_body.bss_params.action = orig->bss_params.action;
+	msg_body.bss_params.rateset = orig->bss_params.rateset;
+	msg_body.bss_params.ht = orig->bss_params.ht;
+	msg_body.bss_params.obss_prot_enabled = orig->bss_params.obss_prot_enabled;
+	msg_body.bss_params.rmf = orig->bss_params.rmf;
+	msg_body.bss_params.ht_oper_mode = orig->bss_params.ht_oper_mode;
+	msg_body.bss_params.dual_cts_protection = orig->bss_params.dual_cts_protection;
+
+	msg_body.bss_params.max_probe_resp_retry_limit = orig->bss_params.max_probe_resp_retry_limit;
+	msg_body.bss_params.hidden_ssid = orig->bss_params.hidden_ssid;
+	msg_body.bss_params.proxy_probe_resp = orig->bss_params.proxy_probe_resp;
+	msg_body.bss_params.edca_params_valid = orig->bss_params.edca_params_valid;
+
+	memcpy(&msg_body.bss_params.acbe,
+	       &orig->bss_params.acbe,
+	       sizeof(orig->bss_params.acbe));
+	memcpy(&msg_body.bss_params.acbk,
+	       &orig->bss_params.acbk,
+	       sizeof(orig->bss_params.acbk));
+	memcpy(&msg_body.bss_params.acvi,
+	       &orig->bss_params.acvi,
+	       sizeof(orig->bss_params.acvi));
+	memcpy(&msg_body.bss_params.acvo,
+	       &orig->bss_params.acvo,
+	       sizeof(orig->bss_params.acvo));
+
+	msg_body.bss_params.ext_set_sta_key_param_valid =
+		orig->bss_params.ext_set_sta_key_param_valid;
+
+	memcpy(&msg_body.bss_params.ext_set_sta_key_param,
+	       &orig->bss_params.ext_set_sta_key_param,
+	       sizeof(orig->bss_params.acvo));
+
+	msg_body.bss_params.wcn36xx_hal_persona = orig->bss_params.wcn36xx_hal_persona;
+	msg_body.bss_params.spectrum_mgt_enable = orig->bss_params.spectrum_mgt_enable;
+	msg_body.bss_params.tx_mgmt_power = orig->bss_params.tx_mgmt_power;
+	msg_body.bss_params.max_tx_power = orig->bss_params.max_tx_power;
+
+	wcn36xx_smd_convert_sta_to_v1(wcn, &orig->bss_params.sta,
+				      &msg_body.bss_params.sta);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config bss v1 bss_type %d",
+		    msg_body.bss_params.bss_type);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg_body;
@@ -397,73 +530,76 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
 
 	if(sta_mode) {
-		memcpy(&msg_body.u.bss_params.bssid, bssid, ETH_ALEN);
-		memcpy(&msg_body.u.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
-		msg_body.u.bss_params.bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
+		memcpy(&msg_body.bss_params.bssid, bssid, ETH_ALEN);
+		memcpy(&msg_body.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
+		msg_body.bss_params.bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
 		//TODO define enum for oper_mode
-		msg_body.u.bss_params.oper_mode = 1;  //0 - AP,  1-STA
-		msg_body.u.bss_params.llg_coexist = 1;
-		msg_body.u.bss_params.beacon_interval = 0x64;
+		msg_body.bss_params.oper_mode = 1;  //0 - AP,  1-STA
+		msg_body.bss_params.llg_coexist = 1;
+		msg_body.bss_params.beacon_interval = 0x64;
 
-		msg_body.u.bss_params.oper_channel = wcn->ch;
-		memcpy(&msg_body.u.bss_params.sta.bssid, bssid, ETH_ALEN);
-		msg_body.u.bss_params.sta.type = 1;
-		msg_body.u.bss_params.sta.listen_interval = 0x64;
-		msg_body.u.bss_params.sta.wmm_enabled = 1;
+		msg_body.bss_params.oper_channel = wcn->ch;
+		memcpy(&msg_body.bss_params.sta.bssid, bssid, ETH_ALEN);
+		msg_body.bss_params.sta.type = 1;
+		msg_body.bss_params.sta.listen_interval = 0x64;
+		msg_body.bss_params.sta.wmm_enabled = 1;
 
-		msg_body.u.bss_params.sta.max_ampdu_size = 3;
-		msg_body.u.bss_params.sta.max_ampdu_density = 5;
-		msg_body.u.bss_params.sta.dsss_cck_mode_40mhz = 1;
+		msg_body.bss_params.sta.max_ampdu_size = 3;
+		msg_body.bss_params.sta.max_ampdu_density = 5;
+		msg_body.bss_params.sta.dsss_cck_mode_40mhz = 1;
 	} else {
-		memcpy(&msg_body.u.bss_params.bssid, &wcn->addresses[0], ETH_ALEN);
-		memcpy(&msg_body.u.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
+		memcpy(&msg_body.bss_params.bssid, &wcn->addresses[0], ETH_ALEN);
+		memcpy(&msg_body.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
 
 		//TODO do all this configurabel
-		msg_body.u.bss_params.bss_type = WCN36XX_HAL_INFRA_AP_MODE;
-		msg_body.u.bss_params.oper_mode = 0; //0 - AP,  1-STA
+		msg_body.bss_params.bss_type = WCN36XX_HAL_INFRA_AP_MODE;
+		msg_body.bss_params.oper_mode = 0; //0 - AP,  1-STA
 
-		msg_body.u.bss_params.short_slot_time_supported = 1;
-		msg_body.u.bss_params.beacon_interval = 0x64;
-		msg_body.u.bss_params.dtim_period = 2;
-		msg_body.u.bss_params.oper_channel = 1;
-		msg_body.u.bss_params.ssid.length = 1;
-		msg_body.u.bss_params.ssid.ssid[0] = 'K';
-		msg_body.u.bss_params.obss_prot_enabled = 1;
-		msg_body.u.bss_params.wcn36xx_hal_persona = 1;
-		msg_body.u.bss_params.max_tx_power = 0x10;
+		msg_body.bss_params.short_slot_time_supported = 1;
+		msg_body.bss_params.beacon_interval = 0x64;
+		msg_body.bss_params.dtim_period = 2;
+		msg_body.bss_params.oper_channel = 1;
+		msg_body.bss_params.ssid.length = 1;
+		msg_body.bss_params.ssid.ssid[0] = 'K';
+		msg_body.bss_params.obss_prot_enabled = 1;
+		msg_body.bss_params.wcn36xx_hal_persona = 1;
+		msg_body.bss_params.max_tx_power = 0x10;
 
-		memcpy(&msg_body.u.bss_params.sta.bssid, &wcn->addresses[0], ETH_ALEN);
-		msg_body.u.bss_params.sta.short_preamble_supported = 1;
-		memcpy(&msg_body.u.bss_params.sta.mac, &wcn->addresses[0], ETH_ALEN);
-		msg_body.u.bss_params.sta.listen_interval = 8;
+		memcpy(&msg_body.bss_params.sta.bssid, &wcn->addresses[0], ETH_ALEN);
+		msg_body.bss_params.sta.short_preamble_supported = 1;
+		memcpy(&msg_body.bss_params.sta.mac, &wcn->addresses[0], ETH_ALEN);
+		msg_body.bss_params.sta.listen_interval = 8;
 	}
-	msg_body.u.bss_params.nw_type = WCN36XX_HAL_11G_NW_TYPE;
-	msg_body.u.bss_params.sta.ht_capable = 1;
-	msg_body.u.bss_params.sta.sgi_40mhz = 1;
-	msg_body.u.bss_params.sta.sgi_20Mhz = 1;
+	msg_body.bss_params.nw_type = WCN36XX_HAL_11G_NW_TYPE;
+	msg_body.bss_params.sta.ht_capable = 1;
+	msg_body.bss_params.sta.sgi_40mhz = 1;
+	msg_body.bss_params.sta.sgi_20Mhz = 1;
 	if (update == 1) {
-		msg_body.u.bss_params.short_slot_time_supported = 1;
-		msg_body.u.bss_params.lln_non_gf_coexist = 1;
-		msg_body.u.bss_params.dtim_period = 0;
-		msg_body.u.bss_params.sta.aid = 1;
-		msg_body.u.bss_params.sta.bssid_index = 0;
-		msg_body.u.bss_params.action = 1;
-		msg_body.u.bss_params.tx_mgmt_power = 6;
-		msg_body.u.bss_params.max_tx_power = 0x10;
+		msg_body.bss_params.short_slot_time_supported = 1;
+		msg_body.bss_params.lln_non_gf_coexist = 1;
+		msg_body.bss_params.dtim_period = 0;
+		msg_body.bss_params.sta.aid = 1;
+		msg_body.bss_params.sta.bssid_index = 0;
+		msg_body.bss_params.action = 1;
+		msg_body.bss_params.tx_mgmt_power = 6;
+		msg_body.bss_params.max_tx_power = 0x10;
 	} else {
-		msg_body.u.bss_params.max_tx_power = 0x14;
-		msg_body.u.bss_params.dtim_period = 1;
-		msg_body.u.bss_params.sta.bssid_index = 0xff;
+		msg_body.bss_params.max_tx_power = 0x14;
+		msg_body.bss_params.dtim_period = 1;
+		msg_body.bss_params.sta.bssid_index = 0xff;
 	}
-	msg_body.u.bss_params.sta.sta_index = 0xff;
+	msg_body.bss_params.sta.sta_index = 0xff;
 
-	memcpy(&msg_body.u.bss_params.sta.supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
+	memcpy(&msg_body.bss_params.sta.supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
+
+	if (wcn->fw_minor <= 3)
+		return wcn36xx_smd_config_bss_v1(wcn, &msg_body);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config bss bss_type %d",
-		    msg_body.u.bss_params.bss_type);
+		    msg_body.bss_params.bss_type);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }

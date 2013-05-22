@@ -1161,73 +1161,9 @@ struct wcn36xx_hal_config_sta_params {
 	//u8 reserved;
 } __packed;
 
-struct wcn36xx_hal_supported_rates_v1 {
-	/*
-	 * For Self STA Entry: this represents Self Mode.
-	 * For Peer Stations, this represents the mode of the peer.
-	 *
-	 * On Station:
-	 *
-	 * --this mode is updated when PE adds the Self Entry.
-	 *
-	 * -- OR when PE sends 'ADD_BSS' message and station context in BSS
-	 *    is used to indicate the mode of the AP.
-	 *
-	 * ON AP:
-	 *
-	 * -- this mode is updated when PE sends 'ADD_BSS' and Sta entry
-	 *    for that BSS is used to indicate the self mode of the AP.
-	 *
-	 * -- OR when a station is associated, PE sends 'ADD_STA' message
-         *     with this mode updated.
-	 */
-
-	enum sta_rate_mode mode;
-
-	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
-	 * unit of 500Kbps */
-	u16 llb_rates[WCN36XX_HAL_NUM_11B_RATES];
-	u16 lla_rates[WCN36XX_HAL_NUM_11A_RATES];
-	u16 legacy_rates[WCN36XX_HAL_NUM_POLARIS_RATES];
-	u16 reserved;
-
-	/* Taurus only supports 26 Titan Rates(no ESF/concat Rates will be
-	 * supported) First 26 bits are reserved for those Titan rates and
-	 * the last 4 bits(bit28-31) for Taurus, 2(bit26-27) bits are
-	 * reserved. */
-
-	/* Titan and Taurus Rates */
-	u32 enhanced_rate_bitmap;
-
-	/*
-	 * 0-76 bits used, remaining reserved
-	 * bits 0-15 and 32 should be set.
-	 */
-	u8 supported_mcs_set[WCN36XX_HAL_MAC_MAX_SUPPORTED_MCS_SET];
-
-	/*
-	 * RX Highest Supported Data Rate defines the highest data
-	 * rate that the STA is able to receive, in unites of 1Mbps.
-	 * This value is derived from "Supported MCS Set field" inside
-	 * the HT capability element.
-	 */
-	u16 rx_highest_data_rate;
-
-	/* Indicates the Maximum MCS that can be received for each number
-	 * of spacial streams */
-	u16 vht_rx_mcs_map;
-
-	/* Indicate the highest VHT data rate that the STA is able to receive */
-	u16 vht_rx_highest_data_rate;
-
-	/* Indicates the Maximum MCS that can be transmitted  for each number
-	 * of spacial streams */
-	u16 vht_tx_mcs_map;
-
-	/* Indicate the highest VHT data rate that the STA is able to
-	 * transmit */
-	u16 vht_tx_highest_data_rate;
-
+struct wcn36xx_hal_config_sta_req_msg {
+	struct wcn36xx_hal_msg_header header;
+	struct wcn36xx_hal_config_sta_params sta_params;
 } __packed;
 
 struct wcn36xx_hal_config_sta_params_v1 {
@@ -1250,10 +1186,10 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	u16 listen_interval;
 
 	/* Support for 11e/WMM */
-	u8 wmm;
+	u8 wmm_enabled;
 
 	/* 11n HT capable STA */
-	u8 ht;
+	u8 ht_capable;
 
 	/* TX Width Set: 0 - 20 MHz only, 1 - 20/40 MHz */
 	u8 tx_channel_width_set;
@@ -1261,7 +1197,7 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	/* RIFS mode 0 - NA, 1 - Allowed */
 	u8 rifs_mode;
 
-	/* L-SIG TXOP Protection mechanism
+	/* L-SIG TXOP Protection mechanism 
 	   0 - No Support, 1 - Supported
 	   SG - there is global field */
 	u8 lsig_txop_protection;
@@ -1288,9 +1224,9 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	/* The unicast encryption type in the association */
 	u32 encrypt_type;
 
-	/* HAL should update the existing STA entry, if this flag is set.
-	 * UMAC will set this flag in case of RE-ASSOC, where we want to
-	 * reuse the old STA ID. 0 = Add, 1 = Update */
+	/* HAL should update the existing STA entry, if this flag is set. UMAC
+	   will set this flag in case of RE-ASSOC, where we want to reuse the old
+	   STA ID. 0 = Add, 1 = Update */
 	u8 action;
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
@@ -1332,26 +1268,15 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	u8 p2p;
 
 	/* Reserved to align next field on a dword boundary */
-	u8 ht_Ldpc_Enabled:1;
-	u8 vht_ldpc_enabled:1;
-	u8 vht_tx_bf_enabled:1;
-	u8 reserved:5;
+	u8 reserved;
 
 	/* These rates are the intersection of peer and self capabilities. */
-	struct wcn36xx_hal_supported_rates_v1 supported_rates;
-
-	u8 vht;
-	u8 vht_tx_channel_width_set;
-
+	struct wcn36xx_hal_supported_rates supported_rates;
 } __packed;
 
-struct wcn36xx_hal_config_sta_req_msg {
+struct wcn36xx_hal_config_sta_req_msg_v1 {
 	struct wcn36xx_hal_msg_header header;
-	union {
-		struct wcn36xx_hal_config_sta_params sta_params;
-		//TODO Not used so far
-		//struct wcn36xx_hal_config_sta_params_v1 sta_params_v1;
-	} u;
+	struct wcn36xx_hal_config_sta_params_v1 sta_params;
 } __packed;
 
 struct config_sta_rsp_params {
@@ -1627,6 +1552,11 @@ struct wcn36xx_hal_config_bss_params {
 	s8 max_tx_power;
 } __packed;
 
+struct wcn36xx_hal_config_bss_req_msg {
+	struct wcn36xx_hal_msg_header header;
+	struct wcn36xx_hal_config_bss_params bss_params;
+} __packed;
+
 struct wcn36xx_hal_config_bss_params_v1 {
 	/* BSSID */
 	u8 bssid[ETH_ALEN];
@@ -1677,10 +1607,10 @@ struct wcn36xx_hal_config_bss_params_v1 {
 	u8 tx_channel_width_set;
 
 	/* Operating channel */
-	u8 current_oper_channel;
+	u8 oper_channel;
 
 	/* Extension channel for channel bonding */
-	u8 current_ext_channel;
+	u8 ext_channel;
 
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
@@ -1701,7 +1631,7 @@ struct wcn36xx_hal_config_bss_params_v1 {
 	u8 ht;
 
 	/* Enable/Disable OBSS protection */
-	u8 obss_prot;
+	u8 obss_prot_enabled;
 
 	/* RMF enabled/disabled */
 	u8 rmf;
@@ -1745,10 +1675,11 @@ struct wcn36xx_hal_config_bss_params_v1 {
 	/* SetStaKeyParams for ext bss msg */
 	struct wcn36xx_hal_set_sta_key_params ext_set_sta_key_param;
 
-	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum wcn36xx_hal_con_mode */
+	/* Persona for the BSS can be STA,AP,GO,CLIENT value same as enum
+	 * wcn36xx_hal_con_mode */
 	u8 wcn36xx_hal_persona;
 
-	u8 spectrum_mgt;
+	u8 spectrum_mgt_enable;
 
 	/* HAL fills in the tx power used for mgmt frames in txMgmtPower */
 	s8 tx_mgmt_power;
@@ -1757,23 +1688,20 @@ struct wcn36xx_hal_config_bss_params_v1 {
 	 * constraint if any */
 	s8 max_tx_power;
 
-	/*Context of the station being added in HW
-	   Add a STA entry for "itself" -
-	   On AP  - Add the AP itself in an "STA context"
-	   On STA - Add the AP to which this STA is joining in an "STA context" */
+	/* Context of the station being added in HW
+	 *  Add a STA entry for "itself" -
+	 *
+	 *  On AP  - Add the AP itself in an "STA context"
+	 *
+	 *  On STA - Add the AP to which this STA is joining in an
+	 *  "STA context"
+	 */
 	struct wcn36xx_hal_config_sta_params_v1 sta;
-
-	u8 vht;
-	u8 vht_tx_channel_width_set;
 } __packed;
 
-struct wcn36xx_hal_config_bss_req_msg {
+struct wcn36xx_hal_config_bss_req_msg_v1 {
 	struct wcn36xx_hal_msg_header header;
-	union {
-		struct wcn36xx_hal_config_bss_params bss_params;
-		//TODO Not used so far
-		//struct wcn36xx_hal_config_bss_params_v1 bss_params_v1;
-	} u;
+	struct wcn36xx_hal_config_bss_params_v1 bss_params;
 } __packed;
 
 struct wcn36xx_hal_config_bss_rsp_params {
