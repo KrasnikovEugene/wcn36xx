@@ -104,16 +104,10 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x", changed);
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-		wcn->ch = ieee80211_frequency_to_channel(hw->conf.chandef.chan->center_freq);
-		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change channel %d", wcn->ch);
-
-		if (wcn->is_scanning) {
-			if (wcn->prev_channel) {
-				wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
-			}
-			wcn36xx_smd_start_scan(wcn, wcn->ch);
-			wcn->prev_channel = wcn->ch;
-		}
+		wcn->ch = hw->conf.chandef.chan->hw_value;
+		wcn->current_channel = hw->conf.chandef.chan;
+		wcn36xx_info("wcn36xx_config channel switch=%d", wcn->ch);
+		wcn36xx_smd_switch_channel_req(wcn, wcn->ch);
 	}
 
 	return 0;
@@ -166,19 +160,14 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_init_scan(wcn);
-	wcn->is_scanning = 1;
 	wcn36xx_smd_start_scan(wcn, wcn->ch);
-	wcn->prev_channel = wcn->ch;
+	wcn->is_scanning = 1;
 }
 
 static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
-
-	if (wcn->prev_channel) {
-		wcn36xx_smd_end_scan(wcn, wcn->prev_channel);
-		wcn->prev_channel = 0;
-	}
+	wcn36xx_smd_end_scan(wcn, wcn->ch);
 	wcn36xx_smd_finish_scan(wcn);
 	wcn->is_scanning = 0;
 }
@@ -352,21 +341,23 @@ static struct ieee80211_hw *wcn36xx_alloc_hw(void)
 	.max_power = 25, \
 }
 
+/* The wcn firmware expects channel values to matching
+ * their mnemonic values. So use these for .hw_value. */
 static struct ieee80211_channel wcn_2ghz_channels[] = {
-	CHAN2G(2412, 0), /* Channel 1 */
-	CHAN2G(2417, 1), /* Channel 2 */
-	CHAN2G(2422, 2), /* Channel 3 */
-	CHAN2G(2427, 3), /* Channel 4 */
-	CHAN2G(2432, 4), /* Channel 5 */
-	CHAN2G(2437, 5), /* Channel 6 */
-	CHAN2G(2442, 6), /* Channel 7 */
-	CHAN2G(2447, 7), /* Channel 8 */
-	CHAN2G(2452, 8), /* Channel 9 */
-	CHAN2G(2457, 9), /* Channel 10 */
-	CHAN2G(2462, 10), /* Channel 11 */
-	CHAN2G(2467, 11), /* Channel 12 */
-	CHAN2G(2472, 12), /* Channel 13 */
-	CHAN2G(2484, 13)  /* Channel 14 */
+	CHAN2G(2412, 1), /* Channel 1 */
+	CHAN2G(2417, 2), /* Channel 2 */
+	CHAN2G(2422, 3), /* Channel 3 */
+	CHAN2G(2427, 4), /* Channel 4 */
+	CHAN2G(2432, 5), /* Channel 5 */
+	CHAN2G(2437, 6), /* Channel 6 */
+	CHAN2G(2442, 7), /* Channel 7 */
+	CHAN2G(2447, 8), /* Channel 8 */
+	CHAN2G(2452, 9), /* Channel 9 */
+	CHAN2G(2457, 10), /* Channel 10 */
+	CHAN2G(2462, 11), /* Channel 11 */
+	CHAN2G(2467, 12), /* Channel 12 */
+	CHAN2G(2472, 13), /* Channel 13 */
+	CHAN2G(2484, 14)  /* Channel 14 */
 
 };
 
