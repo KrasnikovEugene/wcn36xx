@@ -255,10 +255,10 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	if(vif) {
 		switch (vif->type) {
 		case NL80211_IFTYPE_STATION:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+			wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 			break;
 		case NL80211_IFTYPE_AP:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+			wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 			break;
 		default:
 			wcn36xx_warn("Unsupported interface type requested: %d",
