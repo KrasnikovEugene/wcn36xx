@@ -44,35 +44,77 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	// SMD initialization
 	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
-		wcn36xx_error("failed to open smd channel: %d", ret);
-		return ret;
+		wcn36xx_error("Failed to open smd channel: %d", ret);
+		goto out_err;
 	}
 
-	// Not to receive INT untill the whole buf from SMD is read
+	// Not to receive INT until the whole buf from SMD is read
 	smd_disable_read_intr(wcn->smd_ch);
 
 	// Allocate memory pools for Mgmt BD headers and Data BD headers
-	wcn36xx_dxe_allocate_mem_pools(wcn);
+	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE mempool: %d", ret);
+		goto out_smd_close;
+	}
+
 	wcn36xx_dxe_alloc_ctl_blks(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE ctl blocks: %d", ret);
+		goto out_free_dxe_pool;
+	}
 
 	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
 
 	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		//TODO error handling
-		wcn36xx_error("request FM %d", ret);
+		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
+			      ret);
+		goto out_free_dxe_ctl;
 	}
-	// maximu SMD message size is 4k
+
+	// Maximum SMD message size is 4k
 	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
+	if (!wcn->smd_buf) {
+		wcn36xx_error("Failed to allocate smd buf");
+		ret = -ENOMEM;
+		goto out_free_nv;
+	}
 
 	//TODO pass configuration to FW
-	wcn36xx_smd_load_nv(wcn);
-	wcn36xx_smd_start(wcn);
+	ret = wcn36xx_smd_load_nv(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to push NV to chip");
+		goto out_free_smd_buf;
+	}
 
+	ret = wcn36xx_smd_start(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to start chip");
+		goto out_free_nv;
+	}
 	// DMA chanel initialization
-	wcn36xx_dxe_init(wcn);
-
+	ret = wcn36xx_dxe_init(wcn);
+	if (ret) {
+		wcn36xx_error("DXE init failed");
+		goto out_smd_stop;
+	}
 	return 0;
+
+out_smd_stop:
+	wcn36xx_smd_stop(wcn);
+out_free_smd_buf:
+	kfree(wcn->smd_buf);
+out_free_nv:
+	release_firmware(wcn->nv);
+out_free_dxe_pool:
+	wcn36xx_dxe_free_mem_pools(wcn);
+out_free_dxe_ctl:
+	wcn36xx_dxe_free_ctl_blks(wcn);
+out_smd_close:
+	wcn36xx_smd_close(wcn);
+out_err:
+	return ret;
 }
 static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
@@ -83,6 +125,11 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_smd_stop(wcn);
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
+
+	wcn36xx_dxe_free_mem_pools(wcn);
+	wcn36xx_dxe_free_ctl_blks(wcn);
+
+	release_firmware(wcn->nv);
 
 	kfree(wcn->smd_buf);
 }
@@ -201,37 +248,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 }
-static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
+
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
-
-static bool wcn36xx_tx_frames_pending(struct ieee80211_hw *hw)
-{
-	return true;
-}
-static int wcn36xx_set_bitrate_mask(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif,
-				   const struct cfg80211_bitrate_mask *mask)
-{
-	return 0;
-}
-
-static void wcn36xx_channel_switch(struct ieee80211_hw *hw,
-				   struct ieee80211_channel_switch *ch_switch)
-{
-}
-
-static int wcn36xx_suspend(struct ieee80211_hw *hw,
-			    struct cfg80211_wowlan *wow)
-{
-	return 0;
-}
-static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
 	return 0;
 }
@@ -301,23 +319,15 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface 	= wcn36xx_remove_interface,
 	.change_interface 	= wcn36xx_change_interface,
-#ifdef CONFIG_PM
-	.suspend 		= wcn36xx_suspend,
-	.resume			= wcn36xx_resume,
-#endif
 	.config 		= wcn36xx_config,
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
 	.sw_scan_start          = wcn36xx_sw_scan_start,
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
-	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
-	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
+	.set_rts_threshold	= wcn36xx_set_rts_threshold,
 	.sta_add 		= wcn36xx_sta_add,
 	.sta_remove	 	= wcn36xx_sta_remove,
-	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
-	.set_bitrate_mask 	= wcn36xx_set_bitrate_mask,
-	.channel_switch 	= wcn36xx_channel_switch
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
