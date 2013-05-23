@@ -226,6 +226,18 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 	return 0;
 }
 
+static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
+				     struct wcn36xx_dxe_ch *wcn_ch)
+{
+	struct wcn36xx_dxe_ctl *cur = wcn_ch->head_blk_ctl;
+	int i;
+
+	for (i = 0; i < wcn_ch->desc_num; i++) {
+		kfree_skb(cur->skb);
+		cur = cur->next;
+	}
+}
+
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
 	return IRQ_HANDLED;
@@ -602,4 +614,6 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 {
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
+	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_l_ch);
+	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_h_ch);
 }
