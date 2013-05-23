@@ -463,7 +463,11 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 		sizeof(wcn->supported_rates));
 	msg_body.sta_params.sta_index = 1;
 
-	if (wcn->fw_minor <= 3)
+	if (!(wcn->fw_major == 1 &&
+		wcn->fw_minor == 2 &&
+		wcn->fw_version == 2 &&
+		wcn->fw_revision == 24))
+
 		return wcn36xx_smd_config_sta_v1(wcn, &msg_body);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
@@ -729,8 +733,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 		sta->bssid_index = 0xff;
 		bss->action = 0;
 	}
-
-	if (wcn->fw_minor <= 3)
+	if (!(wcn->fw_major == 1 &&
+		wcn->fw_minor == 2 &&
+		wcn->fw_version == 2 &&
+		wcn->fw_revision == 24))
 		return wcn36xx_smd_config_bss_v1(wcn, &msg);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
