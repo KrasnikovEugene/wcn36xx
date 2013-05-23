@@ -16,7 +16,7 @@
 
 #include "smd.h"
 
-int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
+static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
 
@@ -57,7 +57,7 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
 	} while (0)						\
 
-int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_status_rsp * rsp;
 	if (len < sizeof(struct wcn36xx_hal_msg_header) +
