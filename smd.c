@@ -638,138 +638,81 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	}
 
 	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
-
 	bss->short_slot_time_supported = 1;
-
-	/* lla_coexist */
-
-	/* llb_coexist */
-
+	bss->lla_coexist = 0;
+	bss->llb_coexist = 0;
 	bss->llg_coexist = 1;
-
-	/* ht20_coexist */
-
-	/* lln_non_gw_coexist */
-
-	/* lsig_tx_op_protection_full_support */
-
-	/* rifs_mode */
-
+	bss->ht20_coexist = 0;
+	bss->lln_non_gf_coexist = 0;
+	bss->lsig_tx_op_protection_full_support = 0;
+	bss->rifs_mode = 0;
 	bss->beacon_interval = 0x64;
-
 	bss->dtim_period = 2;
-
-	/* tx_channel_width_set */
-
+	bss->tx_channel_width_set = 0;
 	bss->oper_channel = wcn->ch;
-
-	/* ext_channel */
-
-	/* reserved */
+	bss->ext_channel = 0;
+	bss->reserved = 0;
 
 	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
-
-	/* sta.aid */
-
+	sta->aid = 0;
 	sta->type = 1;
-
 	sta->short_preamble_supported = 1;
-
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
-
 	sta->listen_interval = 8;
-
 	sta->wmm_enabled = 1;
-
 	sta->ht_capable = 1;
-
-	/* sta.tx_channel_width_set */
-
-	/* sta.rifs_mode */
-
-	/* sta.lsig_txop_protection */
-
+	sta->tx_channel_width_set = 0;
+	sta->rifs_mode = 0;
+	sta->lsig_txop_protection = 0;
 	sta->max_ampdu_size = 3;
-
 	sta->max_ampdu_density = 5;
-
 	sta->sgi_40mhz = 1;
-
 	sta->sgi_20Mhz = 1;
 
 	memcpy(&sta->supported_rates, &wcn->supported_rates,
 	       sizeof(wcn->supported_rates));
 
-	/* sta.rmf */
-
-	/* sta.encrypt_type */
-
-	/* sta.action */
-
-	/* sta.uapsd */
-
-	/* sta.max_sp_len */
-
-	/* sta.green_field_capable */
-
-	/* sta.mimo_ps */
-
-	/* sta.delayed_ba_support */
-
-	/* sta.max_ampdu_duration */
-
+	sta->rmf = 0;
+	sta->encrypt_type = 0;
+	sta->action = 0;
+	sta->uapsd = 0;
+	sta->max_sp_len = 0;
+	sta->green_field_capable = 0;
+	sta->mimo_ps = 0;
+	sta->delayed_ba_support = 0;
+	sta->max_ampdu_duration = 0;
 	sta->dsss_cck_mode_40mhz = 1;
-
 	sta->sta_index = 0xff;
-
-	/* sta.bssid_index */
-
-	/* sta.p2p */
+	sta->bssid_index = 0;
+	sta->p2p = 0;
 
 	/* wcn->ssid is only valid in AP and IBSS mode */
 	bss->ssid.length = wcn->ssid.length;
 	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
 
-	/* action */
+	bss->action = 0;
 
-	/* rateset */
+	/* FIXME: set rateset */
 
-	/* ht */
-
+	bss->ht = 0;
 	bss->obss_prot_enabled = 1;
+	bss->rmf = 0;
+	bss->ht_oper_mode = 0;
+	bss->dual_cts_protection = 0;
+	bss->max_probe_resp_retry_limit = 0;
+	bss->hidden_ssid = 0;
+	bss->proxy_probe_resp = 0;
+	bss->edca_params_valid = 0;
 
-	/* rmf */
+	/* FIXME: set acbe, acbk, acvi and acvo */
 
-	/* ht_oper_mode */
+	bss->ext_set_sta_key_param_valid = 0;
 
-	/* dual_cts_protection */
-
-	/* max_probe_resp_retry_limit */
-
-	/* hidden_ssid */
-
-	/* proxy_probe_resp */
-
-	/* edca_params_valid */
-
-	/* acbe */
-
-	/* acbk */
-
-	/* acvi */
-
-	/* acvo */
-
-	/* ext_set_sta_key_param_valid */
-
-	/* ext_set_sta_key_param */
+	/* FIXME: set ext_set_sta_key_param */
 
 	bss->wcn36xx_hal_persona = 1;
-
-	/* spectrum_mgt_enable */
-
-	/* tx_mgmt_power */
-
+	bss->spectrum_mgt_enable = 0;
+	bss->tx_mgmt_power = 0;
 	bss->max_tx_power = 0x10;
 
 
