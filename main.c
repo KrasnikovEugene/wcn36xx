@@ -44,35 +44,77 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	// SMD initialization
 	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
-		wcn36xx_error("failed to open smd channel: %d", ret);
-		return ret;
+		wcn36xx_error("Failed to open smd channel: %d", ret);
+		goto out_err;
 	}
 
-	// Not to receive INT untill the whole buf from SMD is read
+	// Not to receive INT until the whole buf from SMD is read
 	smd_disable_read_intr(wcn->smd_ch);
 
 	// Allocate memory pools for Mgmt BD headers and Data BD headers
-	wcn36xx_dxe_allocate_mem_pools(wcn);
+	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE mempool: %d", ret);
+		goto out_smd_close;
+	}
+
 	wcn36xx_dxe_alloc_ctl_blks(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE ctl blocks: %d", ret);
+		goto out_free_dxe_pool;
+	}
 
 	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
 
 	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		//TODO error handling
-		wcn36xx_error("request FM %d", ret);
+		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
+			      ret);
+		goto out_free_dxe_ctl;
 	}
-	// maximu SMD message size is 4k
+
+	// Maximum SMD message size is 4k
 	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
+	if (!wcn->smd_buf) {
+		wcn36xx_error("Failed to allocate smd buf");
+		ret = -ENOMEM;
+		goto out_free_nv;
+	}
 
 	//TODO pass configuration to FW
-	wcn36xx_smd_load_nv(wcn);
-	wcn36xx_smd_start(wcn);
+	ret = wcn36xx_smd_load_nv(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to push NV to chip");
+		goto out_free_smd_buf;
+	}
 
+	ret = wcn36xx_smd_start(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to start chip");
+		goto out_free_nv;
+	}
 	// DMA chanel initialization
-	wcn36xx_dxe_init(wcn);
-
+	ret = wcn36xx_dxe_init(wcn);
+	if (ret) {
+		wcn36xx_error("DXE init failed");
+		goto out_smd_stop;
+	}
 	return 0;
+
+out_smd_stop:
+	wcn36xx_smd_stop(wcn);
+out_free_smd_buf:
+	kfree(wcn->smd_buf);
+out_free_nv:
+	release_firmware(wcn->nv);
+out_free_dxe_pool:
+	wcn36xx_dxe_free_mem_pools(wcn);
+out_free_dxe_ctl:
+	wcn36xx_dxe_free_ctl_blks(wcn);
+out_smd_close:
+	wcn36xx_smd_close(wcn);
+out_err:
+	return ret;
 }
 static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
