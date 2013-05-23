@@ -133,6 +133,9 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start type %d",
+		    msg_body.params.type);
+
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
