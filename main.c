@@ -239,7 +239,9 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
 		}
-	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
+	}
+
+	if (changed & BSS_CHANGED_BEACON_ENABLED){
 		if(!wcn->beacon_enable) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
