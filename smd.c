@@ -715,25 +715,13 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->tx_mgmt_power = 0;
 	bss->max_tx_power = 0x10;
 
-
-	/* OLD: */
-
-
-	if (update == 1) {
-		bss->short_slot_time_supported = 1;
-		bss->lln_non_gf_coexist = 1;
-		bss->dtim_period = 0;
-		sta->aid = 1;
+	if (update) {
 		sta->bssid_index = 0;
 		bss->action = 1;
-		bss->tx_mgmt_power = 6;
-		bss->max_tx_power = 0x10;
 	} else {
-		bss->max_tx_power = 0x14;
-		bss->dtim_period = 1;
 		sta->bssid_index = 0xff;
+		bss->action = 0;
 	}
-
 
 	if (wcn->fw_minor <= 3)
 		return wcn36xx_smd_config_bss_v1(wcn, &msg);
