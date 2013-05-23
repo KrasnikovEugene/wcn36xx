@@ -64,6 +64,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 upd
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off);
+int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch);
 
 // WCN36XX configuration parameters
 struct wcn36xx_fw_cfg {
