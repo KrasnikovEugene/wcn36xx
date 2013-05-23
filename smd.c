@@ -635,6 +635,13 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 
 		/* AP */
 		bss->oper_mode = 0;
+	} else if (type == NL80211_IFTYPE_ADHOC) {
+		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
+
+		/* AP */
+		bss->oper_mode = 0;
+	} else {
+		wcn36xx_warn("Unknown type for bss config: %d", type);
 	}
 
 	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
