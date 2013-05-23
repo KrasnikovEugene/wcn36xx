@@ -16,6 +16,9 @@
 
 #include "txrx.h"
 #include <linux/ieee80211.h>
+
+#define RSSI0(x) (100 - ((x->phy_stat0 >> 24) & 0xff))
+
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 {
 	struct sk_buff *skb2 ;
@@ -33,7 +36,7 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.mactime = 10;
 	status.freq = wcn->current_channel->center_freq;
 	status.band = wcn->current_channel->band;
-	status.signal = 1;
+	status.signal = -RSSI0(bd);
 	status.antenna = 1;
 	status.rate_idx = 1;
 	status.flag = 0;
