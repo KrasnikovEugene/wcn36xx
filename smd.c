@@ -16,6 +16,8 @@
 
 #include "smd.h"
 
+#include <linux/etherdevice.h>
+
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
@@ -615,61 +617,164 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss = &msg.bss_params;
 	sta = &bss->sta;
 
+	WARN_ON(is_zero_ether_addr(bssid));
+
+	memcpy(&bss->bssid, bssid, ETH_ALEN);
+	memcpy(&bss->bssid, &wcn->addresses[0], ETH_ALEN);
+
+	memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
+
 	if (type == NL80211_IFTYPE_STATION) {
-		memcpy(&bss->bssid, bssid, ETH_ALEN);
-		memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
 		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
 
-		/*
-		 * 0 - AP, 1 - STA
-		 *
-		 * TODO define enum for oper_mode
-		 */
+		/* STA */
 		bss->oper_mode = 1;
 
-		bss->llg_coexist = 1;
-		bss->beacon_interval = 0x64;
-
-		bss->oper_channel = wcn->ch;
-		memcpy(&sta->bssid, bssid, ETH_ALEN);
-		sta->type = 1;
-		sta->listen_interval = 0x64;
-		sta->wmm_enabled = 1;
-
-		sta->max_ampdu_size = 3;
-		sta->max_ampdu_density = 5;
-		sta->dsss_cck_mode_40mhz = 1;
 	} else if (type == NL80211_IFTYPE_AP) {
-		memcpy(&bss->bssid, &wcn->addresses[0], ETH_ALEN);
-		memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
-
-		//TODO do all this configurabel
 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
-		bss->oper_mode = 0; //0 - AP,  1-STA
 
-		bss->short_slot_time_supported = 1;
-		bss->beacon_interval = 0x64;
-		bss->dtim_period = 2;
-		bss->oper_channel = 1;
-
-		bss->ssid.length = wcn->ssid.length;
-		memcpy(bss->ssid.ssid,
-		       wcn->ssid.ssid, wcn->ssid.length);
-
-		bss->obss_prot_enabled = 1;
-		bss->wcn36xx_hal_persona = 1;
-		bss->max_tx_power = 0x10;
-
-		memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
-		sta->short_preamble_supported = 1;
-		memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
-		sta->listen_interval = 8;
+		/* AP */
+		bss->oper_mode = 0;
 	}
 
 	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
+
+	bss->short_slot_time_supported = 1;
+
+	/* lla_coexist */
+
+	/* llb_coexist */
+
+	bss->llg_coexist = 1;
+
+	/* ht20_coexist */
+
+	/* lln_non_gw_coexist */
+
+	/* lsig_tx_op_protection_full_support */
+
+	/* rifs_mode */
+
+	bss->beacon_interval = 0x64;
+
+	bss->dtim_period = 2;
+
+	/* tx_channel_width_set */
+
+	bss->oper_channel = wcn->ch;
+
+	/* ext_channel */
+
+	/* reserved */
+
+	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
+
+	/* sta.aid */
+
+	sta->type = 1;
+
+	sta->short_preamble_supported = 1;
+
+	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
+
+	sta->listen_interval = 8;
+
+	sta->wmm_enabled = 1;
+
 	sta->ht_capable = 1;
+
+	/* sta.tx_channel_width_set */
+
+	/* sta.rifs_mode */
+
+	/* sta.lsig_txop_protection */
+
+	sta->max_ampdu_size = 3;
+
+	sta->max_ampdu_density = 5;
+
 	sta->sgi_40mhz = 1;
+
 	sta->sgi_20Mhz = 1;
+
+	memcpy(&sta->supported_rates, &wcn->supported_rates,
+	       sizeof(wcn->supported_rates));
+
+	/* sta.rmf */
+
+	/* sta.encrypt_type */
+
+	/* sta.action */
+
+	/* sta.uapsd */
+
+	/* sta.max_sp_len */
+
+	/* sta.green_field_capable */
+
+	/* sta.mimo_ps */
+
+	/* sta.delayed_ba_support */
+
+	/* sta.max_ampdu_duration */
+
+	sta->dsss_cck_mode_40mhz = 1;
+
+	sta->sta_index = 0xff;
+
+	/* sta.bssid_index */
+
+	/* sta.p2p */
+
+	/* wcn->ssid is only valid in AP and IBSS mode */
+	bss->ssid.length = wcn->ssid.length;
+	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
+
+	/* action */
+
+	/* rateset */
+
+	/* ht */
+
+	bss->obss_prot_enabled = 1;
+
+	/* rmf */
+
+	/* ht_oper_mode */
+
+	/* dual_cts_protection */
+
+	/* max_probe_resp_retry_limit */
+
+	/* hidden_ssid */
+
+	/* proxy_probe_resp */
+
+	/* edca_params_valid */
+
+	/* acbe */
+
+	/* acbk */
+
+	/* acvi */
+
+	/* acvo */
+
+	/* ext_set_sta_key_param_valid */
+
+	/* ext_set_sta_key_param */
+
+	bss->wcn36xx_hal_persona = 1;
+
+	/* spectrum_mgt_enable */
+
+	/* tx_mgmt_power */
+
+	bss->max_tx_power = 0x10;
+
+
+	/* OLD: */
+
 
 	if (update == 1) {
 		bss->short_slot_time_supported = 1;
@@ -686,9 +791,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 		sta->bssid_index = 0xff;
 	}
 
-	sta->sta_index = 0xff;
-
-	memcpy(&sta->supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
 
 	if (wcn->fw_minor <= 3)
 		return wcn36xx_smd_config_bss_v1(wcn, &msg);

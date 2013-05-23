@@ -263,7 +263,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_AP,
-					       NULL, false);
+					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 		} else {
 			/* FIXME: disable beaconing */
