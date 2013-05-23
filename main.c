@@ -160,12 +160,8 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	return 0;
 }
 
-#define WCN36XX_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
-				  FIF_ALLMULTI | \
-				  FIF_FCSFAIL | \
-				  FIF_BCN_PRBRESP_PROMISC | \
-				  FIF_CONTROL | \
-				  FIF_OTHER_BSS)
+#define WCN36XX_SUPPORTED_FILTERS (0)
+
 static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 				       unsigned int changed,
 				       unsigned int *total, u64 multicast)
@@ -237,18 +233,45 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if(!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
-			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
+			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+					       bss_conf->bssid, false);
 		}
-	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
-		if(!wcn->beacon_enable) {
+	}
+
+	if (changed & BSS_CHANGED_SSID) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed ssid");
+		wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "ssid ",
+				 bss_conf->ssid, bss_conf->ssid_len);
+
+		wcn->ssid.length = bss_conf->ssid_len;
+		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+	}
+
+	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp");
+		skb = ieee80211_proberesp_get(hw, vif);
+		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
+	}
+
+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed beacon enabled %d",
+			    bss_conf->enable_beacon);
+
+		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
-			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
+			wcn36xx_smd_config_bss(wcn, wcn->iftype,
+					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+		} else {
+			/* FIXME: disable beaconing */
 		}
 	}
 }
 
+/* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
 	return 0;
@@ -270,20 +293,23 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
 		    vif, vif->type);
 
-	if(vif) {
-		switch (vif->type) {
-		case NL80211_IFTYPE_STATION:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
-			break;
-		case NL80211_IFTYPE_AP:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
-			break;
-		default:
-			wcn36xx_warn("Unsupported interface type requested: %d",
-				     vif->type);
-			return -EOPNOTSUPP;
-		}
+	switch (vif->type) {
+	case NL80211_IFTYPE_STATION:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	case NL80211_IFTYPE_AP:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	case NL80211_IFTYPE_ADHOC:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	default:
+		wcn36xx_warn("Unsupported interface type requested: %d",
+			     vif->type);
+		return -EOPNOTSUPP;
 	}
+
+	wcn->iftype = vif->type;
 
 	return 0;
 }
@@ -297,7 +323,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_POSTASSOC_STATE);
 	wcn36xx_smd_config_sta(wcn, sta->addr, sta->aid, vif->addr);
-	wcn36xx_smd_config_bss(wcn, true, sta->addr, 1);
+	wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION, sta->addr, true);
 	return 0;
 }
 static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
@@ -481,8 +507,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
-	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)|
-		BIT(NL80211_IFTYPE_AP);
+	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+		BIT(NL80211_IFTYPE_AP) |
+		BIT(NL80211_IFTYPE_ADHOC);
 
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
