@@ -78,9 +78,9 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		cur_dxe_ctl->frame = NULL;
 		cur_dxe_ctl->ctl_blk_order = i;
 
+		ch->tail_blk_ctl = cur_dxe_ctl;
 		if (i == 0) {
 			ch->head_blk_ctl = cur_dxe_ctl;
-			ch->tail_blk_ctl = cur_dxe_ctl;
 		} else if (ch->desc_num - 1 == i){
 			prev_dxe_ctl->next = cur_dxe_ctl;
 			cur_dxe_ctl->next = ch->head_blk_ctl;
@@ -90,6 +90,18 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		prev_dxe_ctl = cur_dxe_ctl;
 	}
 	return 0;
+}
+
+static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *cur_dxe_ctl = ch->head_blk_ctl, *next;
+	while (1) {
+		next = cur_dxe_ctl->next;
+		kfree(cur_dxe_ctl);
+		if (ch->tail_blk_ctl == cur_dxe_ctl)
+			break;
+		cur_dxe_ctl = next;
+	}
 }
 
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
@@ -122,6 +134,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	wcn->dxe_tx_h_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_H;
 
 	//DEX control block allocation
+	//TODO: Error handling
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
@@ -134,6 +147,14 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 		WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
 
 	return ret;
+}
+
+void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn)
+{
+	wcn36xx_dxe_free_ctl_block(&wcn->dxe_tx_l_ch);
+	wcn36xx_dxe_free_ctl_block(&wcn->dxe_tx_h_ch);
+	wcn36xx_dxe_free_ctl_block(&wcn->dxe_rx_l_ch);
+	wcn36xx_dxe_free_ctl_block(&wcn->dxe_rx_h_ch);
 }
 
 static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
@@ -391,6 +412,24 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
+
+void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
+{
+	if (wcn->mgmt_mem_pool.virt_addr)
+		dma_free_coherent(NULL, wcn->mgmt_mem_pool.chunk_size *
+				  WCN36XX_DXE_CH_DESC_NUMB_TX_H,
+				  wcn->mgmt_mem_pool.virt_addr,
+				  (dma_addr_t) wcn->data_mem_pool.phy_addr);
+	if (wcn->data_mem_pool.virt_addr) {
+		dma_free_coherent(NULL, wcn->data_mem_pool.chunk_size *
+				  WCN36XX_DXE_CH_DESC_NUMB_TX_L,
+				  wcn->data_mem_pool.virt_addr,
+				  (dma_addr_t) wcn->data_mem_pool.phy_addr);
+	}
+	kfree(wcn->data_mem_pool.bitmap);
+	kfree(wcn->mgmt_mem_pool.bitmap);
+}
+
 int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool is_high)
 {
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;

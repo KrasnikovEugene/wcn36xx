@@ -229,8 +229,10 @@ struct wcn36xx_dxe_mem_pool {
 };
 struct wcn36xx;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
+void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_rx_ready_work(struct work_struct *work);
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn);
+void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn);
 int wcn36xx_dxe_init(struct wcn36xx *wcn);
 void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);

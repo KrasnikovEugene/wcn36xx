@@ -84,6 +84,11 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
 
+	wcn36xx_dxe_free_mem_pools(wcn);
+	wcn36xx_dxe_free_ctl_blks(wcn);
+
+	release_firmware(wcn->nv);
+
 	kfree(wcn->smd_buf);
 }
 
