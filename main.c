@@ -251,6 +251,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	}
 }
 
+/* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
 	return 0;
