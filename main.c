@@ -461,6 +461,18 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
+	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
+};
+
+static const struct ieee80211_iface_combination if_comb = {
+	.limits = if_limits,
+	.n_limits = ARRAY_SIZE(if_limits),
+	.max_interfaces = 2,
+	.num_different_channels = 1,
+};
+
 static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
@@ -473,6 +485,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)|
 		BIT(NL80211_IFTYPE_AP);
+	wcn->hw->wiphy->iface_combinations = &if_comb;
+	wcn->hw->wiphy->n_iface_combinations = 1;
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
