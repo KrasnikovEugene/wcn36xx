@@ -295,13 +295,13 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 
 	switch (vif->type) {
 	case NL80211_IFTYPE_STATION:
-		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 		break;
 	case NL80211_IFTYPE_AP:
-		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 		break;
 	case NL80211_IFTYPE_ADHOC:
-		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 		break;
 	default:
 		wcn36xx_warn("Unsupported interface type requested: %d",
@@ -497,34 +497,49 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
-static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
+	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
+};
+
+static const struct ieee80211_iface_combination if_comb = {
+	.limits = if_limits,
+	.n_limits = ARRAY_SIZE(if_limits),
+	.max_interfaces = 2,
+	.num_different_channels = 1,
+};
+
+static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
 
-	wcn_priv->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_SUPPORTS_PS |
 		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
+	wcn->hw->wiphy->iface_combinations = &if_comb;
+	wcn->hw->wiphy->n_iface_combinations = 1;
+
 	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_ADHOC);
 
-	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
-	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
+	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
+	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
 
-	wcn_priv->hw->wiphy->max_scan_ssids = 1;
+	wcn->hw->wiphy->max_scan_ssids = 1;
 
 	// TODO make a conf file where to read this information from
-	wcn_priv->hw->max_listen_interval = 200;
+	wcn->hw->max_listen_interval = 200;
 
-	wcn_priv->hw->queues = 4;
+	wcn->hw->queues = 4;
 
-	SET_IEEE80211_DEV(wcn_priv->hw, wcn_priv->dev);
+	SET_IEEE80211_DEV(wcn->hw, wcn->dev);
 
-	wcn_priv->hw->sta_data_size = sizeof(struct wcn_sta);
-	wcn_priv->hw->vif_data_size = sizeof(struct wcn_vif);
+	wcn->hw->sta_data_size = sizeof(struct wcn_sta);
+	wcn->hw->vif_data_size = sizeof(struct wcn_vif);
 
 
 	return ret;
@@ -539,15 +554,28 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	char *files[1] = {MAC_ADDR_0};
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(files); i++) {
-		status = request_firmware(&addr_file, files[i], wcn->dev);
+	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
+		if (i > ARRAY_SIZE(files) - 1) {
+			status = -1;
+		} else {
+			status = request_firmware(&addr_file, files[i], wcn->dev);
+		}
 
 		if (status) {
 			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
 				     files[i]);
-			/* Assign a random mac address with Qualcomm oui */
-			memcpy(wcn->addresses[i].addr, qcom_oui, 3);
-			get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			if (i == 0) {
+				/* Assign a random mac address with Qualcomm oui */
+				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
+				get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			} else {
+				/* Assign locally administered mac addresses to
+				 * all but the first mac */
+				memcpy(wcn->addresses[i].addr,
+				       wcn->addresses[0].addr, ETH_ALEN);
+				wcn->addresses[i].addr[0] |= BIT(1);
+				get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			}
 
 		} else {
 			memset(tmp, 0, sizeof(tmp));
