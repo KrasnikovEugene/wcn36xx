@@ -539,15 +539,28 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	char *files[1] = {MAC_ADDR_0};
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(files); i++) {
-		status = request_firmware(&addr_file, files[i], wcn->dev);
+	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
+		if (i > ARRAY_SIZE(files) - 1) {
+			status = -1;
+		} else {
+			status = request_firmware(&addr_file, files[i], wcn->dev);
+		}
 
 		if (status) {
 			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
 				     files[i]);
-			/* Assign a random mac address with Qualcomm oui */
-			memcpy(wcn->addresses[i].addr, qcom_oui, 3);
-			get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			if (i == 0) {
+				/* Assign a random mac address with Qualcomm oui */
+				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
+				get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			} else {
+				/* Assign locally administered mac addresses to
+				 * all but the first mac */
+				memcpy(wcn->addresses[i].addr,
+				       wcn->addresses[0].addr, ETH_ALEN);
+				wcn->addresses[i].addr[0] |= BIT(1);
+				get_random_bytes(wcn->addresses[i].addr + 3, 3);
+			}
 
 		} else {
 			memset(tmp, 0, sizeof(tmp));
