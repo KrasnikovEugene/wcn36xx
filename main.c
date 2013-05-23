@@ -44,35 +44,77 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	// SMD initialization
 	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
-		wcn36xx_error("failed to open smd channel: %d", ret);
-		return ret;
+		wcn36xx_error("Failed to open smd channel: %d", ret);
+		goto out_err;
 	}
 
-	// Not to receive INT untill the whole buf from SMD is read
+	// Not to receive INT until the whole buf from SMD is read
 	smd_disable_read_intr(wcn->smd_ch);
 
 	// Allocate memory pools for Mgmt BD headers and Data BD headers
-	wcn36xx_dxe_allocate_mem_pools(wcn);
+	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE mempool: %d", ret);
+		goto out_smd_close;
+	}
+
 	wcn36xx_dxe_alloc_ctl_blks(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to alloc DXE ctl blocks: %d", ret);
+		goto out_free_dxe_pool;
+	}
 
 	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
 
 	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		//TODO error handling
-		wcn36xx_error("request FM %d", ret);
+		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
+			      ret);
+		goto out_free_dxe_ctl;
 	}
-	// maximu SMD message size is 4k
+
+	// Maximum SMD message size is 4k
 	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
+	if (!wcn->smd_buf) {
+		wcn36xx_error("Failed to allocate smd buf");
+		ret = -ENOMEM;
+		goto out_free_nv;
+	}
 
 	//TODO pass configuration to FW
-	wcn36xx_smd_load_nv(wcn);
-	wcn36xx_smd_start(wcn);
+	ret = wcn36xx_smd_load_nv(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to push NV to chip");
+		goto out_free_smd_buf;
+	}
 
+	ret = wcn36xx_smd_start(wcn);
+	if (ret) {
+		wcn36xx_error("Failed to start chip");
+		goto out_free_nv;
+	}
 	// DMA chanel initialization
-	wcn36xx_dxe_init(wcn);
-
+	ret = wcn36xx_dxe_init(wcn);
+	if (ret) {
+		wcn36xx_error("DXE init failed");
+		goto out_smd_stop;
+	}
 	return 0;
+
+out_smd_stop:
+	wcn36xx_smd_stop(wcn);
+out_free_smd_buf:
+	kfree(wcn->smd_buf);
+out_free_nv:
+	release_firmware(wcn->nv);
+out_free_dxe_pool:
+	wcn36xx_dxe_free_mem_pools(wcn);
+out_free_dxe_ctl:
+	wcn36xx_dxe_free_ctl_blks(wcn);
+out_smd_close:
+	wcn36xx_smd_close(wcn);
+out_err:
+	return ret;
 }
 static void wcn36xx_stop(struct ieee80211_hw *hw)
 {
@@ -83,6 +125,11 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_smd_stop(wcn);
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
+
+	wcn36xx_dxe_free_mem_pools(wcn);
+	wcn36xx_dxe_free_ctl_blks(wcn);
+
+	release_firmware(wcn->nv);
 
 	kfree(wcn->smd_buf);
 }
@@ -113,12 +160,8 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	return 0;
 }
 
-#define WCN36XX_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
-				  FIF_ALLMULTI | \
-				  FIF_FCSFAIL | \
-				  FIF_BCN_PRBRESP_PROMISC | \
-				  FIF_CONTROL | \
-				  FIF_OTHER_BSS)
+#define WCN36XX_SUPPORTED_FILTERS (0)
+
 static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 				       unsigned int changed,
 				       unsigned int *total, u64 multicast)
@@ -190,48 +233,46 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if(!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
-			wcn36xx_smd_config_bss(wcn, true, (u8*)bss_conf->bssid, 0);
+			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+					       bss_conf->bssid, false);
 		}
-	} else if (changed & BSS_CHANGED_BEACON_ENABLED){
-		if(!wcn->beacon_enable) {
+	}
+
+	if (changed & BSS_CHANGED_SSID) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed ssid");
+		wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "ssid ",
+				 bss_conf->ssid, bss_conf->ssid_len);
+
+		wcn->ssid.length = bss_conf->ssid_len;
+		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+	}
+
+	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp");
+		skb = ieee80211_proberesp_get(hw, vif);
+		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
+	}
+
+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed beacon enabled %d",
+			    bss_conf->enable_beacon);
+
+		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
-			wcn36xx_smd_config_bss(wcn, false, NULL, 0);
+			wcn36xx_smd_config_bss(wcn, wcn->iftype,
+					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+		} else {
+			/* FIXME: disable beaconing */
 		}
 	}
 }
-static int wcn36xx_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
+
+/* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-{
-	return 0;
-}
-
-static bool wcn36xx_tx_frames_pending(struct ieee80211_hw *hw)
-{
-	return true;
-}
-static int wcn36xx_set_bitrate_mask(struct ieee80211_hw *hw,
-				   struct ieee80211_vif *vif,
-				   const struct cfg80211_bitrate_mask *mask)
-{
-	return 0;
-}
-
-static void wcn36xx_channel_switch(struct ieee80211_hw *hw,
-				   struct ieee80211_channel_switch *ch_switch)
-{
-}
-
-static int wcn36xx_suspend(struct ieee80211_hw *hw,
-			    struct cfg80211_wowlan *wow)
-{
-	return 0;
-}
-static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
 	return 0;
 }
@@ -252,20 +293,23 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
 		    vif, vif->type);
 
-	if(vif) {
-		switch (vif->type) {
-		case NL80211_IFTYPE_STATION:
-			wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
-			break;
-		case NL80211_IFTYPE_AP:
-			wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
-			break;
-		default:
-			wcn36xx_warn("Unsupported interface type requested: %d",
-				     vif->type);
-			return -EOPNOTSUPP;
-		}
+	switch (vif->type) {
+	case NL80211_IFTYPE_STATION:
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
+		break;
+	case NL80211_IFTYPE_AP:
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
+		break;
+	case NL80211_IFTYPE_ADHOC:
+		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
+		break;
+	default:
+		wcn36xx_warn("Unsupported interface type requested: %d",
+			     vif->type);
+		return -EOPNOTSUPP;
 	}
+
+	wcn->iftype = vif->type;
 
 	return 0;
 }
@@ -279,7 +323,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 	wcn36xx_smd_set_link_st(wcn, sta->addr, vif->addr, WCN36XX_HAL_LINK_POSTASSOC_STATE);
 	wcn36xx_smd_config_sta(wcn, sta->addr, sta->aid, vif->addr);
-	wcn36xx_smd_config_bss(wcn, true, sta->addr, 1);
+	wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION, sta->addr, true);
 	return 0;
 }
 static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
@@ -301,23 +345,15 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface 	= wcn36xx_remove_interface,
 	.change_interface 	= wcn36xx_change_interface,
-#ifdef CONFIG_PM
-	.suspend 		= wcn36xx_suspend,
-	.resume			= wcn36xx_resume,
-#endif
 	.config 		= wcn36xx_config,
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
 	.sw_scan_start          = wcn36xx_sw_scan_start,
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
-	.set_frag_threshold 	= wcn36xx_set_frag_threshold,
-	.set_rts_threshold 	= wcn36xx_set_rts_threshold,
+	.set_rts_threshold	= wcn36xx_set_rts_threshold,
 	.sta_add 		= wcn36xx_sta_add,
 	.sta_remove	 	= wcn36xx_sta_remove,
-	.tx_frames_pending 	= wcn36xx_tx_frames_pending,
-	.set_bitrate_mask 	= wcn36xx_set_bitrate_mask,
-	.channel_switch 	= wcn36xx_channel_switch
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
@@ -483,10 +519,12 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
-	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)|
-		BIT(NL80211_IFTYPE_AP);
 	wcn->hw->wiphy->iface_combinations = &if_comb;
 	wcn->hw->wiphy->n_iface_combinations = 1;
+
+	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+		BIT(NL80211_IFTYPE_AP) |
+		BIT(NL80211_IFTYPE_ADHOC);
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;

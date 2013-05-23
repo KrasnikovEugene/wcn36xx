@@ -16,7 +16,9 @@
 
 #include "smd.h"
 
-int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
+#include <linux/etherdevice.h>
+
+static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
 
@@ -57,7 +59,7 @@ int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
 	} while (0)						\
 
-int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
 	struct wcn36xx_fw_msg_status_rsp * rsp;
 	if (len < sizeof(struct wcn36xx_hal_msg_header) +
@@ -132,6 +134,9 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 	msg_body.params.len = 0;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start type %d",
+		    msg_body.params.type);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -469,6 +474,32 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+{
+	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
+	struct config_sta_rsp_params *params;
+
+	if (len < sizeof(*rsp))
+		return -EINVAL;
+
+	rsp = (struct wcn36xx_hal_config_sta_rsp_msg *)buf;
+	params = &rsp->params;
+
+	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
+		wcn36xx_warn("hal config sta response failure: %d",
+			     params->status);
+		return -EIO;
+	}
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d",
+		    params->status, params->sta_index, params->bssid_index,
+		    params->p2p);
+
+	return 0;
+}
+
 static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_join_rsp_msg * rsp;
@@ -574,86 +605,169 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, bool sta_mode, u8 *bssid, u8 update)
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
+			   const u8 *bssid, bool update)
 {
-	struct wcn36xx_hal_config_bss_req_msg msg_body;
+	struct wcn36xx_hal_config_bss_req_msg msg;
+	struct wcn36xx_hal_config_bss_params *bss;
+	struct wcn36xx_hal_config_sta_params *sta;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
+	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_BSS_REQ);
 
-	if(sta_mode) {
-		memcpy(&msg_body.bss_params.bssid, bssid, ETH_ALEN);
-		memcpy(&msg_body.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
-		msg_body.bss_params.bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
-		//TODO define enum for oper_mode
-		msg_body.bss_params.oper_mode = 1;  //0 - AP,  1-STA
-		msg_body.bss_params.llg_coexist = 1;
-		msg_body.bss_params.beacon_interval = 0x64;
+	bss = &msg.bss_params;
+	sta = &bss->sta;
 
-		msg_body.bss_params.oper_channel = wcn->ch;
-		memcpy(&msg_body.bss_params.sta.bssid, bssid, ETH_ALEN);
-		msg_body.bss_params.sta.type = 1;
-		msg_body.bss_params.sta.listen_interval = 0x64;
-		msg_body.bss_params.sta.wmm_enabled = 1;
+	WARN_ON(is_zero_ether_addr(bssid));
 
-		msg_body.bss_params.sta.max_ampdu_size = 3;
-		msg_body.bss_params.sta.max_ampdu_density = 5;
-		msg_body.bss_params.sta.dsss_cck_mode_40mhz = 1;
+	memcpy(&bss->bssid, bssid, ETH_ALEN);
+	memcpy(&bss->bssid, &wcn->addresses[0], ETH_ALEN);
+
+	memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
+
+	if (type == NL80211_IFTYPE_STATION) {
+		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
+
+		/* STA */
+		bss->oper_mode = 1;
+
+	} else if (type == NL80211_IFTYPE_AP) {
+		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
+
+		/* AP */
+		bss->oper_mode = 0;
+	} else if (type == NL80211_IFTYPE_ADHOC) {
+		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
+
+		/* AP */
+		bss->oper_mode = 0;
 	} else {
-		memcpy(&msg_body.bss_params.bssid, &wcn->addresses[0], ETH_ALEN);
-		memcpy(&msg_body.bss_params.self_mac_addr, &wcn->addresses[0], ETH_ALEN);
-
-		//TODO do all this configurabel
-		msg_body.bss_params.bss_type = WCN36XX_HAL_INFRA_AP_MODE;
-		msg_body.bss_params.oper_mode = 0; //0 - AP,  1-STA
-
-		msg_body.bss_params.short_slot_time_supported = 1;
-		msg_body.bss_params.beacon_interval = 0x64;
-		msg_body.bss_params.dtim_period = 2;
-		msg_body.bss_params.oper_channel = 1;
-		msg_body.bss_params.ssid.length = 1;
-		msg_body.bss_params.ssid.ssid[0] = 'K';
-		msg_body.bss_params.obss_prot_enabled = 1;
-		msg_body.bss_params.wcn36xx_hal_persona = 1;
-		msg_body.bss_params.max_tx_power = 0x10;
-
-		memcpy(&msg_body.bss_params.sta.bssid, &wcn->addresses[0], ETH_ALEN);
-		msg_body.bss_params.sta.short_preamble_supported = 1;
-		memcpy(&msg_body.bss_params.sta.mac, &wcn->addresses[0], ETH_ALEN);
-		msg_body.bss_params.sta.listen_interval = 8;
+		wcn36xx_warn("Unknown type for bss config: %d", type);
 	}
-	msg_body.bss_params.nw_type = WCN36XX_HAL_11G_NW_TYPE;
-	msg_body.bss_params.sta.ht_capable = 1;
-	msg_body.bss_params.sta.sgi_40mhz = 1;
-	msg_body.bss_params.sta.sgi_20Mhz = 1;
-	if (update == 1) {
-		msg_body.bss_params.short_slot_time_supported = 1;
-		msg_body.bss_params.lln_non_gf_coexist = 1;
-		msg_body.bss_params.dtim_period = 0;
-		msg_body.bss_params.sta.aid = 1;
-		msg_body.bss_params.sta.bssid_index = 0;
-		msg_body.bss_params.action = 1;
-		msg_body.bss_params.tx_mgmt_power = 6;
-		msg_body.bss_params.max_tx_power = 0x10;
+
+	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
+	bss->short_slot_time_supported = 1;
+	bss->lla_coexist = 0;
+	bss->llb_coexist = 0;
+	bss->llg_coexist = 1;
+	bss->ht20_coexist = 0;
+	bss->lln_non_gf_coexist = 0;
+	bss->lsig_tx_op_protection_full_support = 0;
+	bss->rifs_mode = 0;
+	bss->beacon_interval = 0x64;
+	bss->dtim_period = 2;
+	bss->tx_channel_width_set = 0;
+	bss->oper_channel = wcn->ch;
+	bss->ext_channel = 0;
+	bss->reserved = 0;
+
+	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
+	sta->aid = 0;
+	sta->type = 1;
+	sta->short_preamble_supported = 1;
+	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
+	sta->listen_interval = 8;
+	sta->wmm_enabled = 1;
+	sta->ht_capable = 1;
+	sta->tx_channel_width_set = 0;
+	sta->rifs_mode = 0;
+	sta->lsig_txop_protection = 0;
+	sta->max_ampdu_size = 3;
+	sta->max_ampdu_density = 5;
+	sta->sgi_40mhz = 1;
+	sta->sgi_20Mhz = 1;
+
+	memcpy(&sta->supported_rates, &wcn->supported_rates,
+	       sizeof(wcn->supported_rates));
+
+	sta->rmf = 0;
+	sta->encrypt_type = 0;
+	sta->action = 0;
+	sta->uapsd = 0;
+	sta->max_sp_len = 0;
+	sta->green_field_capable = 0;
+	sta->mimo_ps = 0;
+	sta->delayed_ba_support = 0;
+	sta->max_ampdu_duration = 0;
+	sta->dsss_cck_mode_40mhz = 1;
+	sta->sta_index = 0xff;
+	sta->bssid_index = 0;
+	sta->p2p = 0;
+
+	/* wcn->ssid is only valid in AP and IBSS mode */
+	bss->ssid.length = wcn->ssid.length;
+	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
+
+	bss->action = 0;
+
+	/* FIXME: set rateset */
+
+	bss->ht = 0;
+	bss->obss_prot_enabled = 1;
+	bss->rmf = 0;
+	bss->ht_oper_mode = 0;
+	bss->dual_cts_protection = 0;
+	bss->max_probe_resp_retry_limit = 0;
+	bss->hidden_ssid = 0;
+	bss->proxy_probe_resp = 0;
+	bss->edca_params_valid = 0;
+
+	/* FIXME: set acbe, acbk, acvi and acvo */
+
+	bss->ext_set_sta_key_param_valid = 0;
+
+	/* FIXME: set ext_set_sta_key_param */
+
+	bss->wcn36xx_hal_persona = 1;
+	bss->spectrum_mgt_enable = 0;
+	bss->tx_mgmt_power = 0;
+	bss->max_tx_power = 0x10;
+
+	if (update) {
+		sta->bssid_index = 0;
+		bss->action = 1;
 	} else {
-		msg_body.bss_params.max_tx_power = 0x14;
-		msg_body.bss_params.dtim_period = 1;
-		msg_body.bss_params.sta.bssid_index = 0xff;
+		sta->bssid_index = 0xff;
+		bss->action = 0;
 	}
-	msg_body.bss_params.sta.sta_index = 0xff;
-
-	memcpy(&msg_body.bss_params.sta.supported_rates, &wcn->supported_rates, sizeof(wcn->supported_rates));
 
 	if (wcn->fw_minor <= 3)
-		return wcn36xx_smd_config_bss_v1(wcn, &msg_body);
+		return wcn36xx_smd_config_bss_v1(wcn, &msg);
 
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config bss bss_type %d",
-		    msg_body.bss_params.bss_type);
+		    bss->bss_type);
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
+
+static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+{
+	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
+	struct wcn36xx_hal_config_bss_rsp_params *params;
+
+	if (len < sizeof(*rsp))
+		return -EINVAL;
+
+	rsp = (struct wcn36xx_hal_config_bss_rsp_msg *)buf;
+	params = &rsp->bss_rsp_params;
+
+	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
+		wcn36xx_warn("hal config bss response failure: %d",
+			     params->status);
+		return -EIO;
+	}
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal config bss rsp status %d bss_idx %d sta_idx %d self_idx %d bcast_idx %d mac %pM power %d",
+		    params->status, params->bss_index, params->bss_sta_index,
+		    params->bss_self_sta_index, params->bss_bcast_sta_idx,
+		    params->mac, params->tx_mgmt_power);
+
+	return 0;
+}
+
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_delete_bss_req_msg  msg_body;
@@ -697,6 +811,37 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 };
 
+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
+{
+	struct wcn36xx_hal_send_probe_resp_req_msg msg;
+
+	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
+
+	/* // TODO need to find out why this is needed? */
+	/* msg_body.beacon_length = skb_beacon->len + 6; */
+
+	if (skb->len > BEACON_TEMPLATE_SIZE) {
+		wcn36xx_warn("probe response template is too big: %d",
+			     skb->len);
+		return -E2BIG;
+	}
+
+	msg.probe_resp_template_len = skb->len;
+	memcpy(&msg.probe_resp_template, skb->data, skb->len);
+
+	memcpy(&msg.bssid, &wcn->addresses[0], ETH_ALEN);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "hal update probe rsp len %d bssid %pM",
+		    msg.probe_resp_template_len, msg.bssid);
+
+	dev_kfree_skb(skb);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
+};
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -728,6 +873,12 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_START_RSP:
 		wcn36xx_smd_start_rsp(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_CONFIG_STA_RSP:
+		wcn36xx_smd_config_sta_rsp(wcn, buf, len);
+		break;
+	case WCN36XX_HAL_CONFIG_BSS_RSP:
+		wcn36xx_smd_config_bss_rsp(wcn, buf, len);
+		break;
 	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 	case WCN36XX_HAL_DEL_STA_SELF_RSP:
@@ -737,11 +888,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_END_SCAN_RSP:
 	case WCN36XX_HAL_FINISH_SCAN_RSP:
 	case WCN36XX_HAL_DOWNLOAD_NV_RSP:
-	case WCN36XX_HAL_CONFIG_BSS_RSP:
 	case WCN36XX_HAL_DELETE_BSS_RSP:
-	case WCN36XX_HAL_CONFIG_STA_RSP:
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
+	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
