@@ -497,34 +497,34 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
-static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
+static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
 
-	wcn_priv->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_SUPPORTS_PS |
 		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
-	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_ADHOC);
 
-	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
-	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
+	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
+	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
 
-	wcn_priv->hw->wiphy->max_scan_ssids = 1;
+	wcn->hw->wiphy->max_scan_ssids = 1;
 
 	// TODO make a conf file where to read this information from
-	wcn_priv->hw->max_listen_interval = 200;
+	wcn->hw->max_listen_interval = 200;
 
-	wcn_priv->hw->queues = 4;
+	wcn->hw->queues = 4;
 
-	SET_IEEE80211_DEV(wcn_priv->hw, wcn_priv->dev);
+	SET_IEEE80211_DEV(wcn->hw, wcn->dev);
 
-	wcn_priv->hw->sta_data_size = sizeof(struct wcn_sta);
-	wcn_priv->hw->vif_data_size = sizeof(struct wcn_vif);
+	wcn->hw->sta_data_size = sizeof(struct wcn_sta);
+	wcn->hw->vif_data_size = sizeof(struct wcn_vif);
 
 
 	return ret;
