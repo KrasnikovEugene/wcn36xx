@@ -262,7 +262,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
-			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_AP,
+			wcn36xx_smd_config_bss(wcn, wcn->iftype,
 					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 		} else {
@@ -293,20 +293,23 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
 		    vif, vif->type);
 
-	if(vif) {
-		switch (vif->type) {
-		case NL80211_IFTYPE_STATION:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
-			break;
-		case NL80211_IFTYPE_AP:
-			wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
-			break;
-		default:
-			wcn36xx_warn("Unsupported interface type requested: %d",
-				     vif->type);
-			return -EOPNOTSUPP;
-		}
+	switch (vif->type) {
+	case NL80211_IFTYPE_STATION:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	case NL80211_IFTYPE_AP:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	case NL80211_IFTYPE_ADHOC:
+		wcn36xx_smd_add_sta_self(wcn, wcn->addresses[0].addr, 0);
+		break;
+	default:
+		wcn36xx_warn("Unsupported interface type requested: %d",
+			     vif->type);
+		return -EOPNOTSUPP;
 	}
+
+	wcn->iftype = vif->type;
 
 	return 0;
 }
@@ -504,8 +507,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx * wcn_priv)
 		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
-	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)|
-		BIT(NL80211_IFTYPE_AP);
+	wcn_priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+		BIT(NL80211_IFTYPE_AP) |
+		BIT(NL80211_IFTYPE_ADHOC);
 
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn_priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
