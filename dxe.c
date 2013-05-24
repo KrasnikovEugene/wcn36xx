@@ -166,18 +166,17 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	int i;
 
 	size = wcn_ch->desc_num * sizeof(struct wcn36xx_dxe_desc);
-	wcn_ch->descs_cpu_addr =
-		wcn36xx_dma_alloc(size, (void**)&wcn_ch->descs_dma_addr);
-	if (!wcn_ch->descs_cpu_addr)
+	wcn_ch->cpu_addr = wcn36xx_dma_alloc(size, (void **)&wcn_ch->dma_addr);
+	if (!wcn_ch->cpu_addr)
 		return -ENOMEM;
 
-	cur_dxe_desc = (struct wcn36xx_dxe_desc*)wcn_ch->descs_cpu_addr;
+	cur_dxe_desc = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
 	cur_dxe_ctl = wcn_ch->head_blk_ctl;
 
 	for (i = 0; i < wcn_ch->desc_num; i++)
 	{
 		cur_dxe_ctl->desc = cur_dxe_desc;
-		cur_dxe_ctl->desc_phy_addr = wcn_ch->descs_dma_addr +
+		cur_dxe_ctl->desc_phy_addr = wcn_ch->dma_addr +
 			i * sizeof(struct wcn36xx_dxe_desc);
 
 		switch (wcn_ch->ch_type) {
