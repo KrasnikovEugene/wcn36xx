@@ -24,30 +24,6 @@
 #include "txrx.h"
 #include "wcn36xx.h"
 
-// Every DMA memory allocation must be preceded with wcn36xx_dxe_mem_info struct
-static void * wcn36xx_dma_alloc(size_t size, void **paddr)
-{
-	u32 len;
-	void *virt_addr;
-	dma_addr_t phy_addr;
-	struct wcn36xx_dxe_mem_info *mem_info = NULL;
-
-	len = size + sizeof(struct wcn36xx_dxe_mem_info);
-	virt_addr = dma_alloc_coherent(NULL, len, &phy_addr, GFP_KERNEL);
-	if (NULL == virt_addr) {
-		wcn36xx_error("can not alloc mem");
-		return NULL;
-	}
-	memset(virt_addr, 0, len);
-	mem_info = (struct wcn36xx_dxe_mem_info *)virt_addr;
-	mem_info->len = len;
-	mem_info->phy_addr = phy_addr;
-	mem_info->offset = sizeof(struct wcn36xx_dxe_mem_info);
-
-	*paddr = (void*)phy_addr + mem_info->offset;
-	return virt_addr+mem_info->offset;
-}
-
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
@@ -162,22 +138,24 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
 	struct wcn36xx_dxe_desc *prev_dxe_desc = NULL;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
-	size_t size = 0;
+	size_t size;
 	int i;
 
 	size = wcn_ch->desc_num * sizeof(struct wcn36xx_dxe_desc);
-	wcn_ch->descs_cpu_addr =
-		wcn36xx_dma_alloc(size, (void**)&wcn_ch->descs_dma_addr);
-	if (!wcn_ch->descs_cpu_addr)
+	wcn_ch->cpu_addr = dma_alloc_coherent(NULL, size, &wcn_ch->dma_addr,
+					      GFP_KERNEL);
+	if (!wcn_ch->cpu_addr)
 		return -ENOMEM;
 
-	cur_dxe_desc = (struct wcn36xx_dxe_desc*)wcn_ch->descs_cpu_addr;
+	memset(wcn_ch->cpu_addr, 0, size);
+
+	cur_dxe_desc = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
 	cur_dxe_ctl = wcn_ch->head_blk_ctl;
 
 	for (i = 0; i < wcn_ch->desc_num; i++)
 	{
 		cur_dxe_ctl->desc = cur_dxe_desc;
-		cur_dxe_ctl->desc_phy_addr = wcn_ch->descs_dma_addr +
+		cur_dxe_ctl->desc_phy_addr = wcn_ch->dma_addr +
 			i * sizeof(struct wcn36xx_dxe_desc);
 
 		switch (wcn_ch->ch_type) {
@@ -384,15 +362,21 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 }
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 {
+	size_t s;
+	void *cpu_addr;
+
 	/* Allocate BD headers for MGMT frames */
 
 	// Where this come from ask QC
 	wcn->mgmt_mem_pool.chunk_size =	WCN36XX_BD_CHUNK_SIZE +
 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
-	wcn->mgmt_mem_pool.virt_addr = wcn36xx_dma_alloc(
-		wcn->mgmt_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_H,
-		(void**)&wcn->mgmt_mem_pool.phy_addr);
 
+	s = wcn->mgmt_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_H;
+	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->mgmt_mem_pool.phy_addr,
+				      GFP_KERNEL);
+
+	wcn->mgmt_mem_pool.virt_addr = cpu_addr;
+	memset(cpu_addr, 0, s);
 	wcn->mgmt_mem_pool.bitmap =
 		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
 		sizeof(u32), GFP_KERNEL);
@@ -402,10 +386,12 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	// Where this come from ask QC
 	wcn->data_mem_pool.chunk_size = WCN36XX_BD_CHUNK_SIZE +
 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
-	wcn->data_mem_pool.virt_addr =	wcn36xx_dma_alloc(
-		wcn->data_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_L,
-		(void**)&wcn->data_mem_pool.phy_addr);
 
+	s = wcn->data_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_L;
+	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->data_mem_pool.phy_addr,
+				      GFP_KERNEL);
+	wcn->data_mem_pool.virt_addr = cpu_addr;
+	memset(cpu_addr, 0, s);
 	wcn->data_mem_pool.bitmap =
 		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
 		sizeof(u32), GFP_KERNEL);
@@ -418,12 +404,12 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 		dma_free_coherent(NULL, wcn->mgmt_mem_pool.chunk_size *
 				  WCN36XX_DXE_CH_DESC_NUMB_TX_H,
 				  wcn->mgmt_mem_pool.virt_addr,
-				  (dma_addr_t) wcn->data_mem_pool.phy_addr);
+				  wcn->mgmt_mem_pool.phy_addr);
 	if (wcn->data_mem_pool.virt_addr) {
 		dma_free_coherent(NULL, wcn->data_mem_pool.chunk_size *
 				  WCN36XX_DXE_CH_DESC_NUMB_TX_L,
 				  wcn->data_mem_pool.virt_addr,
-				  (dma_addr_t) wcn->data_mem_pool.phy_addr);
+				  wcn->data_mem_pool.phy_addr);
 	}
 	kfree(wcn->data_mem_pool.bitmap);
 	kfree(wcn->mgmt_mem_pool.bitmap);
