@@ -441,7 +441,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_mac)
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg_body;
 
@@ -449,7 +449,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u16 ass_id, u8 *sta_m
 
 	memcpy(&msg_body.sta_params.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.sta_params.mac, sta_mac, ETH_ALEN);
-	msg_body.sta_params.aid = 1;
+	msg_body.sta_params.aid = wcn->aid;
 	msg_body.sta_params.type = 0;
 	msg_body.sta_params.listen_interval = 0x8;
 	msg_body.sta_params.ht_capable = 1;
@@ -624,7 +624,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	WARN_ON(is_zero_ether_addr(bssid));
 
 	memcpy(&bss->bssid, bssid, ETH_ALEN);
-	memcpy(&bss->bssid, &wcn->addresses[0], ETH_ALEN);
 
 	memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
 
@@ -665,7 +664,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->reserved = 0;
 
 	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
-	sta->aid = 0;
+	sta->aid = wcn->aid;
 	sta->type = 1;
 	sta->short_preamble_supported = 1;
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
