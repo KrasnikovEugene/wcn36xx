@@ -74,6 +74,24 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 	return 0;
 }
 
+int wcn36xx_smd_rsp_update_scan_param_status_check(void *buf, size_t len)
+{
+       struct wcn36xx_fw_msg_status_rsp * rsp;
+       if (len < sizeof(struct wcn36xx_hal_msg_header) +
+               sizeof(struct wcn36xx_fw_msg_status_rsp))
+               return -EIO;
+       rsp = (struct wcn36xx_fw_msg_status_rsp *)
+               (buf + sizeof(struct wcn36xx_hal_msg_header));
+
+       /* Remove the PNO version bit */
+       rsp->status &= (~(WCN36XX_FW_MSG_PNO_VERSION_MASK));
+
+       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+               return -EIO;
+       }
+       return 0;
+}
+
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 {
 	struct nv_data *nv_d;
@@ -297,18 +315,6 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 		    msg_body.channel_count);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-}
-static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
-{
-	struct  wcn36xx_hal_update_scan_params_resp * rsp;
-
-	rsp = (struct wcn36xx_hal_update_scan_params_resp *)buf;
-
-	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal rsp update scan params status %d",
-		    rsp->status);
-
-	return 0;
 }
 
 int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status)
@@ -901,7 +907,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		wcn36xx_smd_join_rsp(buf, len);
 		break;
 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
-		wcn36xx_smd_update_scan_params_rsp(buf, len);
+               if(wcn36xx_smd_rsp_update_scan_param_status_check(buf, len)) {
+                       wcn36xx_warn("error response from hal request %d",
+                                    msg_header->msg_type);
+               }
 		break;
 	case WCN36XX_HAL_CH_SWITCH_RSP:
 		wcn36xx_smd_switch_channel_rsp(buf,len);

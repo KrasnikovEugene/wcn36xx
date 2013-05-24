@@ -243,7 +243,6 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 			cur_dxe_ctl->skb->data,
 			cur_dxe_ctl->skb->len,
 			DMA_FROM_DEVICE);
-		memset(cur_dxe_ctl->skb->data, 0, cur_dxe_ctl->skb->len);
 		cur_dxe_ctl = cur_dxe_ctl->next;
 	}
 	return 0;
