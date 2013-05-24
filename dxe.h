@@ -203,9 +203,9 @@ struct wcn36xx_dxe_mem_info {
 
 
 struct wcn36xx_dxe_ch {
-	enum wcn36xx_dxe_ch_type  	ch_type;
-	void 				*descs_cpu_addr;
-	dma_addr_t 			descs_dma_addr;
+	enum wcn36xx_dxe_ch_type	ch_type;
+	void				*cpu_addr;
+	dma_addr_t			dma_addr;
 	enum wcn36xx_dxe_ch_desc_num	desc_num;
 	// DXE control block ring
 	struct wcn36xx_dxe_ctl		*head_blk_ctl;
@@ -222,9 +222,9 @@ struct wcn36xx_dxe_ch {
 
 // Memory Pool for BD headers
 struct wcn36xx_dxe_mem_pool {
-	int 	chunk_size;		// size of every chunk
+	int	chunk_size;		// size of every chunk
 	void	*virt_addr;		// virtual address that is visible to CPU
-	void	*phy_addr;		// physical address that
+	dma_addr_t	phy_addr;	// physical address that
 	void	*bitmap;		// bitmap array for all headers
 };
 struct wcn36xx;
