@@ -224,7 +224,7 @@ struct wcn36xx_dxe_ch {
 struct wcn36xx_dxe_mem_pool {
 	int	chunk_size;		// size of every chunk
 	void	*virt_addr;		// virtual address that is visible to CPU
-	void	*phy_addr;		// physical address that
+	dma_addr_t	phy_addr;	// physical address that
 	void	*bitmap;		// bitmap array for all headers
 };
 struct wcn36xx;
