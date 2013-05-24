@@ -100,7 +100,7 @@ struct wcn36xx {
 	struct ieee80211_channel *current_channel;
 	struct wcn36xx_hal_mac_ssid ssid;
 	enum nl80211_iftype iftype;
-
+	u16 aid;
 	u8 fw_revision;
 	u8 fw_version;
 	u8 fw_minor;
