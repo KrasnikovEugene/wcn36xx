@@ -74,7 +74,7 @@ void wcn36xx_prepare_tx_bd(void * pBd, u32 len)
 		bd->pdu.mpdu_header_off;
 	bd->pdu.mpdu_len = len;
 }
-void wcn36xx_fill_tx_bd(void * pBd, u8 broadcast)
+void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, void *pBd, u8 broadcast)
 {
 	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
@@ -98,7 +98,8 @@ void wcn36xx_fill_tx_bd(void * pBd, u8 broadcast)
 		bd->ack_policy = 0;
 	}
 
-	bd->sta_index = 1;
+	bd->sta_index = wcn->current_vif->sta_index;
+	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
 
 	// no encription
 	bd->dpu_ne = 1;

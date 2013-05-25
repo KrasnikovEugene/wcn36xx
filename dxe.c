@@ -443,7 +443,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 	}
 
 	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len);
-	wcn36xx_fill_tx_bd(mem_pool->virt_addr, broadcast);
+	wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast);
 
 	cur_dxe_ctl = cur_ch->head_blk_ctl;
 	cur_dxe_desc = cur_dxe_ctl->desc;

@@ -83,8 +83,9 @@ struct nv_data {
    int    	is_valid;
    void 	*table;
 };
-struct wcn_vif {
-	u8 vif_id;
+struct wcn36xx_vif {
+	u8 sta_index;
+	u8 dpu_desc_index;
 };
 struct wcn_sta {
 	u8 sta_id;
@@ -102,6 +103,7 @@ struct wcn36xx {
 	struct wcn36xx_hal_mac_ssid ssid;
 	enum nl80211_iftype iftype;
 	u16 aid;
+	struct wcn36xx_vif *current_vif;
 	u8 fw_revision;
 	u8 fw_version;
 	u8 fw_minor;
