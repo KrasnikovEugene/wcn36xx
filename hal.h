@@ -631,10 +631,13 @@ struct wcn36xx_hal_keys {
 	u8 key[WCN36XX_HAL_MAC_MAX_KEY_LENGTH];
 } __packed;
 
-/* SetStaKeyParams Moving here since it is shared by configbss/setstakey msgs */
+/*
+ * set_sta_key_params Moving here since it is shared by
+ * configbss/setstakey msgs
+ */
 struct wcn36xx_hal_set_sta_key_params {
 	/* STA Index */
-	u16 index;
+	u16 sta_index;
 
 	/* Encryption Type used with peer */
 	enum ani_ed_type enc_type;
@@ -1819,8 +1822,8 @@ struct post_assoc_rsp_msg {
 	struct wcn36xx_hal_config_bss_rsp_params bss_rsp_params;
 };
 
-/* This is used by PE to create a set of WEP keys for a given BSS. */
-struct set_bss_key_req_msg {
+/* This is used to create a set of WEP keys for a given BSS. */
+struct wcn36xx_hal_set_bss_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* BSS Index of the BSS */
@@ -1838,38 +1841,38 @@ struct set_bss_key_req_msg {
 	/* Control for Replay Count, 1= Single TID based replay count on Tx
 	 * 0 = Per TID based replay count on TX */
 	u8 single_tid_rc;
-};
+} __packed;
 
 /* tagged version of set bss key */
-struct set_bss_key_req_msg_tagged {
-	struct set_bss_key_req_msg Msg;
+struct wcn36xx_hal_set_bss_key_req_msg_tagged {
+	struct wcn36xx_hal_set_bss_key_req_msg Msg;
 	u32 tag;
-};
+} __packed;
 
-struct set_bss_key_rsp_msg {
+struct wcn36xx_hal_set_bss_key_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 /*
- * This is used by PE to configure the key information on a given station.
- * When the secType is WEP40 or WEP104, the defWEPIdx is used to locate
+ * This is used  configure the key information on a given station.
+ * When the sec_type is WEP40 or WEP104, the def_wep_idx is used to locate
  * a preconfigured key from a BSS the station assoicated with; otherwise
  * a new key descriptor is created based on the key field.
  */
-struct set_sta_key_req_msg {
+struct wcn36xx_hal_set_sta_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
 	struct wcn36xx_hal_set_sta_key_params set_sta_key_params;
-};
+} __packed;
 
-struct set_sta_key_rsp_msg {
+struct wcn36xx_hal_set_sta_key_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 struct remove_bss_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
