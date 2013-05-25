@@ -333,6 +333,32 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
+					void *buf,
+					size_t len)
+{
+	struct wcn36xx_hal_add_sta_self_rsp_msg *rsp;
+
+	if (len < sizeof(*rsp))
+		return -EINVAL;
+
+	rsp = (struct wcn36xx_hal_add_sta_self_rsp_msg *)buf;
+
+	if (rsp->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
+		wcn36xx_warn("hal add sta self failure: %d",
+			     rsp->status);
+		return -EIO;
+	}
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal add sta self status %d "
+		    "self_sta_index %d dpu_index %d",
+		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
+	wcn->current_vif->sta_index = rsp->self_sta_index;
+	wcn->current_vif->dpu_desc_index = rsp->dpu_index;
+
+	return 0;
+}
+
 int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr)
 {
 	struct wcn36xx_hal_del_sta_self_req_msg msg_body;
@@ -818,10 +844,12 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 	}
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config bss rsp status %d bss_idx %d sta_idx %d self_idx %d bcast_idx %d mac %pM power %d",
-		    params->status, params->bss_index, params->bss_sta_index,
-		    params->bss_self_sta_index, params->bss_bcast_sta_idx,
-		    params->mac, params->tx_mgmt_power);
+		    "hal config bss rsp status %d bss_idx %d dpu_desc_index %d"
+		    " sta_idx %d self_idx %d bcast_idx %d mac %pM power %d",
+		    params->status, params->bss_index, params->dpu_desc_index,
+		    params->bss_sta_index, params->bss_self_sta_index,
+		    params->bss_bcast_sta_idx, params->mac,
+		    params->tx_mgmt_power);
 
 	return 0;
 }
@@ -939,6 +967,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
+		wcn36xx_smd_add_sta_self_rsp(wcn, buf, len);
+		break;
 	case WCN36XX_HAL_DEL_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
 	case WCN36XX_HAL_INIT_SCAN_RSP:

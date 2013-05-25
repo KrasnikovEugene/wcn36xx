@@ -225,6 +225,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
+	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
@@ -337,6 +338,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d",
 		    vif, vif->type);
 
+	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
 	switch (vif->type) {
 	case NL80211_IFTYPE_STATION:
 		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
@@ -584,7 +586,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	SET_IEEE80211_DEV(wcn->hw, wcn->dev);
 
 	wcn->hw->sta_data_size = sizeof(struct wcn_sta);
-	wcn->hw->vif_data_size = sizeof(struct wcn_vif);
+	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
 
 
 	return ret;
@@ -700,6 +702,7 @@ static int __init wcn36xx_init(void)
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
 	wcn->aid = 0;
+	wcn->current_vif = NULL;
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
 
