@@ -233,7 +233,6 @@ struct wcn36xx_dxe_mem_pool {
 	int		chunk_size;
 	void		*virt_addr;
 	dma_addr_t	phy_addr;
-	void		*bitmap;
 };
 struct wcn36xx;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);

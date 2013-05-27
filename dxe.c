@@ -373,9 +373,6 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 	wcn->mgmt_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
-	wcn->mgmt_mem_pool.bitmap =
-		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32), GFP_KERNEL);
 
 	/* Allocate BD headers for DATA frames */
 
@@ -388,9 +385,6 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 				      GFP_KERNEL);
 	wcn->data_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
-	wcn->data_mem_pool.bitmap =
-		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
 
@@ -407,8 +401,6 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 				  wcn->data_mem_pool.virt_addr,
 				  wcn->data_mem_pool.phy_addr);
 	}
-	kfree(wcn->data_mem_pool.bitmap);
-	kfree(wcn->mgmt_mem_pool.bitmap);
 }
 
 int wcn36xx_dxe_tx(struct wcn36xx *wcn,
