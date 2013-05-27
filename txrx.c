@@ -25,6 +25,7 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	struct ieee80211_rx_status status;
 	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd * bd;
+	u16 fc, sn;
 
 	skb2 = skb_clone(skb, GFP_KERNEL);
 	bd = (struct wcn36xx_rx_bd *)skb2->data;
@@ -44,9 +45,16 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	memcpy(skb2->cb, &status, sizeof(struct ieee80211_rx_status));
 
 	hdr = (struct ieee80211_hdr *) skb2->data;
+	fc = __le16_to_cpu(hdr->frame_control);
+	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
 
-	wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %02x",
-		    skb2, skb2->len, __le16_to_cpu(hdr->frame_control));
+	if (ieee80211_is_beacon(hdr->frame_control)) {
+		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d",
+			    skb2, skb2->len, fc, sn);
+	} else {
+		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d",
+			    skb2, skb2->len, fc, sn);
+	}
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
 			 (char*)skb2->data, skb2->len);

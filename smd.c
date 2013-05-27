@@ -363,7 +363,7 @@ int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 
 }
-int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
+int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
 {
 	struct wcn36xx_hal_join_req_msg msg_body;
 
@@ -385,7 +385,10 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
+
+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
+			    const u8 *sta_mac,
+			    enum wcn36xx_hal_link_state state)
 {
 	struct wcn36xx_hal_set_link_state_req_msg msg_body;
 
@@ -430,6 +433,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 				     const struct wcn36xx_hal_config_sta_req_msg *orig)
 {
 	struct wcn36xx_hal_config_sta_req_msg_v1 msg_body;
+	struct wcn36xx_hal_config_sta_params_v1 *sta = &msg_body.sta_params;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
 
@@ -439,48 +443,78 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta v1 bssid %pM mac %pM",
-		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
+		    "hal config sta v1 action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    sta->action, sta->sta_index, sta->bssid_index,
+		    sta->bssid, sta->type, sta->mac, sta->aid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac)
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
+			   const u8 *sta_mac)
 {
-	struct wcn36xx_hal_config_sta_req_msg msg_body;
+	struct wcn36xx_hal_config_sta_req_msg msg;
+	struct wcn36xx_hal_config_sta_params *sta;
 
-	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
+	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_STA_REQ);
 
-	memcpy(&msg_body.sta_params.bssid, bssid, ETH_ALEN);
-	memcpy(&msg_body.sta_params.mac, sta_mac, ETH_ALEN);
-	msg_body.sta_params.aid = wcn->aid;
-	msg_body.sta_params.type = 0;
-	msg_body.sta_params.listen_interval = 0x8;
-	msg_body.sta_params.ht_capable = 1;
+	sta = &msg.sta_params;
 
-	msg_body.sta_params.max_ampdu_size = 3;
-	msg_body.sta_params.max_ampdu_density = 5;
-	msg_body.sta_params.sgi_40mhz = 1;
-	msg_body.sta_params.sgi_20Mhz = 1;
+	memcpy(&sta->bssid, bssid, ETH_ALEN);
 
-	memcpy(&msg_body.sta_params.supported_rates, &wcn->supported_rates,
+	sta->aid = wcn->aid;
+
+	if (wcn->iftype == NL80211_IFTYPE_ADHOC)
+		sta->type = 1;
+	else
+		sta->type = 0;
+
+	sta->short_preamble_supported = 0;
+
+	memcpy(&sta->mac, sta_mac, ETH_ALEN);
+
+	sta->listen_interval = 0x8;
+	sta->wmm_enabled = 0;
+	sta->ht_capable = 0;
+	sta->tx_channel_width_set = 0;
+	sta->rifs_mode = 0;
+	sta->lsig_txop_protection = 0;
+	sta->max_ampdu_size = 0;
+	sta->max_ampdu_density = 0;
+	sta->sgi_40mhz = 0;
+	sta->sgi_20Mhz = 0;
+
+	memcpy(&sta->supported_rates, &wcn->supported_rates,
 		sizeof(wcn->supported_rates));
-	msg_body.sta_params.sta_index = 1;
+
+	sta->rmf = 0;
+	sta->encrypt_type = 0;
+	sta->action = 0;
+	sta->uapsd = 0;
+	sta->max_sp_len = 0;
+	sta->green_field_capable = 0;
+	sta->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
+	sta->delayed_ba_support = 0;
+	sta->max_ampdu_duration = 0;
+	sta->dsss_cck_mode_40mhz = 0;
+	sta->sta_index = 1;
+	sta->bssid_index = 0;
+	sta->p2p = 0;
 
 	if (!(wcn->fw_major == 1 &&
-		wcn->fw_minor == 2 &&
-		wcn->fw_version == 2 &&
-		wcn->fw_revision == 24))
+	      wcn->fw_minor == 2 &&
+	      wcn->fw_version == 2 &&
+	      wcn->fw_revision == 24))
+		return wcn36xx_smd_config_sta_v1(wcn, &msg);
 
-		return wcn36xx_smd_config_sta_v1(wcn, &msg_body);
-
-	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta bssid %pM mac %pM",
-		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
+		    "hal config sta action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    sta->action, sta->sta_index, sta->bssid_index,
+		    sta->bssid, sta->type, sta->mac, sta->aid);
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
 
 static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf, size_t len)
@@ -528,6 +562,8 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 				     const struct wcn36xx_hal_config_bss_req_msg *orig)
 {
 	struct wcn36xx_hal_config_bss_req_msg_v1 msg_body;
+	struct wcn36xx_hal_config_bss_params_v1 *bss = &msg_body.bss_params;
+	struct wcn36xx_hal_config_sta_params_v1 *sta = &bss->sta;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_BSS_REQ);
 
@@ -607,8 +643,14 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config bss v1 bss_type %d",
-		    msg_body.bss_params.bss_type);
+		    "hal config bss v1 bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d",
+		    bss->bssid, bss->self_mac_addr, bss->bss_type,
+		    bss->oper_mode, bss->nw_type);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM",
+		    sta->bssid, sta->action, sta->sta_index,
+		    sta->bssid_index, sta->aid, sta->type, sta->mac);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -645,17 +687,17 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	} else if (type == NL80211_IFTYPE_ADHOC) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
 
-		/* AP */
-		bss->oper_mode = 0;
+		/* STA */
+		bss->oper_mode = 1;
 	} else {
 		wcn36xx_warn("Unknown type for bss config: %d", type);
 	}
 
 	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
-	bss->short_slot_time_supported = 1;
+	bss->short_slot_time_supported = 0;
 	bss->lla_coexist = 0;
 	bss->llb_coexist = 0;
-	bss->llg_coexist = 1;
+	bss->llg_coexist = 0;
 	bss->ht20_coexist = 0;
 	bss->lln_non_gf_coexist = 0;
 	bss->lsig_tx_op_protection_full_support = 0;
@@ -667,21 +709,22 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->ext_channel = 0;
 	bss->reserved = 0;
 
-	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&sta->bssid, bssid, ETH_ALEN);
+
 	sta->aid = wcn->aid;
-	sta->type = 1;
-	sta->short_preamble_supported = 1;
+	sta->type = 0;
+	sta->short_preamble_supported = 0;
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
 	sta->listen_interval = 8;
-	sta->wmm_enabled = 1;
-	sta->ht_capable = 1;
+	sta->wmm_enabled = 0;
+	sta->ht_capable = 0;
 	sta->tx_channel_width_set = 0;
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
-	sta->max_ampdu_size = 3;
-	sta->max_ampdu_density = 5;
-	sta->sgi_40mhz = 1;
-	sta->sgi_20Mhz = 1;
+	sta->max_ampdu_size = 0;
+	sta->max_ampdu_density = 0;
+	sta->sgi_40mhz = 0;
+	sta->sgi_20Mhz = 0;
 
 	memcpy(&sta->supported_rates, &wcn->supported_rates,
 	       sizeof(wcn->supported_rates));
@@ -695,7 +738,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	sta->mimo_ps = 0;
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
-	sta->dsss_cck_mode_40mhz = 1;
+	sta->dsss_cck_mode_40mhz = 0;
 	sta->sta_index = 0xff;
 	sta->bssid_index = 0;
 	sta->p2p = 0;
@@ -709,7 +752,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	/* FIXME: set rateset */
 
 	bss->ht = 0;
-	bss->obss_prot_enabled = 1;
+	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
 	bss->ht_oper_mode = 0;
 	bss->dual_cts_protection = 0;
@@ -745,8 +788,14 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config bss bss_type %d",
-		    bss->bss_type);
+		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d",
+		    bss->bssid, bss->self_mac_addr, bss->bss_type,
+		    bss->oper_mode, bss->nw_type);
+
+	wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM",
+		    sta->bssid, sta->action, sta->sta_index,
+		    sta->bssid_index, sta->aid, sta->type, sta->mac);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
