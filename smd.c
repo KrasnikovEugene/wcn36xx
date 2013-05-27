@@ -430,6 +430,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 				     const struct wcn36xx_hal_config_sta_req_msg *orig)
 {
 	struct wcn36xx_hal_config_sta_req_msg_v1 msg_body;
+	struct wcn36xx_hal_config_sta_params_v1 *sta = &msg_body.sta_params;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CONFIG_STA_REQ);
 
@@ -439,8 +440,9 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta v1 bssid %pM mac %pM",
-		    msg_body.sta_params.bssid, msg_body.sta_params.mac);
+		    "hal config sta v1 action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    sta->action, sta->sta_index, sta->bssid_index,
+		    sta->bssid, sta->type, sta->mac, sta->aid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -499,8 +501,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta bssid %pM mac %pM",
-		    sta->bssid, sta->mac);
+		    "hal config sta action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    sta->action, sta->sta_index, sta->bssid_index,
+		    sta->bssid, sta->type, sta->mac, sta->aid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
