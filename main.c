@@ -234,7 +234,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (vif->type == NL80211_IFTYPE_STATION &&
 		    !is_zero_ether_addr(bss_conf->bssid)) {
-			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
+			wcn36xx_smd_join(wcn, bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false);
 		}
@@ -260,25 +260,25 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn->aid = bss_conf->aid;
 
-			wcn36xx_smd_set_link_st(wcn, (u8*)bss_conf->bssid,
+			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
-					       (u8*)bss_conf->bssid,
+					       bss_conf->bssid,
 					       true);
-			wcn36xx_smd_config_sta(wcn, (u8*)bss_conf->bssid, vif->addr);
+			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "disassociated bss %pM vif %pM AID=%d",
-				    (u8*)bss_conf->bssid,
+				    bss_conf->bssid,
 				    vif->addr,
 				    bss_conf->aid);
 			wcn->aid = 0;
 			wcn36xx_smd_delete_sta(wcn);
 			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
-						(u8*)bss_conf->bssid,
+						bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_IDLE_STATE);
 		}
@@ -555,8 +555,8 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	const struct firmware *addr_file = NULL;
 	int status;
 	u8 tmp[18];
-	u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
-	char *files[1] = {MAC_ADDR_0};
+	static const u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
+	static const char *files[1] = {MAC_ADDR_0};
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
@@ -684,7 +684,7 @@ static int __init wcn36xx_init(void)
 	wcn->beacon_enable = false;
 
 	wcn36xx_read_mac_addresses(wcn);
-	SET_IEEE80211_PERM_ADDR(wcn->hw, (u8*)(wcn->addresses[0].addr));
+	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
 
 	ret = ieee80211_register_hw(wcn->hw);
 	if (ret)

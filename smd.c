@@ -363,7 +363,7 @@ int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 
 }
-int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
+int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
 {
 	struct wcn36xx_hal_join_req_msg msg_body;
 
@@ -385,7 +385,10 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, u8 *bssid, u8 *vif, u8 ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac, enum wcn36xx_hal_link_state state)
+
+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
+			    const u8 *sta_mac,
+			    enum wcn36xx_hal_link_state state)
 {
 	struct wcn36xx_hal_set_link_state_req_msg msg_body;
 
@@ -447,7 +450,8 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac)
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
+			   const u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
 	struct wcn36xx_hal_config_sta_params *sta;
