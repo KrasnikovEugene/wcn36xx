@@ -188,8 +188,9 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 		is_multicast_ether_addr(mgmt->da);
 
 	wcn36xx_dbg(WCN36XX_DBG_TX,
-		    "tx skb %p len %d fc %02x %s %s",
+		    "tx skb %p len %d fc %04x sn %d %s %s",
 		    skb, skb->len, __le16_to_cpu(mgmt->frame_control),
+		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(mgmt->seq_ctrl)),
 		    high ? "high" : "low", bcast ? "bcast" : "ucast");
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
@@ -223,6 +224,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct wcn36xx *wcn = hw->priv;
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
+	enum wcn36xx_hal_link_state link_state;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
@@ -231,8 +233,9 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
 
-		if(!is_zero_ether_addr(bss_conf->bssid)) {
-			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
+		if (vif->type == NL80211_IFTYPE_STATION &&
+		    !is_zero_ether_addr(bss_conf->bssid)) {
+			wcn36xx_smd_join(wcn, bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false);
 		}
@@ -258,25 +261,25 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn->aid = bss_conf->aid;
 
-			wcn36xx_smd_set_link_st(wcn, (u8*)bss_conf->bssid,
+			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
-					       (u8*)bss_conf->bssid,
+					       bss_conf->bssid,
 					       true);
-			wcn36xx_smd_config_sta(wcn, (u8*)bss_conf->bssid, vif->addr);
+			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "disassociated bss %pM vif %pM AID=%d",
-				    (u8*)bss_conf->bssid,
+				    bss_conf->bssid,
 				    vif->addr,
 				    bss_conf->aid);
 			wcn->aid = 0;
 			wcn36xx_smd_delete_sta(wcn);
 			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
-						(u8*)bss_conf->bssid,
+						bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_IDLE_STATE);
 		}
@@ -298,6 +301,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, wcn->iftype,
 					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+
+			if (vif->type == NL80211_IFTYPE_ADHOC)
+				link_state = WCN36XX_HAL_LINK_IBSS_STATE;
+			else
+				link_state = WCN36XX_HAL_LINK_AP_STATE;
+
+			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
+						link_state);
 		} else {
 			/* FIXME: disable beaconing */
 		}
@@ -347,6 +358,35 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	return 0;
 }
 
+static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			   struct ieee80211_sta *sta)
+{
+ 	struct wcn36xx *wcn = hw->priv;
+
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM",
+		    vif, sta->addr);
+
+	if (vif->type == NL80211_IFTYPE_ADHOC)
+		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
+				       sta->addr);
+
+ 	return 0;
+}
+
+static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			      struct ieee80211_sta *sta)
+{
+ 	struct wcn36xx *wcn = hw->priv;
+
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM",
+		    vif, sta->addr);
+
+	if (vif->type == NL80211_IFTYPE_ADHOC)
+		wcn36xx_smd_delete_sta(wcn);
+
+	return 0;
+}
+
 static const struct ieee80211_ops wcn36xx_ops = {
 	.start 			= wcn36xx_start,
 	.stop	 		= wcn36xx_stop,
@@ -360,6 +400,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
 	.set_rts_threshold	= wcn36xx_set_rts_threshold,
+	.sta_add		= wcn36xx_sta_add,
+	.sta_remove		= wcn36xx_sta_remove,
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
@@ -520,9 +562,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	int ret = 0;
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
-		IEEE80211_HW_SUPPORTS_PS |
-		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
@@ -556,8 +595,8 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	const struct firmware *addr_file = NULL;
 	int status;
 	u8 tmp[18];
-	u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
-	char *files[1] = {MAC_ADDR_0};
+	static const u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
+	static const char *files[1] = {MAC_ADDR_0};
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
@@ -685,7 +724,7 @@ static int __init wcn36xx_init(void)
 	wcn->beacon_enable = false;
 
 	wcn36xx_read_mac_addresses(wcn);
-	SET_IEEE80211_PERM_ADDR(wcn->hw, (u8*)(wcn->addresses[0].addr));
+	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
 
 	ret = ieee80211_register_hw(wcn->hw);
 	if (ret)
