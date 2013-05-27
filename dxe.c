@@ -50,9 +50,8 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
 			return -ENOMEM;
-		cur_ctl->frame = NULL;
-		cur_ctl->ctl_blk_order = i;
 
+		cur_ctl->ctl_blk_order = i;
 		ch->tail_blk_ctl = cur_ctl;
 		if (i == 0) {
 			ch->head_blk_ctl = cur_ctl;
@@ -432,9 +431,6 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 
 	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
-
-	// Let's not forget the frame we are sending
-	ctl->frame = mem_pool->virt_addr;
 
 	// Set source address of the BD we send
 	desc->src_addr_l = (int)mem_pool->phy_addr;
