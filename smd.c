@@ -462,14 +462,14 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, u8 *bssid, u8 *sta_mac)
 
 	sta->listen_interval = 0x8;
 	sta->wmm_enabled = 0;
-	sta->ht_capable = 1;
+	sta->ht_capable = 0;
 	sta->tx_channel_width_set = 0;
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
-	sta->max_ampdu_size = 3;
-	sta->max_ampdu_density = 5;
-	sta->sgi_40mhz = 1;
-	sta->sgi_20Mhz = 1;
+	sta->max_ampdu_size = 0;
+	sta->max_ampdu_density = 0;
+	sta->sgi_40mhz = 0;
+	sta->sgi_20Mhz = 0;
 
 	memcpy(&sta->supported_rates, &wcn->supported_rates,
 		sizeof(wcn->supported_rates));
@@ -681,10 +681,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	}
 
 	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
-	bss->short_slot_time_supported = 1;
+	bss->short_slot_time_supported = 0;
 	bss->lla_coexist = 0;
 	bss->llb_coexist = 0;
-	bss->llg_coexist = 1;
+	bss->llg_coexist = 0;
 	bss->ht20_coexist = 0;
 	bss->lln_non_gf_coexist = 0;
 	bss->lsig_tx_op_protection_full_support = 0;
@@ -699,18 +699,18 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
 	sta->aid = wcn->aid;
 	sta->type = 1;
-	sta->short_preamble_supported = 1;
+	sta->short_preamble_supported = 0;
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
 	sta->listen_interval = 8;
-	sta->wmm_enabled = 1;
-	sta->ht_capable = 1;
+	sta->wmm_enabled = 0;
+	sta->ht_capable = 0;
 	sta->tx_channel_width_set = 0;
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
-	sta->max_ampdu_size = 3;
-	sta->max_ampdu_density = 5;
-	sta->sgi_40mhz = 1;
-	sta->sgi_20Mhz = 1;
+	sta->max_ampdu_size = 0;
+	sta->max_ampdu_density = 0;
+	sta->sgi_40mhz = 0;
+	sta->sgi_20Mhz = 0;
 
 	memcpy(&sta->supported_rates, &wcn->supported_rates,
 	       sizeof(wcn->supported_rates));
@@ -724,7 +724,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	sta->mimo_ps = 0;
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
-	sta->dsss_cck_mode_40mhz = 1;
+	sta->dsss_cck_mode_40mhz = 0;
 	sta->sta_index = 0xff;
 	sta->bssid_index = 0;
 	sta->p2p = 0;
@@ -738,7 +738,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	/* FIXME: set rateset */
 
 	bss->ht = 0;
-	bss->obss_prot_enabled = 1;
+	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
 	bss->ht_oper_mode = 0;
 	bss->dual_cts_protection = 0;
