@@ -520,9 +520,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	int ret = 0;
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
-		IEEE80211_HW_SUPPORTS_PS |
-		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-		IEEE80211_HW_AP_LINK_PS |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
