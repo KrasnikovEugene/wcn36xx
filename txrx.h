@@ -143,6 +143,9 @@ struct wcn36xx_tx_bd {
 	u32 	reserved7:6;*/
 };
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
-void wcn36xx_prepare_tx_bd(void * pBd, u32 len);
-void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, void *pBd, u8 broadcast);
+void wcn36xx_prepare_tx_bd(void *pBd, u32 len, u32 header_len);
+void wcn36xx_fill_tx_bd(struct wcn36xx *wcn,
+			void * pBd,
+			u8 broadcast,
+			u8 encrypt);
 #endif	/* _TXRX_H_ */

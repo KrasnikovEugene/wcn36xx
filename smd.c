@@ -851,6 +851,8 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 		    params->bss_bcast_sta_idx, params->mac,
 		    params->tx_mgmt_power);
 
+	wcn->current_vif->sta_index =  params->bss_sta_index;
+	wcn->current_vif->dpu_desc_index = params->dpu_desc_index;
 	return 0;
 }
 
@@ -928,6 +930,56 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 };
 
+int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
+			   enum ani_ed_type enc_type,
+			   u8 keyidx,
+			   u8 keylen,
+			   u8 *key)
+{
+	struct wcn36xx_hal_set_sta_key_req_msg  msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_STAKEY_REQ);
+
+	msg_body.set_sta_key_params.sta_index = wcn->current_vif->sta_index;
+	msg_body.set_sta_key_params.enc_type = enc_type;
+
+	msg_body.set_sta_key_params.key[0].id = keyidx;
+	msg_body.set_sta_key_params.key[0].unicast = 1;
+	msg_body.set_sta_key_params.key[0].direction = WCN36XX_HAL_TX_RX;
+	msg_body.set_sta_key_params.key[0].pae_role = 0;
+	msg_body.set_sta_key_params.key[0].length = keylen;
+	memcpy(msg_body.set_sta_key_params.key[0].key, key, keylen);
+	msg_body.set_sta_key_params.single_tid_rc = 1;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
+			   enum ani_ed_type enc_type,
+			   u8 keyidx,
+			   u8 keylen,
+			   u8 *key)
+{
+	struct wcn36xx_hal_set_bss_key_req_msg  msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
+	msg_body.bss_idx = 0;
+	msg_body.enc_type = enc_type;
+	msg_body.num_keys = 1;
+	msg_body.keys[0].id = keyidx;
+	msg_body.keys[0].unicast = 0;
+	msg_body.keys[0].direction = WCN36XX_HAL_RX_ONLY;
+	msg_body.keys[0].pae_role = 0;
+	msg_body.keys[0].length = keylen;
+	memcpy(msg_body.keys[0].key, key, keylen);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -980,6 +1032,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_SEND_BEACON_RSP:
 	case WCN36XX_HAL_SET_LINK_ST_RSP:
 	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
+	case WCN36XX_HAL_SET_BSSKEY_RSP:
+	case WCN36XX_HAL_SET_STAKEY_RSP:
 		if(wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);

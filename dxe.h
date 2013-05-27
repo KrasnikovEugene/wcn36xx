@@ -236,5 +236,9 @@ void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn);
 int wcn36xx_dxe_init(struct wcn36xx *wcn);
 void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
-int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool is_high);
+int wcn36xx_dxe_tx(struct wcn36xx *wcn,
+		   struct sk_buff *skb,
+		   u8 broadcast,
+		   bool is_high,
+		   u32 header_len);
 #endif	/* _DXE_H_ */

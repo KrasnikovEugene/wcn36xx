@@ -178,6 +178,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 {
 	struct ieee80211_mgmt *mgmt;
 	bool high, bcast;
+	u32 header_len = 0;
 
 	mgmt = (struct ieee80211_mgmt *)skb->data;
 
@@ -195,7 +196,69 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
 
-	wcn36xx_dxe_tx(hw->priv, skb, bcast, high);
+	header_len = ieee80211_is_data_qos(mgmt->frame_control) ?
+		sizeof(struct ieee80211_qos_hdr) :
+		sizeof(struct ieee80211_hdr_3addr);
+	wcn36xx_dxe_tx(hw->priv, skb, bcast, high, header_len);
+}
+
+static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+			   struct ieee80211_vif *vif,
+			   struct ieee80211_sta *sta,
+			   struct ieee80211_key_conf *key_conf)
+{
+	struct wcn36xx *wcn = hw->priv;
+	int ret = 0;
+	enum ani_ed_type enc_type;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "Key: cmd=0x%x algo:0x%x, "
+		    "id:%d, len:%d flags 0x%x",
+		    cmd, key_conf->cipher, key_conf->keyidx,
+		    key_conf->keylen, key_conf->flags);
+	wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "KEY: ",
+			 key_conf->key,
+			 key_conf->keylen);
+
+	switch (cmd) {
+	case SET_KEY:
+		switch (key_conf->cipher) {
+		case WLAN_CIPHER_SUITE_CCMP:
+			enc_type = WCN36XX_HAL_ED_CCMP;
+			break;
+		case WLAN_CIPHER_SUITE_TKIP:
+			enc_type = WCN36XX_HAL_ED_TKIP;
+			break;
+		default:
+			wcn36xx_error("Unsupported key type 0x%x",
+				      key_conf->cipher);
+			ret = -EOPNOTSUPP;
+			goto out;
+			break;
+		}
+		break;
+	default:
+		wcn36xx_error("Unsupported key cmd 0x%x", cmd);
+		ret = -EOPNOTSUPP;
+		goto out;
+		break;
+	}
+
+	if (WCN36XX_STA_KEY == wcn->en_state) {
+		wcn36xx_smd_set_stakey(wcn,
+			enc_type,
+			key_conf->keyidx,
+			key_conf->keylen,
+			key_conf->key);
+		wcn->en_state = WCN36XX_BSS_KEY;
+	} else {
+		wcn36xx_smd_set_bsskey(wcn,
+			enc_type,
+			key_conf->keyidx,
+			key_conf->keylen,
+			key_conf->key);
+	}
+out:
+	return ret;
 }
 
 static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
@@ -261,6 +324,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				     bss_conf->aid);
 
 			wcn->aid = bss_conf->aid;
+			wcn->en_state = WCN36XX_STA_KEY;
 
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
@@ -277,6 +341,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    vif->addr,
 				    bss_conf->aid);
 			wcn->aid = 0;
+			wcn->en_state = WCN36XX_STA_KEY;
 			wcn36xx_smd_delete_sta(wcn);
 			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
@@ -398,6 +463,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.config 		= wcn36xx_config,
 	.configure_filter 	= wcn36xx_configure_filter,
 	.tx 			= wcn36xx_tx,
+	.set_key		= wcn36xx_set_key,
 	.sw_scan_start          = wcn36xx_sw_scan_start,
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
@@ -563,6 +629,11 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
 
+	static const u32 cipher_suites[] = {
+		WLAN_CIPHER_SUITE_TKIP,
+		WLAN_CIPHER_SUITE_CCMP,
+	};
+
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_HAS_RATE_CONTROL;
 
@@ -577,6 +648,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
 
 	wcn->hw->wiphy->max_scan_ssids = 1;
+
+	wcn->hw->wiphy->cipher_suites = cipher_suites;
+	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 
 	// TODO make a conf file where to read this information from
 	wcn->hw->max_listen_interval = 200;
