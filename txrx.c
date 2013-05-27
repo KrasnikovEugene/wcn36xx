@@ -45,8 +45,13 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	hdr = (struct ieee80211_hdr *) skb2->data;
 
-	wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %02x",
-		    skb2, skb2->len, __le16_to_cpu(hdr->frame_control));
+	if (ieee80211_is_beacon(hdr->frame_control)) {
+		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %02x",
+			    skb2, skb2->len, __le16_to_cpu(hdr->frame_control));
+	} else {
+		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %02x",
+			    skb2, skb2->len, __le16_to_cpu(hdr->frame_control));
+	}
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
 			 (char*)skb2->data, skb2->len);
