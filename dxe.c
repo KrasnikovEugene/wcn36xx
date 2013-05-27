@@ -427,7 +427,11 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 	kfree(wcn->mgmt_mem_pool.bitmap);
 }
 
-int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool is_high)
+int wcn36xx_dxe_tx(struct wcn36xx *wcn,
+		   struct sk_buff *skb,
+		   u8 broadcast,
+		   bool is_high,
+		   u32 header_len)
 {
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
 	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
@@ -442,8 +446,13 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn, struct sk_buff *skb, u8 broadcast, bool 
 		cur_ch = &wcn->dxe_tx_l_ch;
 	}
 
-	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len);
-	wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast);
+	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len, header_len);
+	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
+		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 0);
+	} else {
+		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 1);
+	}
 
 	cur_dxe_ctl = cur_ch->head_blk_ctl;
 	cur_dxe_desc = cur_dxe_ctl->desc;

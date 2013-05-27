@@ -26,6 +26,11 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd * bd;
 	u16 fc, sn;
+	/*
+	 * All fields must be 0, otherwise it can lead to
+	 * unexpected consequences.
+	 */
+	memset(&status, 0, sizeof(status));
 
 	skb2 = skb_clone(skb, GFP_KERNEL);
 	bd = (struct wcn36xx_rx_bd *)skb2->data;
@@ -42,7 +47,14 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.rate_idx = 1;
 	status.flag = 0;
 	status.rx_flags = 0;
-	memcpy(skb2->cb, &status, sizeof(struct ieee80211_rx_status));
+	status.flag |= RX_FLAG_IV_STRIPPED |
+		       RX_FLAG_MMIC_STRIPPED |
+		       RX_FLAG_DECRYPTED ;
+	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x "
+		    "status->vendor_radiotap_len=%x",
+		    status.flag,  status.vendor_radiotap_len);
+
+	memcpy(IEEE80211_SKB_RXCB(skb2), &status, sizeof(status));
 
 	hdr = (struct ieee80211_hdr *) skb2->data;
 	fc = __le16_to_cpu(hdr->frame_control);
@@ -63,18 +75,21 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	return 0;
 }
-void wcn36xx_prepare_tx_bd(void * pBd, u32 len)
+void wcn36xx_prepare_tx_bd(void *pBd, u32 len, u32 header_len)
 {
 	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
 	// Must be clean every time because we can have some leftovers from the previous packet
 	memset(pBd, 0, (sizeof(struct wcn36xx_tx_bd)));
-	bd->pdu.mpdu_header_len = WCN36XX_802_11_HEADER_LEN;
+	bd->pdu.mpdu_header_len = header_len;
 	bd->pdu.mpdu_header_off = sizeof(struct wcn36xx_tx_bd);
 	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
 		bd->pdu.mpdu_header_off;
 	bd->pdu.mpdu_len = len;
 }
-void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, void *pBd, u8 broadcast)
+void wcn36xx_fill_tx_bd(struct wcn36xx *wcn,
+			void *pBd,
+			u8 broadcast,
+			u8 encrypt)
 {
 	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
@@ -101,8 +116,7 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, void *pBd, u8 broadcast)
 	bd->sta_index = wcn->current_vif->sta_index;
 	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
 
-	// no encription
-	bd->dpu_ne = 1;
+	bd->dpu_ne = encrypt;
 
 	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
 	bd->tx_bd_sign = 0xbdbdbdbd;

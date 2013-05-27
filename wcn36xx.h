@@ -70,6 +70,10 @@ enum wcn36xx_debug_mask {
 			       DUMP_PREFIX_ADDRESS, 32, 1,	\
 			       buf, len, false);
 
+enum wcn36xx_encryption_state {
+	WCN36XX_STA_KEY,
+	WCN36XX_BSS_KEY
+};
 
 static inline void buff_to_be(u32 *buf, size_t len)
 {
@@ -108,6 +112,7 @@ struct wcn36xx {
 	u8 fw_version;
 	u8 fw_minor;
 	u8 fw_major;
+	enum wcn36xx_encryption_state en_state;
 
 	/* extra byte for the NULL termination */
 	u8 crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
