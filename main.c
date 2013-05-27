@@ -224,6 +224,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct wcn36xx *wcn = hw->priv;
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
+	enum wcn36xx_hal_link_state link_state;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
@@ -300,6 +301,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, wcn->iftype,
 					       wcn->addresses[0].addr, false);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+
+			if (vif->type == NL80211_IFTYPE_ADHOC)
+				link_state = WCN36XX_HAL_LINK_IBSS_STATE;
+			else
+				link_state = WCN36XX_HAL_LINK_AP_STATE;
+
+			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
+						link_state);
 		} else {
 			/* FIXME: disable beaconing */
 		}
@@ -349,6 +358,35 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	return 0;
 }
 
+static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			   struct ieee80211_sta *sta)
+{
+ 	struct wcn36xx *wcn = hw->priv;
+
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM",
+		    vif, sta->addr);
+
+	if (vif->type == NL80211_IFTYPE_ADHOC)
+		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
+				       sta->addr);
+
+ 	return 0;
+}
+
+static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			      struct ieee80211_sta *sta)
+{
+ 	struct wcn36xx *wcn = hw->priv;
+
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM",
+		    vif, sta->addr);
+
+	if (vif->type == NL80211_IFTYPE_ADHOC)
+		wcn36xx_smd_delete_sta(wcn);
+
+	return 0;
+}
+
 static const struct ieee80211_ops wcn36xx_ops = {
 	.start 			= wcn36xx_start,
 	.stop	 		= wcn36xx_stop,
@@ -362,6 +400,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.sw_scan_complete       = wcn36xx_sw_scan_complete,
 	.bss_info_changed 	= wcn36xx_bss_info_changed,
 	.set_rts_threshold	= wcn36xx_set_rts_threshold,
+	.sta_add		= wcn36xx_sta_add,
+	.sta_remove		= wcn36xx_sta_remove,
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
