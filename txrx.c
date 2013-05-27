@@ -26,7 +26,7 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd * bd;
 
-	skb2 = skb_clone(skb, GFP_ATOMIC);
+	skb2 = skb_clone(skb, GFP_KERNEL);
 	bd = (struct wcn36xx_rx_bd *)skb2->data;
 	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
 

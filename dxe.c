@@ -213,7 +213,7 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 
 	for ( i = 0; i < wcn_ch->desc_num; i++)
 	{
-		cur_dxe_ctl->skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_ATOMIC);
+		cur_dxe_ctl->skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_KERNEL);
 		skb_reserve(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
 		skb_headroom(cur_dxe_ctl->skb);
 		skb_push(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
@@ -224,6 +224,18 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 		cur_dxe_ctl = cur_dxe_ctl->next;
 	}
 	return 0;
+}
+
+static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
+				     struct wcn36xx_dxe_ch *wcn_ch)
+{
+	struct wcn36xx_dxe_ctl *cur = wcn_ch->head_blk_ctl;
+	int i;
+
+	for (i = 0; i < wcn_ch->desc_num; i++) {
+		kfree_skb(cur->skb);
+		cur = cur->next;
+	}
 }
 
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
@@ -602,4 +614,6 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 {
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
+	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_l_ch);
+	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_h_ch);
 }
