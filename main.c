@@ -378,7 +378,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       wcn->beacon_interval);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 
-			if (vif->type == NL80211_IFTYPE_ADHOC)
+			if (vif->type == NL80211_IFTYPE_ADHOC ||
+			    vif->type == NL80211_IFTYPE_MESH_POINT)
 				link_state = WCN36XX_HAL_LINK_IBSS_STATE;
 			else
 				link_state = WCN36XX_HAL_LINK_AP_STATE;
@@ -422,6 +423,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 		break;
 	case NL80211_IFTYPE_ADHOC:
+	case NL80211_IFTYPE_MESH_POINT:
 		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
 		break;
 	default:
@@ -443,7 +445,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM",
 		    vif, sta->addr);
 
-	if (vif->type == NL80211_IFTYPE_ADHOC)
+	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
 				       sta->addr);
 
@@ -458,7 +461,8 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif
  	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM",
 		    vif, sta->addr);
 
-	if (vif->type == NL80211_IFTYPE_ADHOC)
+	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		wcn36xx_smd_delete_sta(wcn);
 
 	return 0;
@@ -649,7 +653,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
-		BIT(NL80211_IFTYPE_ADHOC);
+		BIT(NL80211_IFTYPE_ADHOC) |
+		BIT(NL80211_IFTYPE_MESH_POINT);
 
 	wcn->hw->wiphy->iface_combinations = &if_comb;
 	wcn->hw->wiphy->n_iface_combinations = 1;
