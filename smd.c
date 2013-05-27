@@ -459,7 +459,12 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	memcpy(&sta->bssid, bssid, ETH_ALEN);
 
 	sta->aid = wcn->aid;
-	sta->type = 0;
+
+	if (wcn->iftype == NL80211_IFTYPE_ADHOC)
+		sta->type = 1;
+	else
+		sta->type = 0;
+
 	sta->short_preamble_supported = 0;
 
 	memcpy(&sta->mac, sta_mac, ETH_ALEN);
@@ -678,8 +683,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	} else if (type == NL80211_IFTYPE_ADHOC) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
 
-		/* AP */
-		bss->oper_mode = 0;
+		/* STA */
+		bss->oper_mode = 1;
 	} else {
 		wcn36xx_warn("Unknown type for bss config: %d", type);
 	}
@@ -700,9 +705,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->ext_channel = 0;
 	bss->reserved = 0;
 
-	memcpy(&sta->bssid, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&sta->bssid, bssid, ETH_ALEN);
+
 	sta->aid = wcn->aid;
-	sta->type = 1;
+	sta->type = 0;
 	sta->short_preamble_supported = 0;
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
 	sta->listen_interval = 8;
