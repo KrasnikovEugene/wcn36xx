@@ -271,6 +271,25 @@ static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
 	}
 }
 
+static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
+	struct ieee80211_tx_info *info;
+
+	while (ctl != ch->head_blk_ctl &&
+	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+		if (ctl->skb) {
+			dma_unmap_single(NULL, ctl->desc->src_addr_l,
+					 ctl->skb->len, DMA_TO_DEVICE);
+			info = IEEE80211_SKB_CB(ctl->skb);
+			ieee80211_tx_info_clear_status(info);
+			ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+			ctl->skb = NULL;
+		}
+		ctl = ctl->next;
+	}
+	ch->tail_blk_ctl = ctl;
+}
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
@@ -291,6 +310,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
 					   WCN36XX_INT_MASK_CHAN_TX_H);
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high");
+		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
 	}
 	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
 		wcn36xx_dxe_read_register(wcn,
@@ -305,6 +325,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
 					   WCN36XX_INT_MASK_CHAN_TX_L);
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low");
+		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
 	}
 
 	return IRQ_HANDLED;
@@ -468,8 +489,18 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
 
 	ctl = ch->head_blk_ctl;
+	ctl->skb = NULL;
 	desc = ctl->desc;
-	BUG_ON(!ctl->bd_cpu_addr);
+	if (!ctl->bd_cpu_addr) {
+		/* TX DXE are used in pairs. One for the BD and one for the
+		   actual frame. The BD DXE's has a preallocated buffer while
+		   the skb ones does not. If this isn't true something is really
+		   wierd. TODO: Recover from this situation
+		 */
+
+		wcn36xx_error("bd_cpu_addr may not be NULL for BD DXE");
+		return -EINVAL;
+	}
 
 	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
 	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
@@ -501,11 +532,16 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	ctl = ctl->next;
 	ctl->skb = skb;
 	desc = ctl->desc;
+	if (ctl->bd_cpu_addr) {
+		/* TODO: Recover from this situation */
+		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE");
+		return -EINVAL;
+	}
 
-	desc->src_addr_l = (int)dma_map_single(NULL,
-		ctl->skb->data,
-		ctl->skb->len,
-		DMA_TO_DEVICE );
+	desc->src_addr_l = dma_map_single(NULL,
+					  ctl->skb->data,
+					  ctl->skb->len,
+					  DMA_TO_DEVICE);
 
 	desc->dst_addr_l = ch->dxe_wq;
 	desc->fr_len = ctl->skb->len;
