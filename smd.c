@@ -140,6 +140,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
@@ -300,14 +301,17 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
 }
 static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 {
-	struct  wcn36xx_hal_update_scan_params_resp * rsp;
+	struct wcn36xx_hal_update_scan_params_resp *rsp;
 
 	rsp = (struct wcn36xx_hal_update_scan_params_resp *)buf;
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal rsp update scan params status %d",
-		    rsp->status);
+	/* Remove the PNO version bit */
+	rsp->status &= (~(WCN36XX_FW_MSG_PNO_VERSION_MASK));
 
+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+		wcn36xx_warn("error response from update scan");
+		return -EIO;
+	}
 	return 0;
 }
 
