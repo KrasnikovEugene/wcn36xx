@@ -231,7 +231,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
 
-		if(!is_zero_ether_addr(bss_conf->bssid)) {
+		if (vif->type == NL80211_IFTYPE_STATION &&
+		    !is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, (u8*)bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false);
