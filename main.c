@@ -188,8 +188,9 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 		is_multicast_ether_addr(mgmt->da);
 
 	wcn36xx_dbg(WCN36XX_DBG_TX,
-		    "tx skb %p len %d fc %02x %s %s",
+		    "tx skb %p len %d fc %04x sn %d %s %s",
 		    skb, skb->len, __le16_to_cpu(mgmt->frame_control),
+		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(mgmt->seq_ctrl)),
 		    high ? "high" : "low", bcast ? "bcast" : "ucast");
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
