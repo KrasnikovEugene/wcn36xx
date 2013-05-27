@@ -52,10 +52,10 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 			return -ENOMEM;
 
 		cur_ctl->ctl_blk_order = i;
-		ch->tail_blk_ctl = cur_ctl;
 		if (i == 0) {
 			ch->head_blk_ctl = cur_ctl;
-		} else if (ch->desc_num - 1 == i){
+			ch->tail_blk_ctl = cur_ctl;
+		} else if (ch->desc_num - 1 == i) {
 			prev_ctl->next = cur_ctl;
 			cur_ctl->next = ch->head_blk_ctl;
 		} else {
@@ -69,11 +69,11 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
-	while (1) {
+	int i;
+
+	for (i = 0; i < ch->desc_num; i++) {
 		next = ctl->next;
 		kfree(ctl);
-		if (ch->tail_blk_ctl == ctl)
-			break;
 		ctl = next;
 	}
 }
