@@ -211,14 +211,6 @@ struct wcn36xx_dxe_ctl {
    struct sk_buff 			*skb;
 };
 
-struct wcn36xx_dxe_mem_info {
-	unsigned long len;
-	//The offset from beginning of the buffer where it is allocated
-	unsigned long offset;
-	unsigned long phy_addr;
-};
-
-
 struct wcn36xx_dxe_ch {
 	enum wcn36xx_dxe_ch_type	ch_type;
 	void				*cpu_addr;
