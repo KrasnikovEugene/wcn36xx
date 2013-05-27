@@ -27,6 +27,8 @@
 #define SMD_MSG_TIMEOUT 200
 #define WCN36XX_SMSM_WLAN_TX_ENABLE	 		0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
+/* The PNO version info be contained in the rsp msg */
+#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
 
 enum wcn36xx_fw_msg_result {
 	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
