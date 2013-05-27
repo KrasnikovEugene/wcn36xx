@@ -157,19 +157,6 @@ enum wcn36xx_dxe_ch_desc_num {
 	WCN36XX_DXE_CH_DESC_NUMB_RX_H		= 40
 };
 
-
-// Packets
-struct wcn36xx_pkt {
-	void 	*bd;
-	void 	*bd_phy;
-	void 	*os_struct;
-	void 	*pkt_info;
-	int	pkt_type;
-	u16	len;
-	void	*int_data;
-
-};
-
 struct wcn36xx_dxe_desc
 {
 	u32	ctrl;
@@ -204,7 +191,6 @@ struct wcn36xx_dxe_desc
 // DXE Control block
 struct wcn36xx_dxe_ctl {
 	struct wcn36xx_dxe_ctl	*next;
-	struct wcn36xx_pkt	*frame;
 	struct wcn36xx_dxe_desc	*desc;
 	unsigned int		desc_phy_addr;
 	int			ctl_blk_order;
