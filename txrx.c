@@ -73,28 +73,23 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	return 0;
 }
-void wcn36xx_prepare_tx_bd(void *pBd, u32 len, u32 header_len)
+void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len)
 {
-	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
-	// Must be clean every time because we can have some leftovers from the previous packet
-	memset(pBd, 0, (sizeof(struct wcn36xx_tx_bd)));
+	memset(bd, 0, sizeof(*bd));
 	bd->pdu.mpdu_header_len = header_len;
-	bd->pdu.mpdu_header_off = sizeof(struct wcn36xx_tx_bd);
+	bd->pdu.mpdu_header_off = sizeof(*bd);
 	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
 		bd->pdu.mpdu_header_off;
 	bd->pdu.mpdu_len = len;
 }
-void wcn36xx_fill_tx_bd(struct wcn36xx *wcn,
-			void *pBd,
-			u8 broadcast,
-			u8 encrypt)
+void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
+			u8 broadcast, u8 encrypt)
 {
-	struct wcn36xx_tx_bd * bd = (struct wcn36xx_tx_bd *)pBd;
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
 	bd->pdu.tid   = WCN36XX_TID;
 	bd->pdu.reserved3 = 0xd;
 
-	if ( broadcast ) {
+	if (broadcast) {
 		// broadcast
 		bd->ub = 1;
 		bd->queue_id = WCN36XX_TX_B_WQ_ID;
