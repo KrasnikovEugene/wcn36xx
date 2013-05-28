@@ -160,31 +160,31 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 
 		switch (wcn_ch->ch_type) {
 		case WCN36XX_DXE_CH_TX_L:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_L;
-			cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_L;
+			cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_TX_L;
+			cur_dxe_desc->dst_addr_l = WCN36XX_DXE_WQ_TX_L;
 			break;
 		case WCN36XX_DXE_CH_TX_H:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H;
-			cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+			cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_TX_H;
+			cur_dxe_desc->dst_addr_l = WCN36XX_DXE_WQ_TX_H;
 			break;
 		case WCN36XX_DXE_CH_RX_L:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
-			cur_dxe_desc->desc.src_addr_l = WCN36XX_DXE_WQ_RX_L;
+			cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_RX_L;
+			cur_dxe_desc->src_addr_l = WCN36XX_DXE_WQ_RX_L;
 			break;
 		case WCN36XX_DXE_CH_RX_H:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
-			cur_dxe_desc->desc.src_addr_l = WCN36XX_DXE_WQ_RX_H;
+			cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_RX_H;
+			cur_dxe_desc->src_addr_l = WCN36XX_DXE_WQ_RX_H;
 			break;
 		}
 		if (0 == i) {
-			cur_dxe_desc->desc.phy_next_l = 0;
+			cur_dxe_desc->phy_next_l = 0;
 		} else if ((0 < i) && (i < wcn_ch->desc_num - 1)) {
-			prev_dxe_desc->desc.phy_next_l =
+			prev_dxe_desc->phy_next_l =
 				cur_dxe_ctl->desc_phy_addr;
 		} else if (i == (wcn_ch->desc_num -1)) {
-			prev_dxe_desc->desc.phy_next_l =
+			prev_dxe_desc->phy_next_l =
 				cur_dxe_ctl->desc_phy_addr;
-			cur_dxe_desc->desc.phy_next_l =
+			cur_dxe_desc->phy_next_l =
 				wcn_ch->head_blk_ctl->desc_phy_addr;
 		}
 		cur_dxe_ctl = cur_dxe_ctl->next;
@@ -217,7 +217,7 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *
 		skb_reserve(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
 		skb_headroom(cur_dxe_ctl->skb);
 		skb_push(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
-		cur_dxe_ctl->desc->desc.dst_addr_l = dma_map_single(NULL,
+		cur_dxe_ctl->desc->dst_addr_l = dma_map_single(NULL,
 			cur_dxe_ctl->skb->data,
 			cur_dxe_ctl->skb->len,
 			DMA_FROM_DEVICE);
@@ -317,16 +317,16 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		wcn36xx_dbg(WCN36XX_DBG_DXE,
 			    "dxe rx ready order %d ctl %x",
 			    cur_dxe_ctl->ctl_blk_order,
-			    cur_dxe_desc->desc_ctl.ctrl);
+			    cur_dxe_desc->ctrl);
 
 		dma_unmap_single( NULL,
-			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
+			(dma_addr_t)cur_dxe_desc->dst_addr_l,
 			cur_dxe_ctl->skb->len,
 			DMA_FROM_DEVICE );
 		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
 
 		// Release RX descriptor
-		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
+		cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_RX_H;
 
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_H);
 
@@ -351,16 +351,16 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 		wcn36xx_dbg(WCN36XX_DBG_DXE,
 			    "dxe rx ready order %d ctl %x",
 			    cur_dxe_ctl->ctl_blk_order,
-			    cur_dxe_desc->desc_ctl.ctrl);
+			    cur_dxe_desc->ctrl);
 
 		dma_unmap_single( NULL,
-			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
+			(dma_addr_t)cur_dxe_desc->dst_addr_l,
 			cur_dxe_ctl->skb->len,
 			DMA_FROM_DEVICE );
 		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
 
 		// Release RX descriptor
-		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
+		cur_dxe_desc->ctrl = WCN36XX_DXE_CTRL_RX_L;
 
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_L);
 
@@ -461,11 +461,11 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	cur_dxe_ctl->frame = mem_pool->virt_addr;
 
 	// Set source address of the BD we send
-	cur_dxe_desc->desc.src_addr_l = (int)mem_pool->phy_addr;
+	cur_dxe_desc->src_addr_l = (int)mem_pool->phy_addr;
 
-	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
+	cur_dxe_desc->dst_addr_l = cur_ch->dxe_wq;
 	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
-	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_bd;
+	cur_dxe_desc->ctrl = cur_ch->ctrl_bd;
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX");
 
@@ -479,16 +479,16 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
 	cur_dxe_ctl->skb = skb;
 	cur_dxe_desc = cur_dxe_ctl->desc;
-	cur_dxe_desc->desc.src_addr_l = (int)dma_map_single(NULL,
+	cur_dxe_desc->src_addr_l = (int)dma_map_single(NULL,
 		cur_dxe_ctl->skb->data,
 		cur_dxe_ctl->skb->len,
 		DMA_TO_DEVICE );
 
-	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
+	cur_dxe_desc->dst_addr_l = cur_ch->dxe_wq;
 	cur_dxe_desc->fr_len = cur_dxe_ctl->skb->len;
 
 	// set it to VALID
-	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_skb;
+	cur_dxe_desc->ctrl = cur_ch->ctrl_skb;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
 			 (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
@@ -569,7 +569,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	// Program preallocated destionatio Address
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
-		wcn->dxe_rx_l_ch.head_blk_ctl->desc->desc.phy_next_l);
+		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
 
 
 	// Enable default control registers
@@ -600,7 +600,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	// Program preallocated destionatio Address
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_H,
-		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->desc.phy_next_l);
+		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->phy_next_l);
 
 	// Enable default control registers
 	wcn36xx_dxe_write_register(wcn,
