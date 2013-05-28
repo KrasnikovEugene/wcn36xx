@@ -293,7 +293,8 @@ out_err:
 
 }
 
-int wcn36xx_rx_handle_packets(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+				     struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = ch->head_blk_ctl;
 	struct wcn36xx_dxe_desc *cur_dxe_desc = cur_dxe_ctl->desc;

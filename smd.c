@@ -269,7 +269,7 @@ int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
+static void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
 	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg*)buf;
