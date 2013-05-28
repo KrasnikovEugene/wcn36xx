@@ -141,6 +141,7 @@ struct wcn36xx {
 
 	/* Scanning */
 	int			is_scanning;
+	bool			is_joining;
 
 	/* DXE channels */
 	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */

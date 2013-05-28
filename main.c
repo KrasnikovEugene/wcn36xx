@@ -179,6 +179,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	struct ieee80211_mgmt *mgmt;
 	bool high, bcast;
 	u32 header_len = 0;
+	struct wcn36xx *wcn = hw->priv;
 
 	mgmt = (struct ieee80211_mgmt *)skb->data;
 
@@ -188,6 +189,12 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	bcast = is_broadcast_ether_addr(mgmt->da) ||
 		is_multicast_ether_addr(mgmt->da);
 
+	/*
+	 * In joining state trick hardware that probe is sent as unicast even
+	 * if address is broadcast.
+	 */
+	if (wcn->is_joining && ieee80211_is_probe_req(mgmt->frame_control))
+		bcast = false;
 	wcn36xx_dbg(WCN36XX_DBG_TX,
 		    "tx skb %p len %d fc %04x sn %d %s %s",
 		    skb, skb->len, __le16_to_cpu(mgmt->frame_control),
@@ -299,6 +306,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (vif->type == NL80211_IFTYPE_STATION &&
 		    !is_zero_ether_addr(bss_conf->bssid)) {
+			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
@@ -326,6 +334,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
+		wcn->is_joining = false;
 		if (bss_conf->assoc) {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "mac assoc bss %pM vif %pM AID=%d",
@@ -795,6 +804,7 @@ static int __init wcn36xx_init(void)
 
 	wcn->aid = 0;
 	wcn->current_vif = NULL;
+	wcn->is_joining = false;
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
 
