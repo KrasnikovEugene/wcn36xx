@@ -205,22 +205,32 @@ static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 		(int)reg_data);
 	return 0;
 }
-static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wcn_ch)
+
+static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *cur_dxe_ctl)
+{
+	struct wcn36xx_dxe_desc *cur_dxe_desc = cur_dxe_ctl->desc;
+	struct sk_buff *skb;
+
+	skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_ATOMIC);
+	if (skb == NULL)
+		return -ENOMEM;
+	cur_dxe_desc->desc.dst_addr_l = dma_map_single(NULL,
+						       skb_tail_pointer(skb),
+						       WCN36XX_PKT_SIZE,
+						       DMA_FROM_DEVICE);
+	cur_dxe_ctl->skb = skb;
+	return 0;
+}
+
+static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn,
+				    struct wcn36xx_dxe_ch *wcn_ch)
 {
 	int i;
 	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
 	cur_dxe_ctl = wcn_ch->head_blk_ctl;
 
-	for ( i = 0; i < wcn_ch->desc_num; i++)
-	{
-		cur_dxe_ctl->skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_KERNEL);
-		skb_reserve(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
-		skb_headroom(cur_dxe_ctl->skb);
-		skb_push(cur_dxe_ctl->skb, WCN36XX_PKT_SIZE);
-		cur_dxe_ctl->desc->desc.dst_addr_l = dma_map_single(NULL,
-			cur_dxe_ctl->skb->data,
-			cur_dxe_ctl->skb->len,
-			DMA_FROM_DEVICE);
+	for (i = 0; i < wcn_ch->desc_num; i++) {
+		wcn36xx_dxe_fill_skb(cur_dxe_ctl);
 		cur_dxe_ctl = cur_dxe_ctl->next;
 	}
 	return 0;
@@ -282,96 +292,70 @@ out_err:
 	return -ret;
 
 }
+
+int wcn36xx_rx_handle_packets(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *cur_dxe_ctl = ch->head_blk_ctl;
+	struct wcn36xx_dxe_desc *cur_dxe_desc = cur_dxe_ctl->desc;
+	dma_addr_t  dma_addr;
+	struct sk_buff *skb;
+
+	while (!(cur_dxe_desc->desc_ctl.ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+		skb = cur_dxe_ctl->skb;
+		dma_addr = cur_dxe_desc->desc.dst_addr_l;
+		wcn36xx_dxe_fill_skb(cur_dxe_ctl);
+
+		switch (ch->ch_type) {
+		case WCN36XX_DXE_CH_RX_L:
+			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
+			break;
+		case WCN36XX_DXE_CH_RX_H:
+			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
+			break;
+		default:
+			wcn36xx_warn("Unknow received channel");
+		}
+
+		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
+				 DMA_FROM_DEVICE);
+		wcn36xx_rx_skb(wcn, skb);
+		cur_dxe_ctl = cur_dxe_ctl->next;
+		cur_dxe_desc = cur_dxe_ctl->desc;
+	}
+	ch->head_blk_ctl = cur_dxe_ctl;
+
+	return 0;
+}
+
 void wcn36xx_rx_ready_work(struct work_struct *work)
 {
 	struct wcn36xx *wcn =
 		container_of(work, struct wcn36xx, rx_ready_work);
-	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
-	int intSrc;
-	int int_reason;
+	int int_src;
 
-	// TODO read which channel generated INT by checking mask
-	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &intSrc);
+	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
 
-	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe rx ready channel %x %s%s",
-		    intSrc,
-		    intSrc & WCN36XX_INT_MASK_CHAN_RX_H ? "high " : "",
-		    intSrc & WCN36XX_INT_MASK_CHAN_RX_L ? "low " : "");
-
-	// check if this channel is High or Low. Assume high
-	if (intSrc & WCN36XX_INT_MASK_CHAN_RX_H) {
-		/* Read Channel Status Register to know why INT Happen */
-		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_H, &int_reason);
-		// TODO if status says erro handle that
-
-		/* Clean up all the INT within this channel */
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_CLR_ADDR ,  WCN36XX_INT_MASK_CHAN_RX_H);
-
-		/* Clean up ED INT Bit */
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_END_CLR_ADDR, WCN36XX_INT_MASK_CHAN_RX_H);
-
-		cur_dxe_ctl = wcn->dxe_rx_h_ch.head_blk_ctl;
-		cur_dxe_desc = cur_dxe_ctl->desc;
-
-		wcn36xx_dbg(WCN36XX_DBG_DXE,
-			    "dxe rx ready order %d ctl %x",
-			    cur_dxe_ctl->ctl_blk_order,
-			    cur_dxe_desc->desc_ctl.ctrl);
-
-		dma_unmap_single( NULL,
-			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
-			cur_dxe_ctl->skb->len,
-			DMA_FROM_DEVICE );
-		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
-
-		// Release RX descriptor
-		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
-
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_H);
-
-		// Reenable RX Low not high
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CTL_RX_L, WCN36XX_DXE_CH_DEFAULT_CTL_RX_L);
-
-		wcn->dxe_rx_h_ch.head_blk_ctl = cur_dxe_ctl->next;
-	} else if (intSrc & WCN36XX_INT_MASK_CHAN_RX_L) {
-		/* Read Channel Status Register to know why INT Happen */
-		wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_L, &int_reason);
-		// TODO if status says erro handle that
-
-		/* Clean up all the INT within this channel */
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_CLR_ADDR ,  WCN36XX_INT_MASK_CHAN_RX_L);
-
-		/* Clean up ED INT Bit */
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_INT_END_CLR_ADDR, WCN36XX_INT_MASK_CHAN_RX_L);
-
-		cur_dxe_ctl = wcn->dxe_rx_l_ch.head_blk_ctl;
-		cur_dxe_desc = cur_dxe_ctl->desc;
-
-		wcn36xx_dbg(WCN36XX_DBG_DXE,
-			    "dxe rx ready order %d ctl %x",
-			    cur_dxe_ctl->ctl_blk_order,
-			    cur_dxe_desc->desc_ctl.ctrl);
-
-		dma_unmap_single( NULL,
-			(dma_addr_t)cur_dxe_desc->desc.dst_addr_l,
-			cur_dxe_ctl->skb->len,
-			DMA_FROM_DEVICE );
-		wcn36xx_rx_skb(wcn, cur_dxe_ctl->skb);
-
-		// Release RX descriptor
-		cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
-
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, WCN36XX_INT_MASK_CHAN_RX_L);
-
-		// Reenable RX Low not high
-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CTL_RX_H, WCN36XX_DXE_CH_DEFAULT_CTL_RX_H);
-
-		wcn->dxe_rx_l_ch.head_blk_ctl = cur_dxe_ctl->next;
+	/* RX_LOW_PRI */
+	if (int_src & WCN36XX_DXE_INT_CH1_MASK) {
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_DXE_INT_CH1_MASK);
+		wcn36xx_rx_handle_packets(wcn, &(wcn->dxe_rx_l_ch));
 	}
+
+	/* RX_HIGH_PRI */
+	if (int_src & WCN36XX_DXE_INT_CH3_MASK) {
+		/* Clean up all the INT within this channel */
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_DXE_INT_CH3_MASK);
+		wcn36xx_rx_handle_packets(wcn, &(wcn->dxe_rx_h_ch));
+	}
+
+	if (!int_src)
+		wcn36xx_warn("None DXE interrupt triggerd");
 
 	enable_irq(wcn->rx_irq);
 }
+
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 {
 	size_t s;
