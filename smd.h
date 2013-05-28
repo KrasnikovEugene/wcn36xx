@@ -65,7 +65,7 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 			    const u8 *sta_mac,
 			    enum wcn36xx_hal_link_state state);
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
-			   const u8 *bssid, bool update);
+			   const u8 *bssid, bool update, u16 beacon_interval);
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 			   const u8 *sta_mac);

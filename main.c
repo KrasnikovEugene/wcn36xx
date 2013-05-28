@@ -301,7 +301,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		    !is_zero_ether_addr(bss_conf->bssid)) {
 			wcn36xx_smd_join(wcn, bss_conf->bssid, vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
-					       bss_conf->bssid, false);
+					       bss_conf->bssid, false,
+					       wcn->beacon_interval);
 		}
 	}
 
@@ -313,6 +314,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		wcn->ssid.length = bss_conf->ssid_len;
 		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+	}
+
+	if (changed & BSS_CHANGED_BEACON_INT) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed beacon_int %d",
+			    bss_conf->beacon_int);
+
+		wcn->beacon_interval = bss_conf->beacon_int;
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
@@ -331,7 +340,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid,
-					       true);
+					       true, wcn->beacon_interval);
 			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
 
 		} else {
@@ -365,7 +374,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->beacon_enable = true;
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off, &tim_len);
 			wcn36xx_smd_config_bss(wcn, wcn->iftype,
-					       wcn->addresses[0].addr, false);
+					       wcn->addresses[0].addr, false,
+					       wcn->beacon_interval);
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 
 			if (vif->type == NL80211_IFTYPE_ADHOC)

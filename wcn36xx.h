@@ -108,6 +108,8 @@ struct wcn36xx {
 	enum nl80211_iftype iftype;
 	u16 aid;
 	struct wcn36xx_vif *current_vif;
+	u16 beacon_interval;
+
 	u8 fw_revision;
 	u8 fw_version;
 	u8 fw_minor;
