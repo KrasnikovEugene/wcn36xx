@@ -19,9 +19,8 @@
 
 #define RSSI0(x) (100 - ((x->phy_stat0 >> 24) & 0xff))
 
-int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 {
-	struct sk_buff *skb2 ;
 	struct ieee80211_rx_status status;
 	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd * bd;
@@ -32,13 +31,12 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	 */
 	memset(&status, 0, sizeof(status));
 
-	skb2 = skb_clone(skb, GFP_KERNEL);
-	bd = (struct wcn36xx_rx_bd *)skb2->data;
+	bd = (struct wcn36xx_rx_bd *)skb->data;
 	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
 
-	skb_pull(skb2, bd->pdu.mpdu_header_off);
+	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
+	skb_pull(skb, bd->pdu.mpdu_header_off);
 
-	skb_trim(skb2, bd->pdu.mpdu_len);
 	status.mactime = 10;
 	status.freq = wcn->current_channel->center_freq;
 	status.band = wcn->current_channel->band;
@@ -54,24 +52,24 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 		    "status->vendor_radiotap_len=%x",
 		    status.flag,  status.vendor_radiotap_len);
 
-	memcpy(IEEE80211_SKB_RXCB(skb2), &status, sizeof(status));
+	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
 
-	hdr = (struct ieee80211_hdr *) skb2->data;
+	hdr = (struct ieee80211_hdr *) skb->data;
 	fc = __le16_to_cpu(hdr->frame_control);
 	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
 
 	if (ieee80211_is_beacon(hdr->frame_control)) {
 		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d",
-			    skb2, skb2->len, fc, sn);
+			    skb, skb->len, fc, sn);
 	} else {
 		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d",
-			    skb2, skb2->len, fc, sn);
+			    skb, skb->len, fc, sn);
 	}
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
-			 (char*)skb2->data, skb2->len);
+			 (char *)skb->data, skb->len);
 
-	ieee80211_rx_ni(wcn->hw, skb2);
+	ieee80211_rx_ni(wcn->hw, skb);
 
 	return 0;
 }
