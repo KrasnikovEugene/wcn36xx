@@ -169,40 +169,37 @@ struct wcn36xx_pkt {
 	void	*int_data;
 
 };
-// DXE descriptor data type
-struct wcn36xx_dxe_desc_data
-{
-	int                      src_addr_l;
-	int                      dst_addr_l;
-	int                      phy_next_l;
-	int                      src_addr_h;
-	int                      dst_addr_h;
-	int                      phy_next_h;
-};
-
 
 struct wcn36xx_dxe_desc
 {
-   union
-   {
-      u32                   ctrl;
-      u32                   valid		:1;     //0 = DMA stop, 1 = DMA continue with this descriptor
-      u32                   transfer_type	:2;     //0 = Host to Host space
-      u32                   eop			:1;     //End of Packet
-      u32                   bd_handling		:1;          //if transferType = Host to BMU, then 0 means first 128 bytes contain BD, and 1 means create new empty BD
-      u32                   siq			:1;     // SIQ
-      u32                   diq			:1;     // DIQ
-      u32                   pdu_rel		:1;     //0 = don't release BD and PDUs when done, 1 = release them
-      u32                   bthld_sel		:4;     //BMU Threshold Select
-      u32                   prio		:3;     //Specifies the priority level to use for the transfer
-      u32                   stop_channel	:1;     //1 = DMA stops processing further, channel requires re-enabling after this
-      u32                   intr		:1;     //Interrupt on Descriptor Done
-      u32                   rsvd		:1;     //reserved
-      u32                   size		:14;    //14 bits used - ignored for BMU transfers, only used for host to host transfers?
-   } desc_ctl;
-   int                      fr_len;
-   struct wcn36xx_dxe_desc_data desc;
-};
+	u32	ctrl;
+/*
+	//TODO: Turn these into defines and start using them.
+	union {
+		u32	valid		:1;     //0 = DMA stop, 1 = DMA continue with this descriptor
+		u32	transfer_type	:2;     //0 = Host to Host space
+		u32	eop		:1;     //End of Packet
+		u32	bd_handling	:1;          //if transferType = Host to BMU, then 0 means first 128 bytes contain BD, and 1 means create new empty BD
+		u32	siq		:1;     // SIQ
+		u32	diq		:1;     // DIQ
+		u32	pdu_rel		:1;     //0 = don't release BD and PDUs when done, 1 = release them
+		u32	bthld_sel	:4;     //BMU Threshold Select
+		u32	prio		:3;     //Specifies the priority level to use for the transfer
+		u32	stop_channel	:1;     //1 = DMA stops processing further, channel requires re-enabling after this
+		u32	intr		:1;     //Interrupt on Descriptor Done
+		u32	rsvd		:1;     //reserved
+		u32	size		:14;    //14 bits used - ignored for BMU transfers, only used for host to host transfers?
+	} desc_ctl;
+*/
+	u32	fr_len;
+
+	u32	src_addr_l;
+	u32	dst_addr_l;
+	u32	phy_next_l;
+	u32	src_addr_h;
+	u32	dst_addr_h;
+	u32	phy_next_h;
+} __packed;
 
 // DXE Control block
 struct wcn36xx_dxe_ctl {
