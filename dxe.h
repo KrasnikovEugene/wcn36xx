@@ -203,12 +203,12 @@ struct wcn36xx_dxe_desc
 
 // DXE Control block
 struct wcn36xx_dxe_ctl {
-   void                            	*next;
-   struct wcn36xx_pkt                   *frame;
-   struct wcn36xx_dxe_desc		*desc;
-   unsigned int				desc_phy_addr;
-   int                       		ctl_blk_order;
-   struct sk_buff 			*skb;
+	struct wcn36xx_dxe_ctl	*next;
+	struct wcn36xx_pkt	*frame;
+	struct wcn36xx_dxe_desc	*desc;
+	unsigned int		desc_phy_addr;
+	int			ctl_blk_order;
+	struct sk_buff		*skb;
 };
 
 struct wcn36xx_dxe_ch {
@@ -219,7 +219,6 @@ struct wcn36xx_dxe_ch {
 	// DXE control block ring
 	struct wcn36xx_dxe_ctl		*head_blk_ctl;
 	struct wcn36xx_dxe_ctl		*tail_blk_ctl;
-	uint				num_free_desc;
 
 	// DXE channel specific configs
 	u32				dxe_wq;
@@ -229,12 +228,12 @@ struct wcn36xx_dxe_ch {
 	u32				def_ctrl;
 };
 
-// Memory Pool for BD headers
+/* Memory Pool for BD headers */
 struct wcn36xx_dxe_mem_pool {
-	int	chunk_size;		// size of every chunk
-	void	*virt_addr;		// virtual address that is visible to CPU
-	dma_addr_t	phy_addr;	// physical address that
-	void	*bitmap;		// bitmap array for all headers
+	int		chunk_size;
+	void		*virt_addr;
+	dma_addr_t	phy_addr;
+	void		*bitmap;
 };
 struct wcn36xx;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
