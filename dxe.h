@@ -195,6 +195,8 @@ struct wcn36xx_dxe_ctl {
 	unsigned int		desc_phy_addr;
 	int			ctl_blk_order;
 	struct sk_buff		*skb;
+	void			*bd_cpu_addr;
+	dma_addr_t		bd_phy_addr;
 };
 
 struct wcn36xx_dxe_ch {

@@ -191,6 +191,31 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	}
 	return 0;
 }
+
+static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
+				   struct wcn36xx_dxe_mem_pool *pool)
+{
+	int i, chunk_size = pool->chunk_size;
+	dma_addr_t bd_phy_addr = pool->phy_addr;
+	void *bd_cpu_addr = pool->virt_addr;
+
+	struct wcn36xx_dxe_ctl *cur = ch->head_blk_ctl;
+	for (i = 0; i < ch->desc_num; i++) {
+		/* Only every second dxe needs a bd pointer,
+		   the other will point to the skb data */
+		if (!(i & 1)) {
+			cur->bd_phy_addr = bd_phy_addr;
+			cur->bd_cpu_addr = bd_cpu_addr;
+			bd_phy_addr += chunk_size;
+			bd_cpu_addr += chunk_size;
+		} else {
+			cur->bd_phy_addr = 0;
+			cur->bd_cpu_addr = NULL;
+		}
+		cur = cur->next;
+	}
+}
+
 static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 {
 	int reg_data = 0;
@@ -405,30 +430,27 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 {
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
-	struct wcn36xx_dxe_mem_pool *mem_pool = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
 
-	if(is_high) {
-		mem_pool = &wcn->mgmt_mem_pool;
-		ch = &wcn->dxe_tx_h_ch;
-	} else {
-		mem_pool = &wcn->data_mem_pool;
-		ch = &wcn->dxe_tx_l_ch;
-	}
+	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
 
-	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len, header_len);
+	ctl = ch->head_blk_ctl;
+	desc = ctl->desc;
+	BUG_ON(!ctl->bd_cpu_addr);
+
+	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
 	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
-		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 0);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0);
 	} else {
-		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 1);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1);
 	}
 
 	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
 
 	// Set source address of the BD we send
-	desc->src_addr_l = (int)mem_pool->phy_addr;
+	desc->src_addr_l = ctl->bd_phy_addr;
 
 	desc->dst_addr_l = ch->dxe_wq;
 	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
@@ -439,13 +461,14 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
 			 (char *)desc, sizeof(*desc));
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
-			 "BD   >>> ", (char *)mem_pool->virt_addr,
+			 "BD   >>> ", (char *)ctl->bd_cpu_addr,
 			 sizeof(struct wcn36xx_tx_bd));
 
 	// Set source address of the SKB we send
-	ctl = (struct wcn36xx_dxe_ctl *)ctl->next;
+	ctl = ctl->next;
 	ctl->skb = skb;
 	desc = ctl->desc;
+
 	desc->src_addr_l = (int)dma_map_single(NULL,
 		ctl->skb->data,
 		ctl->skb->len,
@@ -485,6 +508,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/* Init descriptors for TX LOW channel */
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_l_ch);
+	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
 
 	// Write chanel head to a NEXT register
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_L,
@@ -502,6 +526,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/* Init descriptors for TX HIGH channel */
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_h_ch);
+	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
 
 	// Write chanel head to a NEXT register
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_H,
