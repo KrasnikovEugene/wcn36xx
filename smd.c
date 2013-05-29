@@ -490,7 +490,8 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	sta->aid = wcn->aid;
 
-	if (wcn->iftype == NL80211_IFTYPE_ADHOC)
+	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
+	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
 		sta->type = 0;
@@ -682,7 +683,8 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 }
 
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
-			   const u8 *bssid, bool update)
+			   const u8 *bssid, bool update,
+			   u16 beacon_interval)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
@@ -710,7 +712,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 
 		/* AP */
 		bss->oper_mode = 0;
-	} else if (type == NL80211_IFTYPE_ADHOC) {
+	} else if (type == NL80211_IFTYPE_ADHOC ||
+		   type == NL80211_IFTYPE_MESH_POINT) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
 
 		/* STA */
@@ -728,7 +731,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->lln_non_gf_coexist = 0;
 	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
-	bss->beacon_interval = 0x64;
+	bss->beacon_interval = beacon_interval;
 	bss->dtim_period = 2;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = wcn->ch;

@@ -47,6 +47,7 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_HAL_DUMP	= 0x00000200,
 	WCN36XX_DBG_MAC		= 0x00000400,
 	WCN36XX_DBG_BEACON	= 0x00000800,
+	WCN36XX_DBG_BEACON_DUMP	= 0x00001000,
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
@@ -108,6 +109,8 @@ struct wcn36xx {
 	enum nl80211_iftype iftype;
 	u16 aid;
 	struct wcn36xx_vif *current_vif;
+	u16 beacon_interval;
+
 	u8 fw_revision;
 	u8 fw_version;
 	u8 fw_minor;
