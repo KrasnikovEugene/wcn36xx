@@ -262,25 +262,20 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 {
 	int ret;
 
-	// Register TX complete irq
-	ret =request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete, IRQF_TRIGGER_HIGH,
-                           "wcn36xx_tx", wcn);
+	ret = request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete,
+			  IRQF_TRIGGER_HIGH, "wcn36xx_tx", wcn);
 	if (ret) {
 		wcn36xx_error("failed to alloc tx irq");
 		goto out_err;
 	}
 
-	// Register RX irq
 	ret = request_irq(wcn->rx_irq, wcn36xx_irq_rx_ready, IRQF_TRIGGER_HIGH,
-                           "wcn36xx_rx", wcn);
+			  "wcn36xx_rx", wcn);
 	if (ret) {
 		wcn36xx_error("failed to alloc rx irq");
 		goto out_txirq;
 	}
-	// disable tx irq, not supported
 	disable_irq_nosync(wcn->tx_irq);
-
-	// enable rx irq
 	enable_irq_wake(wcn->rx_irq);
 	return 0;
 
