@@ -42,41 +42,40 @@ static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
 
 static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
-	struct wcn36xx_dxe_ctl *prev_dxe_ctl = NULL;
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
+	struct wcn36xx_dxe_ctl *prev_ctl = NULL;
+	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	int i;
 	for (i = 0; i < ch->desc_num; i++)
 	{
-		cur_dxe_ctl = kmalloc(sizeof(*cur_dxe_ctl), GFP_KERNEL);
-		if (!cur_dxe_ctl) {
+		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
+		if (!cur_ctl)
 			return -ENOMEM;
-		}
-		cur_dxe_ctl->frame = NULL;
-		cur_dxe_ctl->ctl_blk_order = i;
+		cur_ctl->frame = NULL;
+		cur_ctl->ctl_blk_order = i;
 
-		ch->tail_blk_ctl = cur_dxe_ctl;
+		ch->tail_blk_ctl = cur_ctl;
 		if (i == 0) {
-			ch->head_blk_ctl = cur_dxe_ctl;
+			ch->head_blk_ctl = cur_ctl;
 		} else if (ch->desc_num - 1 == i){
-			prev_dxe_ctl->next = cur_dxe_ctl;
-			cur_dxe_ctl->next = ch->head_blk_ctl;
+			prev_ctl->next = cur_ctl;
+			cur_ctl->next = ch->head_blk_ctl;
 		} else {
-			prev_dxe_ctl->next = cur_dxe_ctl;
+			prev_ctl->next = cur_ctl;
 		}
-		prev_dxe_ctl = cur_dxe_ctl;
+		prev_ctl = cur_ctl;
 	}
 	return 0;
 }
 
 static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = ch->head_blk_ctl, *next;
+	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
 	while (1) {
-		next = cur_dxe_ctl->next;
-		kfree(cur_dxe_ctl);
-		if (ch->tail_blk_ctl == cur_dxe_ctl)
+		next = ctl->next;
+		kfree(ctl);
+		if (ch->tail_blk_ctl == ctl)
 			break;
-		cur_dxe_ctl = next;
+		ctl = next;
 	}
 }
 
@@ -135,9 +134,9 @@ void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn)
 
 static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 {
-	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
-	struct wcn36xx_dxe_desc *prev_dxe_desc = NULL;
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
+	struct wcn36xx_dxe_desc *cur_dxe = NULL;
+	struct wcn36xx_dxe_desc *prev_dxe = NULL;
+	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	size_t size;
 	int i;
 
@@ -149,47 +148,47 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 
 	memset(wcn_ch->cpu_addr, 0, size);
 
-	cur_dxe_desc = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
-	cur_dxe_ctl = wcn_ch->head_blk_ctl;
+	cur_dxe = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
+	cur_ctl = wcn_ch->head_blk_ctl;
 
 	for (i = 0; i < wcn_ch->desc_num; i++)
 	{
-		cur_dxe_ctl->desc = cur_dxe_desc;
-		cur_dxe_ctl->desc_phy_addr = wcn_ch->dma_addr +
+		cur_ctl->desc = cur_dxe;
+		cur_ctl->desc_phy_addr = wcn_ch->dma_addr +
 			i * sizeof(struct wcn36xx_dxe_desc);
 
 		switch (wcn_ch->ch_type) {
 		case WCN36XX_DXE_CH_TX_L:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_L;
-			cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_L;
+			cur_dxe->ctrl = WCN36XX_DXE_CTRL_TX_L;
+			cur_dxe->dst_addr_l = WCN36XX_DXE_WQ_TX_L;
 			break;
 		case WCN36XX_DXE_CH_TX_H:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_TX_H;
-			cur_dxe_desc->desc.dst_addr_l = WCN36XX_DXE_WQ_TX_H;
+			cur_dxe->ctrl = WCN36XX_DXE_CTRL_TX_H;
+			cur_dxe->dst_addr_l = WCN36XX_DXE_WQ_TX_H;
 			break;
 		case WCN36XX_DXE_CH_RX_L:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
-			cur_dxe_desc->desc.src_addr_l = WCN36XX_DXE_WQ_RX_L;
+			cur_dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
+			cur_dxe->src_addr_l = WCN36XX_DXE_WQ_RX_L;
 			break;
 		case WCN36XX_DXE_CH_RX_H:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
-			cur_dxe_desc->desc.src_addr_l = WCN36XX_DXE_WQ_RX_H;
+			cur_dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
+			cur_dxe->src_addr_l = WCN36XX_DXE_WQ_RX_H;
 			break;
 		}
 		if (0 == i) {
-			cur_dxe_desc->desc.phy_next_l = 0;
+			cur_dxe->phy_next_l = 0;
 		} else if ((0 < i) && (i < wcn_ch->desc_num - 1)) {
-			prev_dxe_desc->desc.phy_next_l =
-				cur_dxe_ctl->desc_phy_addr;
+			prev_dxe->phy_next_l =
+				cur_ctl->desc_phy_addr;
 		} else if (i == (wcn_ch->desc_num -1)) {
-			prev_dxe_desc->desc.phy_next_l =
-				cur_dxe_ctl->desc_phy_addr;
-			cur_dxe_desc->desc.phy_next_l =
+			prev_dxe->phy_next_l =
+				cur_ctl->desc_phy_addr;
+			cur_dxe->phy_next_l =
 				wcn_ch->head_blk_ctl->desc_phy_addr;
 		}
-		cur_dxe_ctl = cur_dxe_ctl->next;
-		prev_dxe_desc = cur_dxe_desc;
-		cur_dxe_desc++;
+		cur_ctl = cur_ctl->next;
+		prev_dxe = cur_dxe;
+		cur_dxe++;
 	}
 	return 0;
 }
@@ -206,19 +205,19 @@ static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 	return 0;
 }
 
-static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *cur_dxe_ctl)
+static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *ctl)
 {
-	struct wcn36xx_dxe_desc *cur_dxe_desc = cur_dxe_ctl->desc;
+	struct wcn36xx_dxe_desc *dxe = ctl->desc;
 	struct sk_buff *skb;
 
 	skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_ATOMIC);
 	if (skb == NULL)
 		return -ENOMEM;
-	cur_dxe_desc->desc.dst_addr_l = dma_map_single(NULL,
-						       skb_tail_pointer(skb),
-						       WCN36XX_PKT_SIZE,
-						       DMA_FROM_DEVICE);
-	cur_dxe_ctl->skb = skb;
+	dxe->dst_addr_l = dma_map_single(NULL,
+					 skb_tail_pointer(skb),
+					 WCN36XX_PKT_SIZE,
+					 DMA_FROM_DEVICE);
+	ctl->skb = skb;
 	return 0;
 }
 
@@ -226,12 +225,12 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn,
 				    struct wcn36xx_dxe_ch *wcn_ch)
 {
 	int i;
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
-	cur_dxe_ctl = wcn_ch->head_blk_ctl;
+	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
+	cur_ctl = wcn_ch->head_blk_ctl;
 
 	for (i = 0; i < wcn_ch->desc_num; i++) {
-		wcn36xx_dxe_fill_skb(cur_dxe_ctl);
-		cur_dxe_ctl = cur_dxe_ctl->next;
+		wcn36xx_dxe_fill_skb(cur_ctl);
+		cur_ctl = cur_ctl->next;
 	}
 	return 0;
 }
@@ -293,24 +292,25 @@ out_err:
 
 }
 
-int wcn36xx_rx_handle_packets(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+				     struct wcn36xx_dxe_ch *ch)
 {
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = ch->head_blk_ctl;
-	struct wcn36xx_dxe_desc *cur_dxe_desc = cur_dxe_ctl->desc;
+	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl;
+	struct wcn36xx_dxe_desc *dxe = ctl->desc;
 	dma_addr_t  dma_addr;
 	struct sk_buff *skb;
 
-	while (!(cur_dxe_desc->desc_ctl.ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
-		skb = cur_dxe_ctl->skb;
-		dma_addr = cur_dxe_desc->desc.dst_addr_l;
-		wcn36xx_dxe_fill_skb(cur_dxe_ctl);
+	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+		skb = ctl->skb;
+		dma_addr = dxe->dst_addr_l;
+		wcn36xx_dxe_fill_skb(ctl);
 
 		switch (ch->ch_type) {
 		case WCN36XX_DXE_CH_RX_L:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_L;
+			dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
 			break;
 		case WCN36XX_DXE_CH_RX_H:
-			cur_dxe_desc->desc_ctl.ctrl = WCN36XX_DXE_CTRL_RX_H;
+			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
 			break;
 		default:
 			wcn36xx_warn("Unknow received channel");
@@ -319,10 +319,10 @@ int wcn36xx_rx_handle_packets(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
 				 DMA_FROM_DEVICE);
 		wcn36xx_rx_skb(wcn, skb);
-		cur_dxe_ctl = cur_dxe_ctl->next;
-		cur_dxe_desc = cur_dxe_ctl->desc;
+		ctl = ctl->next;
+		dxe = ctl->desc;
 	}
-	ch->head_blk_ctl = cur_dxe_ctl;
+	ch->head_blk_ctl = ctl;
 
 	return 0;
 }
@@ -417,17 +417,17 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		   bool is_high,
 		   u32 header_len)
 {
-	struct wcn36xx_dxe_ctl *cur_dxe_ctl = NULL;
-	struct wcn36xx_dxe_desc *cur_dxe_desc = NULL;
-	struct wcn36xx_dxe_mem_pool * mem_pool = NULL;
-	struct wcn36xx_dxe_ch * cur_ch = NULL;
+	struct wcn36xx_dxe_ctl *ctl = NULL;
+	struct wcn36xx_dxe_desc *desc = NULL;
+	struct wcn36xx_dxe_mem_pool *mem_pool = NULL;
+	struct wcn36xx_dxe_ch *ch = NULL;
 
 	if(is_high) {
 		mem_pool = &wcn->mgmt_mem_pool;
-		cur_ch = &wcn->dxe_tx_h_ch;
+		ch = &wcn->dxe_tx_h_ch;
 	} else {
 		mem_pool = &wcn->data_mem_pool;
-		cur_ch = &wcn->dxe_tx_l_ch;
+		ch = &wcn->dxe_tx_l_ch;
 	}
 
 	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len, header_len);
@@ -438,53 +438,53 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 1);
 	}
 
-	cur_dxe_ctl = cur_ch->head_blk_ctl;
-	cur_dxe_desc = cur_dxe_ctl->desc;
+	ctl = ch->head_blk_ctl;
+	desc = ctl->desc;
 
 	// Let's not forget the frame we are sending
-	cur_dxe_ctl->frame = mem_pool->virt_addr;
+	ctl->frame = mem_pool->virt_addr;
 
 	// Set source address of the BD we send
-	cur_dxe_desc->desc.src_addr_l = (int)mem_pool->phy_addr;
+	desc->src_addr_l = (int)mem_pool->phy_addr;
 
-	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
-	cur_dxe_desc->fr_len = sizeof(struct wcn36xx_tx_bd);
-	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_bd;
+	desc->dst_addr_l = ch->dxe_wq;
+	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
+	desc->ctrl = ch->ctrl_bd;
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX");
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
-			 (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+			 (char *)desc, sizeof(*desc));
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
-			 "BD   >>> ", (char*)mem_pool->virt_addr,
+			 "BD   >>> ", (char *)mem_pool->virt_addr,
 			 sizeof(struct wcn36xx_tx_bd));
 
 	// Set source address of the SKB we send
-	cur_dxe_ctl = (struct wcn36xx_dxe_ctl*)cur_dxe_ctl->next;
-	cur_dxe_ctl->skb = skb;
-	cur_dxe_desc = cur_dxe_ctl->desc;
-	cur_dxe_desc->desc.src_addr_l = (int)dma_map_single(NULL,
-		cur_dxe_ctl->skb->data,
-		cur_dxe_ctl->skb->len,
+	ctl = (struct wcn36xx_dxe_ctl *)ctl->next;
+	ctl->skb = skb;
+	desc = ctl->desc;
+	desc->src_addr_l = (int)dma_map_single(NULL,
+		ctl->skb->data,
+		ctl->skb->len,
 		DMA_TO_DEVICE );
 
-	cur_dxe_desc->desc.dst_addr_l = cur_ch->dxe_wq;
-	cur_dxe_desc->fr_len = cur_dxe_ctl->skb->len;
+	desc->dst_addr_l = ch->dxe_wq;
+	desc->fr_len = ctl->skb->len;
 
 	// set it to VALID
-	cur_dxe_desc->desc_ctl.ctrl = cur_ch->ctrl_skb;
+	desc->ctrl = ch->ctrl_skb;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
-			 (char*)cur_dxe_desc, sizeof(*cur_dxe_desc));
+			 (char *)desc, sizeof(*desc));
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
-			 (char*)cur_dxe_ctl->skb->data, cur_dxe_ctl->skb->len);
+			 (char *)ctl->skb->data, ctl->skb->len);
 
 	// Move the head of the ring to the next empty descriptor
-	 cur_ch->head_blk_ctl = cur_dxe_ctl->next;
+	 ch->head_blk_ctl = ctl->next;
 
 	//indicate End Of Packet and generate interrupt on descriptor Done
 	wcn36xx_dxe_write_register(wcn,
-		cur_ch->reg_ctrl, cur_ch->def_ctrl);
+		ch->reg_ctrl, ch->def_ctrl);
 	return 0;
 }
 int wcn36xx_dxe_init(struct wcn36xx *wcn)
@@ -553,7 +553,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	// Program preallocated destionatio Address
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
-		wcn->dxe_rx_l_ch.head_blk_ctl->desc->desc.phy_next_l);
+		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
 
 
 	// Enable default control registers
@@ -584,7 +584,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	// Program preallocated destionatio Address
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_H,
-		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->desc.phy_next_l);
+		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->phy_next_l);
 
 	// Enable default control registers
 	wcn36xx_dxe_write_register(wcn,
