@@ -38,9 +38,9 @@ H2H_TEST_RX_TX = DMA2
 #define WCN36XX_DXE_CTRL_TX_H			0x32ce44
 #define WCN36XX_DXE_CTRL_RX_L			0x12ad2f
 #define WCN36XX_DXE_CTRL_RX_H			0x12d12f
-#define WCN36XX_DXE_CTRL_TX_H_BD		0x32ce45
+#define WCN36XX_DXE_CTRL_TX_H_BD		0x30ce45
 #define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
-#define WCN36XX_DXE_CTRL_TX_L_BD		0x328a45
+#define WCN36XX_DXE_CTRL_TX_L_BD		0x308a45
 #define WCN36XX_DXE_CTRL_TX_L_SKB		0x328a4d
 
 // TODO This must calculated properly but not hardcoded

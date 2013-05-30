@@ -273,6 +273,40 @@ static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
 
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
+	struct wcn36xx *wcn = (struct wcn36xx *)dev;
+	int int_src, int_reason;
+
+	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
+
+	if (int_src & WCN36XX_INT_MASK_CHAN_TX_H) {
+		wcn36xx_dxe_read_register(wcn,
+					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H,
+					  &int_reason);
+		/* TODO: Check int_reason */
+
+		wcn36xx_dxe_write_register(wcn,
+					   WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_H);
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_H);
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high");
+	}
+	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
+		wcn36xx_dxe_read_register(wcn,
+					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L,
+					  &int_reason);
+		/* TODO: Check int_reason */
+
+		wcn36xx_dxe_write_register(wcn,
+					   WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_L);
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_L);
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low");
+	}
+
 	return IRQ_HANDLED;
 }
 
@@ -300,7 +334,6 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 		wcn36xx_error("failed to alloc rx irq");
 		goto out_txirq;
 	}
-	disable_irq_nosync(wcn->tx_irq);
 	enable_irq_wake(wcn->rx_irq);
 	return 0;
 
