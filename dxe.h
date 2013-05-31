@@ -38,9 +38,9 @@ H2H_TEST_RX_TX = DMA2
 #define WCN36XX_DXE_CTRL_TX_H			0x32ce44
 #define WCN36XX_DXE_CTRL_RX_L			0x12ad2f
 #define WCN36XX_DXE_CTRL_RX_H			0x12d12f
-#define WCN36XX_DXE_CTRL_TX_H_BD		0x32ce45
+#define WCN36XX_DXE_CTRL_TX_H_BD		0x30ce45
 #define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
-#define WCN36XX_DXE_CTRL_TX_L_BD		0x328a45
+#define WCN36XX_DXE_CTRL_TX_L_BD		0x308a45
 #define WCN36XX_DXE_CTRL_TX_L_SKB		0x328a4d
 
 // TODO This must calculated properly but not hardcoded
@@ -157,19 +157,6 @@ enum wcn36xx_dxe_ch_desc_num {
 	WCN36XX_DXE_CH_DESC_NUMB_RX_H		= 40
 };
 
-
-// Packets
-struct wcn36xx_pkt {
-	void 	*bd;
-	void 	*bd_phy;
-	void 	*os_struct;
-	void 	*pkt_info;
-	int	pkt_type;
-	u16	len;
-	void	*int_data;
-
-};
-
 struct wcn36xx_dxe_desc
 {
 	u32	ctrl;
@@ -203,21 +190,14 @@ struct wcn36xx_dxe_desc
 
 // DXE Control block
 struct wcn36xx_dxe_ctl {
-   void                            	*next;
-   struct wcn36xx_pkt                   *frame;
-   struct wcn36xx_dxe_desc		*desc;
-   unsigned int				desc_phy_addr;
-   int                       		ctl_blk_order;
-   struct sk_buff 			*skb;
+	struct wcn36xx_dxe_ctl	*next;
+	struct wcn36xx_dxe_desc	*desc;
+	unsigned int		desc_phy_addr;
+	int			ctl_blk_order;
+	struct sk_buff		*skb;
+	void			*bd_cpu_addr;
+	dma_addr_t		bd_phy_addr;
 };
-
-struct wcn36xx_dxe_mem_info {
-	unsigned long len;
-	//The offset from beginning of the buffer where it is allocated
-	unsigned long offset;
-	unsigned long phy_addr;
-};
-
 
 struct wcn36xx_dxe_ch {
 	enum wcn36xx_dxe_ch_type	ch_type;
@@ -227,7 +207,6 @@ struct wcn36xx_dxe_ch {
 	// DXE control block ring
 	struct wcn36xx_dxe_ctl		*head_blk_ctl;
 	struct wcn36xx_dxe_ctl		*tail_blk_ctl;
-	uint				num_free_desc;
 
 	// DXE channel specific configs
 	u32				dxe_wq;
@@ -237,12 +216,11 @@ struct wcn36xx_dxe_ch {
 	u32				def_ctrl;
 };
 
-// Memory Pool for BD headers
+/* Memory Pool for BD headers */
 struct wcn36xx_dxe_mem_pool {
-	int	chunk_size;		// size of every chunk
-	void	*virt_addr;		// virtual address that is visible to CPU
-	dma_addr_t	phy_addr;	// physical address that
-	void	*bitmap;		// bitmap array for all headers
+	int		chunk_size;
+	void		*virt_addr;
+	dma_addr_t	phy_addr;
 };
 struct wcn36xx;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);

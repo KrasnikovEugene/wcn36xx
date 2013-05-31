@@ -50,13 +50,12 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
 			return -ENOMEM;
-		cur_ctl->frame = NULL;
-		cur_ctl->ctl_blk_order = i;
 
-		ch->tail_blk_ctl = cur_ctl;
+		cur_ctl->ctl_blk_order = i;
 		if (i == 0) {
 			ch->head_blk_ctl = cur_ctl;
-		} else if (ch->desc_num - 1 == i){
+			ch->tail_blk_ctl = cur_ctl;
+		} else if (ch->desc_num - 1 == i) {
 			prev_ctl->next = cur_ctl;
 			cur_ctl->next = ch->head_blk_ctl;
 		} else {
@@ -70,11 +69,11 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
-	while (1) {
+	int i;
+
+	for (i = 0; i < ch->desc_num; i++) {
 		next = ctl->next;
 		kfree(ctl);
-		if (ch->tail_blk_ctl == ctl)
-			break;
 		ctl = next;
 	}
 }
@@ -192,6 +191,31 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	}
 	return 0;
 }
+
+static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
+				   struct wcn36xx_dxe_mem_pool *pool)
+{
+	int i, chunk_size = pool->chunk_size;
+	dma_addr_t bd_phy_addr = pool->phy_addr;
+	void *bd_cpu_addr = pool->virt_addr;
+
+	struct wcn36xx_dxe_ctl *cur = ch->head_blk_ctl;
+	for (i = 0; i < ch->desc_num; i++) {
+		/* Only every second dxe needs a bd pointer,
+		   the other will point to the skb data */
+		if (!(i & 1)) {
+			cur->bd_phy_addr = bd_phy_addr;
+			cur->bd_cpu_addr = bd_cpu_addr;
+			bd_phy_addr += chunk_size;
+			bd_cpu_addr += chunk_size;
+		} else {
+			cur->bd_phy_addr = 0;
+			cur->bd_cpu_addr = NULL;
+		}
+		cur = cur->next;
+	}
+}
+
 static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 {
 	int reg_data = 0;
@@ -247,8 +271,63 @@ static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
 	}
 }
 
+static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
+	struct ieee80211_tx_info *info;
+
+	while (ctl != ch->head_blk_ctl &&
+	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+		if (ctl->skb) {
+			dma_unmap_single(NULL, ctl->desc->src_addr_l,
+					 ctl->skb->len, DMA_TO_DEVICE);
+			info = IEEE80211_SKB_CB(ctl->skb);
+			ieee80211_tx_info_clear_status(info);
+			ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+			ctl->skb = NULL;
+		}
+		ctl = ctl->next;
+	}
+	ch->tail_blk_ctl = ctl;
+}
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
+	struct wcn36xx *wcn = (struct wcn36xx *)dev;
+	int int_src, int_reason;
+
+	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
+
+	if (int_src & WCN36XX_INT_MASK_CHAN_TX_H) {
+		wcn36xx_dxe_read_register(wcn,
+					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H,
+					  &int_reason);
+		/* TODO: Check int_reason */
+
+		wcn36xx_dxe_write_register(wcn,
+					   WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_H);
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_H);
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high");
+		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
+	}
+	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
+		wcn36xx_dxe_read_register(wcn,
+					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L,
+					  &int_reason);
+		/* TODO: Check int_reason */
+
+		wcn36xx_dxe_write_register(wcn,
+					   WCN36XX_DXE_0_INT_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_L);
+
+		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+					   WCN36XX_INT_MASK_CHAN_TX_L);
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low");
+		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
+	}
+
 	return IRQ_HANDLED;
 }
 
@@ -263,25 +342,19 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 {
 	int ret;
 
-	// Register TX complete irq
-	ret =request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete, IRQF_TRIGGER_HIGH,
-                           "wcn36xx_tx", wcn);
+	ret = request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete,
+			  IRQF_TRIGGER_HIGH, "wcn36xx_tx", wcn);
 	if (ret) {
 		wcn36xx_error("failed to alloc tx irq");
 		goto out_err;
 	}
 
-	// Register RX irq
 	ret = request_irq(wcn->rx_irq, wcn36xx_irq_rx_ready, IRQF_TRIGGER_HIGH,
-                           "wcn36xx_rx", wcn);
+			  "wcn36xx_rx", wcn);
 	if (ret) {
 		wcn36xx_error("failed to alloc rx irq");
 		goto out_txirq;
 	}
-	// disable tx irq, not supported
-	disable_irq_nosync(wcn->tx_irq);
-
-	// enable rx irq
 	enable_irq_wake(wcn->rx_irq);
 	return 0;
 
@@ -373,9 +446,6 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 	wcn->mgmt_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
-	wcn->mgmt_mem_pool.bitmap =
-		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_H / 32 + 1) *
-		sizeof(u32), GFP_KERNEL);
 
 	/* Allocate BD headers for DATA frames */
 
@@ -388,9 +458,6 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 				      GFP_KERNEL);
 	wcn->data_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
-	wcn->data_mem_pool.bitmap =
-		kzalloc((WCN36XX_DXE_CH_DESC_NUMB_TX_L / 32 + 1) *
-		sizeof(u32), GFP_KERNEL);
 	return 0;
 }
 
@@ -407,8 +474,6 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 				  wcn->data_mem_pool.virt_addr,
 				  wcn->data_mem_pool.phy_addr);
 	}
-	kfree(wcn->data_mem_pool.bitmap);
-	kfree(wcn->mgmt_mem_pool.bitmap);
 }
 
 int wcn36xx_dxe_tx(struct wcn36xx *wcn,
@@ -419,33 +484,37 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 {
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
-	struct wcn36xx_dxe_mem_pool *mem_pool = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
 
-	if(is_high) {
-		mem_pool = &wcn->mgmt_mem_pool;
-		ch = &wcn->dxe_tx_h_ch;
-	} else {
-		mem_pool = &wcn->data_mem_pool;
-		ch = &wcn->dxe_tx_l_ch;
+	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
+
+	ctl = ch->head_blk_ctl;
+	ctl->skb = NULL;
+	desc = ctl->desc;
+	if (!ctl->bd_cpu_addr) {
+		/* TX DXE are used in pairs. One for the BD and one for the
+		   actual frame. The BD DXE's has a preallocated buffer while
+		   the skb ones does not. If this isn't true something is really
+		   wierd. TODO: Recover from this situation
+		 */
+
+		wcn36xx_error("bd_cpu_addr may not be NULL for BD DXE");
+		return -EINVAL;
 	}
 
-	wcn36xx_prepare_tx_bd(mem_pool->virt_addr, skb->len, header_len);
+	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
 	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
-		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 0);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0);
 	} else {
-		wcn36xx_fill_tx_bd(wcn, mem_pool->virt_addr, broadcast, 1);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1);
 	}
 
 	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
 
-	// Let's not forget the frame we are sending
-	ctl->frame = mem_pool->virt_addr;
-
 	// Set source address of the BD we send
-	desc->src_addr_l = (int)mem_pool->phy_addr;
+	desc->src_addr_l = ctl->bd_phy_addr;
 
 	desc->dst_addr_l = ch->dxe_wq;
 	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
@@ -456,17 +525,23 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
 			 (char *)desc, sizeof(*desc));
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
-			 "BD   >>> ", (char *)mem_pool->virt_addr,
+			 "BD   >>> ", (char *)ctl->bd_cpu_addr,
 			 sizeof(struct wcn36xx_tx_bd));
 
 	// Set source address of the SKB we send
-	ctl = (struct wcn36xx_dxe_ctl *)ctl->next;
+	ctl = ctl->next;
 	ctl->skb = skb;
 	desc = ctl->desc;
-	desc->src_addr_l = (int)dma_map_single(NULL,
-		ctl->skb->data,
-		ctl->skb->len,
-		DMA_TO_DEVICE );
+	if (ctl->bd_cpu_addr) {
+		/* TODO: Recover from this situation */
+		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE");
+		return -EINVAL;
+	}
+
+	desc->src_addr_l = dma_map_single(NULL,
+					  ctl->skb->data,
+					  ctl->skb->len,
+					  DMA_TO_DEVICE);
 
 	desc->dst_addr_l = ch->dxe_wq;
 	desc->fr_len = ctl->skb->len;
@@ -502,6 +577,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/* Init descriptors for TX LOW channel */
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_l_ch);
+	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
 
 	// Write chanel head to a NEXT register
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_L,
@@ -519,6 +595,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/* Init descriptors for TX HIGH channel */
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_h_ch);
+	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
 
 	// Write chanel head to a NEXT register
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_H,
