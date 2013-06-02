@@ -61,16 +61,15 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 
 static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 {
-	struct wcn36xx_fw_msg_status_rsp * rsp;
+	struct wcn36xx_fw_msg_status_rsp *rsp;
 	if (len < sizeof(struct wcn36xx_hal_msg_header) +
 		sizeof(struct wcn36xx_fw_msg_status_rsp))
 		return -EIO;
 	rsp = (struct wcn36xx_fw_msg_status_rsp *)
 		(buf + sizeof(struct wcn36xx_hal_msg_header));
 
-	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
 		return -EIO;
-	}
 	return 0;
 }
 
@@ -99,27 +98,28 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 			msg_body.last_fragment = 1;
 			msg_body.nv_img_buffer_size = fw_bytes_left;
 
-			// Do not forget update general message len
+			/* Do not forget update general message len */
 			msg_body.header.len = sizeof(msg_body) + fw_bytes_left;
 
 		}
 
-		// Add load NV request message header
-		memcpy((void*)(wcn->smd_buf), &msg_body,
-			sizeof(msg_body));
+		/* Add load NV request message header */
+		memcpy(wcn->smd_buf, &msg_body,	sizeof(msg_body));
 
-		// Add NV body itself
-		// Rework me
-		memcpy((void*)(wcn->smd_buf + sizeof(msg_body)),
-			(void*)((void*)(&nv_d->table) + fm_offset), msg_body.nv_img_buffer_size);
+		/* Add NV body itself */
+		/* Rework me */
+		memcpy(wcn->smd_buf + sizeof(msg_body),
+		       (void *)(&nv_d->table) + fm_offset,
+		       msg_body.nv_img_buffer_size);
 
 		ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-		if(ret)	return ret;
+		if (ret)
+			return ret;
 
 		msg_body.frag_number++;
 		fm_offset += WCN36XX_NV_FRAGMENT_SIZE;
 
-	} while(msg_body.last_fragment != 1);
+	} while (msg_body.last_fragment != 1);
 
 	return ret;
 }
@@ -143,7 +143,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 {
-	struct wcn36xx_hal_mac_start_rsp_msg * rsp;
+	struct wcn36xx_hal_mac_start_rsp_msg *rsp;
 
 	if (len < sizeof(*rsp))
 		return -EIO;
@@ -272,16 +272,18 @@ int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch)
 static void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
-	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg*)buf;
-	wcn36xx_info("channel switched to: %d, status: %d", rsp->channel_number, rsp->status);
+	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg *)buf;
+	wcn36xx_info("channel switched to: %d, status: %d", rsp->channel_number,
+		     rsp->status);
 }
 
-int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn){
+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
+{
 	struct wcn36xx_hal_update_scan_params_req msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
 
-	// TODO read this from config
+	/* TODO read this from config */
 	msg_body.dot11d_enabled	= 0;
 	msg_body.dot11d_resolved = 0;
 	msg_body.channel_count = 26;
@@ -544,7 +546,8 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
 
-static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
+				      size_t len)
 {
 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
 	struct config_sta_rsp_params *params;
@@ -571,9 +574,9 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf, size_t len
 
 static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 {
-	struct wcn36xx_hal_join_rsp_msg * rsp;
+	struct wcn36xx_hal_join_rsp_msg *rsp;
 
-	if(wcn36xx_smd_rsp_status_check(buf, len))
+	if (wcn36xx_smd_rsp_status_check(buf, len))
 		return -EIO;
 
 	rsp = (struct wcn36xx_hal_join_rsp_msg *)buf;
@@ -873,24 +876,28 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off){
+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
+			    u16 tim_off, u16 p2p_off)
+{
 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
 
-	// TODO need to find out why this is needed?
+	/* TODO need to find out why this is needed? */
 	msg_body.beacon_length = skb_beacon->len + 6;
 
-	// TODO make this as a const
+	/* TODO make this as a const */
 	if (BEACON_TEMPLATE_SIZE > msg_body.beacon_length) {
 		memcpy(&msg_body.beacon, &skb_beacon->len, sizeof(u32));
-		memcpy(&(msg_body.beacon[4]), skb_beacon->data, skb_beacon->len);
+		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
+		       skb_beacon->len);
 	} else {
-		wcn36xx_error("Beacon is to big: beacon size=%d", msg_body.beacon_length);
+		wcn36xx_error("Beacon is to big: beacon size=%d",
+			      msg_body.beacon_length);
 		return -ENOMEM;
 	}
 	memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
 
-	// TODO need to find out why this is needed?
+	/* TODO need to find out why this is needed? */
 	msg_body.tim_ie_offset = tim_off+4;
 	msg_body.p2p_ie_offset = p2p_off;
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
@@ -1007,7 +1014,7 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 }
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
-	struct wcn36xx_hal_msg_header * msg_header = buf;
+	struct wcn36xx_hal_msg_header *msg_header = buf;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
 	switch (msg_header->msg_type) {
@@ -1037,7 +1044,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
 	case WCN36XX_HAL_SET_BSSKEY_RSP:
 	case WCN36XX_HAL_SET_STAKEY_RSP:
-		if(wcn36xx_smd_rsp_status_check(buf, len)) {
+		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
 		}
@@ -1049,7 +1056,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		wcn36xx_smd_update_scan_params_rsp(buf, len);
 		break;
 	case WCN36XX_HAL_CH_SWITCH_RSP:
-		wcn36xx_smd_switch_channel_rsp(buf,len);
+		wcn36xx_smd_switch_channel_rsp(buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
