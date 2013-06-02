@@ -23,7 +23,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 {
 	struct ieee80211_rx_status status;
 	struct ieee80211_hdr *hdr;
-	struct wcn36xx_rx_bd * bd;
+	struct wcn36xx_rx_bd *bd;
 	u16 fc, sn;
 	/*
 	 * All fields must be 0, otherwise it can lead to
@@ -32,7 +32,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	memset(&status, 0, sizeof(status));
 
 	bd = (struct wcn36xx_rx_bd *)skb->data;
-	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
+	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
 
 	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
 	skb_pull(skb, bd->pdu.mpdu_header_off);
@@ -47,7 +47,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.rx_flags = 0;
 	status.flag |= RX_FLAG_IV_STRIPPED |
 		       RX_FLAG_MMIC_STRIPPED |
-		       RX_FLAG_DECRYPTED ;
+		       RX_FLAG_DECRYPTED;
 	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x "
 		    "status->vendor_radiotap_len=%x",
 		    status.flag,  status.vendor_radiotap_len);
@@ -91,18 +91,18 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 	bd->pdu.reserved3 = 0xd;
 
 	if (broadcast) {
-		// broadcast
+		/* broadcast */
 		bd->ub = 1;
 		bd->queue_id = WCN36XX_TX_B_WQ_ID;
 
-		// default rate for broadcast
+		/* default rate for broadcast */
 		bd->bd_rate = 0;
 
-		// No ack needed not unicast
+		/* No ack needed not unicast */
 		bd->ack_policy = 1;
 	} else {
 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
-		// default rate for unicast
+		/* default rate for unicast */
 		bd->bd_rate = 2;
 		bd->ack_policy = 0;
 	}
@@ -112,6 +112,6 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 
 	bd->dpu_ne = encrypt;
 
-	buff_to_be((u32*)bd, sizeof(*bd)/sizeof(u32));
+	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
 	bd->tx_bd_sign = 0xbdbdbdbd;
 }
