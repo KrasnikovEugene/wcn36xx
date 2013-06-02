@@ -14,11 +14,11 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-// DXE - DMA transfer engine
-// we have 2 channels(High prio and Low prio) for TX and 2 channels for RX.
-// through low channels data packets are transfered
-// through high channels managment packets are transfered
-
+/* DXE - DMA transfer engine
+ * we have 2 channels(High prio and Low prio) for TX and 2 channels for RX.
+ * through low channels data packets are transfered
+ * through high channels managment packets are transfered
+ */
 #include <linux/interrupt.h>
 #include "dxe.h"
 #include "txrx.h"
@@ -32,7 +32,7 @@ static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 	writel(data, wcn->mmio + addr);
 }
 
-static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int* data)
+static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 {
 	*data = readl(wcn->mmio + addr);
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
@@ -45,8 +45,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 	struct wcn36xx_dxe_ctl *prev_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	int i;
-	for (i = 0; i < ch->desc_num; i++)
-	{
+	for (i = 0; i < ch->desc_num; i++) {
 		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
 			return -ENOMEM;
@@ -107,14 +106,14 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	wcn->dxe_tx_l_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_L;
 	wcn->dxe_tx_h_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_H;
 
-	//DEX control block allocation
-	//TODO: Error handling
+	/* DEX control block allocation */
+	/* TODO: Error handling */
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
 	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_h_ch);
 
-	// TODO most probably do not need this
+	/* TODO most probably do not need this */
 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
 	ret = smsm_change_state(SMSM_APPS_STATE,
 		WCN36XX_SMSM_WLAN_TX_ENABLE,
@@ -150,8 +149,7 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 	cur_dxe = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
 	cur_ctl = wcn_ch->head_blk_ctl;
 
-	for (i = 0; i < wcn_ch->desc_num; i++)
-	{
+	for (i = 0; i < wcn_ch->desc_num; i++) {
 		cur_ctl->desc = cur_dxe;
 		cur_ctl->desc_phy_addr = wcn_ch->dma_addr +
 			i * sizeof(struct wcn36xx_dxe_desc);
@@ -179,7 +177,7 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 		} else if ((0 < i) && (i < wcn_ch->desc_num - 1)) {
 			prev_dxe->phy_next_l =
 				cur_ctl->desc_phy_addr;
-		} else if (i == (wcn_ch->desc_num -1)) {
+		} else if (i == (wcn_ch->desc_num - 1)) {
 			prev_dxe->phy_next_l =
 				cur_ctl->desc_phy_addr;
 			cur_dxe->phy_next_l =
@@ -436,7 +434,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 	/* Allocate BD headers for MGMT frames */
 
-	// Where this come from ask QC
+	/* Where this come from ask QC */
 	wcn->mgmt_mem_pool.chunk_size =	WCN36XX_BD_CHUNK_SIZE +
 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
 
@@ -449,7 +447,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 	/* Allocate BD headers for DATA frames */
 
-	// Where this come from ask QC
+	/* Where this come from ask QC */
 	wcn->data_mem_pool.chunk_size = WCN36XX_BD_CHUNK_SIZE +
 		16 - (WCN36XX_BD_CHUNK_SIZE % 8);
 
@@ -513,7 +511,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
 
-	// Set source address of the BD we send
+	/* Set source address of the BD we send */
 	desc->src_addr_l = ctl->bd_phy_addr;
 
 	desc->dst_addr_l = ch->dxe_wq;
@@ -528,7 +526,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 			 "BD   >>> ", (char *)ctl->bd_cpu_addr,
 			 sizeof(struct wcn36xx_tx_bd));
 
-	// Set source address of the SKB we send
+	/* Set source address of the SKB we send */
 	ctl = ctl->next;
 	ctl->skb = skb;
 	desc = ctl->desc;
@@ -546,7 +544,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	desc->dst_addr_l = ch->dxe_wq;
 	desc->fr_len = ctl->skb->len;
 
-	// set it to VALID
+	/* set dxe descriptor to VALID */
 	desc->ctrl = ch->ctrl_skb;
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
@@ -554,10 +552,10 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
 			 (char *)ctl->skb->data, ctl->skb->len);
 
-	// Move the head of the ring to the next empty descriptor
+	/* Move the head of the ring to the next empty descriptor */
 	 ch->head_blk_ctl = ctl->next;
 
-	//indicate End Of Packet and generate interrupt on descriptor Done
+	/* indicate End Of Packet and generate interrupt on descriptor done */
 	wcn36xx_dxe_write_register(wcn,
 		ch->reg_ctrl, ch->def_ctrl);
 	return 0;
@@ -569,7 +567,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	reg_data = WCN36XX_DXE_REG_RESET;
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CSR_RESET, reg_data);
 
-	// Setting interrupt path
+	/* Setting interrupt path */
 	reg_data = WCN36XX_DXE_CCU_INT;
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_REG_CCU_INT, reg_data);
 
@@ -579,11 +577,11 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_l_ch);
 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_l_ch, &wcn->data_mem_pool);
 
-	// Write chanel head to a NEXT register
+	/* Write channel head to a NEXT register */
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_L,
 		wcn->dxe_tx_l_ch.head_blk_ctl->desc_phy_addr);
 
-	// Program DMA destination addr for TX LOW
+	/* Program DMA destination addr for TX LOW */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_TX_L,
 		WCN36XX_DXE_WQ_TX_L);
@@ -597,17 +595,17 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	wcn36xx_dxe_init_descs(&wcn->dxe_tx_h_ch);
 	wcn36xx_dxe_init_tx_bd(&wcn->dxe_tx_h_ch, &wcn->mgmt_mem_pool);
 
-	// Write chanel head to a NEXT register
+	/* Write channel head to a NEXT register */
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_H,
 		wcn->dxe_tx_h_ch.head_blk_ctl->desc_phy_addr);
 
-	// Program DMA destination addr for TX HIGH
+	/* Program DMA destination addr for TX HIGH */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_TX_H,
 		WCN36XX_DXE_WQ_TX_H);
 
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_REG_CH_EN, &reg_data);
-	// Enable channel interrupts
+	/* Enable channel interrupts */
 	wcn36xx_dxe_enable_ch_int(wcn, WCN36XX_INT_MASK_CHAN_TX_H);
 
 	/***************************************/
@@ -615,30 +613,30 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_rx_l_ch);
 
-	// For RX we need to prealocat buffers
+	/* For RX we need to preallocated buffers */
 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_l_ch);
 
-	// Write chanel head to a NEXT register
+	/* Write channel head to a NEXT register */
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_RX_L,
 		wcn->dxe_rx_l_ch.head_blk_ctl->desc_phy_addr);
 
-	// Write DMA source address
+	/* Write DMA source address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_SRC_ADDR_RX_L,
 		WCN36XX_DXE_WQ_RX_L);
 
-	// Program preallocated destionatio Address
+	/* Program preallocated destionation Address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
 		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
 
 
-	// Enable default control registers
+	/* Enable default control registers */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_REG_CTL_RX_L,
 		WCN36XX_DXE_CH_DEFAULT_CTL_RX_L);
 
-	// Enable channel interrupts
+	/* Enable channel interrupts */
 	wcn36xx_dxe_enable_ch_int(wcn, WCN36XX_INT_MASK_CHAN_RX_L);
 
 	/***************************************/
@@ -646,29 +644,29 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	/***************************************/
 	wcn36xx_dxe_init_descs(&wcn->dxe_rx_h_ch);
 
-	// For RX we need to prealocat buffers
+	/* For RX we need to prealocat buffers */
 	wcn36xx_dxe_ch_alloc_skb(wcn, &wcn->dxe_rx_h_ch);
 
-	// Write chanel head to a NEXT register
+	/* Write chanel head to a NEXT register */
 	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_CH_NEXT_DESC_ADDR_RX_H,
 		wcn->dxe_rx_h_ch.head_blk_ctl->desc_phy_addr);
 
-	// Write DMA source address
+	/* Write DMA source address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_SRC_ADDR_RX_H,
 		WCN36XX_DXE_WQ_RX_H);
 
-	// Program preallocated destionatio Address
+	/* Program preallocated destionation Address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_H,
 		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->phy_next_l);
 
-	// Enable default control registers
+	/* Enable default control registers */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_REG_CTL_RX_H,
 		WCN36XX_DXE_CH_DEFAULT_CTL_RX_H);
 
-	// Enable channel interrupts
+	/* Enable channel interrupts */
 	wcn36xx_dxe_enable_ch_int(wcn, WCN36XX_INT_MASK_CHAN_RX_H);
 
 	ret = wcn36xx_dxe_request_irqs(wcn);
