@@ -51,25 +51,28 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
-#define wcn36xx_error(fmt, arg...) \
-	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg); \
-	__WARN()
+#define wcn36xx_error(fmt, arg...) do {			\
+	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg);	\
+	__WARN();					\
+} while (0)
 
-#define wcn36xx_warn(fmt, arg...) \
-	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg);
+#define wcn36xx_warn(fmt, arg...)				\
+	pr_warn(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
 
-#define wcn36xx_info(fmt, arg...) \
+#define wcn36xx_info(fmt, arg...)		\
 	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
 
-#define wcn36xx_dbg(mask, fmt, arg...)			\
-	if (debug_mask & mask)				\
-		pr_debug(DRIVER_PREFIX fmt "\n", ##arg)
+#define wcn36xx_dbg(mask, fmt, arg...) do {			\
+	if (debug_mask & mask)					\
+		pr_debug(DRIVER_PREFIX fmt "\n", ##arg);	\
+} while (0)
 
-#define wcn36xx_dbg_dump(mask, prefix_str, buf, len)		\
+#define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
 	if (debug_mask & mask)					\
 		print_hex_dump(KERN_DEBUG, prefix_str,		\
 			       DUMP_PREFIX_ADDRESS, 32, 1,	\
-			       buf, len, false);
+			       buf, len, false);		\
+} while (0)
 
 enum wcn36xx_encryption_state {
 	WCN36XX_STA_KEY,
@@ -79,14 +82,12 @@ enum wcn36xx_encryption_state {
 static inline void buff_to_be(u32 *buf, size_t len)
 {
 	int i;
-	for (i = 0; i< len; i++)
-	{
+	for (i = 0; i < len; i++)
 		buf[i] = cpu_to_be32(buf[i]);
-	}
 }
 struct nv_data {
-   int    	is_valid;
-   void 	*table;
+	int	is_valid;
+	void	*table;
 };
 struct wcn36xx_vif {
 	u8 sta_index;
@@ -97,59 +98,59 @@ struct wcn_sta {
 };
 struct wcn36xx_dxe_ch;
 struct wcn36xx {
-	struct ieee80211_hw 	*hw;
-	struct workqueue_struct 	*wq;
-	struct workqueue_struct 	*ctl_wq;
-	struct device 		*dev;
-	const struct firmware 	*nv;
-	struct mac_address addresses[2];
-	int ch;
+	struct ieee80211_hw	*hw;
+	struct workqueue_struct	*wq;
+	struct workqueue_struct	*ctl_wq;
+	struct device		*dev;
+	const struct firmware	*nv;
+	struct mac_address	addresses[2];
+	int			ch;
 	struct ieee80211_channel *current_channel;
 	struct wcn36xx_hal_mac_ssid ssid;
-	enum nl80211_iftype iftype;
-	u16 aid;
-	struct wcn36xx_vif *current_vif;
-	u16 beacon_interval;
+	enum nl80211_iftype	iftype;
+	u16			aid;
+	struct wcn36xx_vif	*current_vif;
+	u16			beacon_interval;
 
-	u8 fw_revision;
-	u8 fw_version;
-	u8 fw_minor;
-	u8 fw_major;
-	enum wcn36xx_encryption_state en_state;
+	u8			fw_revision;
+	u8			fw_version;
+	u8			fw_minor;
+	u8			fw_major;
+	enum wcn36xx_encryption_state	en_state;
 
 	/* extra byte for the NULL termination */
-	u8 crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
-	u8 wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+	u8			wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
 
-	bool            beacon_enable;
-	// IRQs
-	int 			tx_irq; 	// TX complete irq
-	int 			rx_irq; 	// RX ready irq
-	void __iomem    	*mmio;
+	bool			beacon_enable;
+	/* IRQs */
+	int			tx_irq;
+	int			rx_irq;
+	void __iomem		*mmio;
 
-	// Rates
+	/* Rates */
 	struct wcn36xx_hal_supported_rates supported_rates;
 
-	// SMD related
-	smd_channel_t 		*smd_ch;
+	/* SMD related */
+	smd_channel_t		*smd_ch;
 	u8			*smd_buf;
-	struct work_struct 	smd_work;
-	struct work_struct 	start_work;
-	struct work_struct 	rx_ready_work;
-	struct completion 	smd_compl;
+	struct work_struct	smd_work;
+	struct work_struct	start_work;
+	struct work_struct	rx_ready_work;
+	struct completion	smd_compl;
 
-	//Scanning
-	int                     is_scanning;
+	/* Scanning */
+	int			is_scanning;
 
-	// DXE chanels
-	struct wcn36xx_dxe_ch 	dxe_tx_l_ch;	// TX low channel
-	struct wcn36xx_dxe_ch 	dxe_tx_h_ch;	// TX high channel
-	struct wcn36xx_dxe_ch 	dxe_rx_l_ch;	// RX low channel
-	struct wcn36xx_dxe_ch 	dxe_rx_h_ch;	// RX high channel
+	/* DXE channels */
+	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */
+	struct wcn36xx_dxe_ch	dxe_tx_h_ch;	/* TX high */
+	struct wcn36xx_dxe_ch	dxe_rx_l_ch;	/* RX low */
+	struct wcn36xx_dxe_ch	dxe_rx_h_ch;	/* RX high */
 
-	// Memory pools
-	struct wcn36xx_dxe_mem_pool	mgmt_mem_pool;
-	struct wcn36xx_dxe_mem_pool	data_mem_pool;
+	/* Memory pools */
+	struct wcn36xx_dxe_mem_pool mgmt_mem_pool;
+	struct wcn36xx_dxe_mem_pool data_mem_pool;
 };
 
 #endif	/* _WCN36XX_H_ */
