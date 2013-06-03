@@ -27,6 +27,11 @@
 /* broadcast wq ID */
 #define WCN36XX_TX_B_WQ_ID		0xA
 #define WCN36XX_TX_U_WQ_ID		0x9
+/* bd_rate */
+#define WCN36XX_BD_RATE_DATA 0
+#define WCN36XX_BD_RATE_MGMT 2
+#define WCN36XX_BD_RATE_CTRL 3
+
 struct wcn36xx_pdu {
 	u32	dpu_fb:8;
 	u32	adu_fb:8;
@@ -146,5 +151,5 @@ struct wcn36xx_tx_bd {
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
 void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len);
 void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
-			u8 broadcast, u8 encrypt);
+			u8 broadcast, u8 encrypt, struct ieee80211_hdr *hdr);
 #endif	/* _TXRX_H_ */
