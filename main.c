@@ -176,11 +176,13 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 		       struct ieee80211_tx_control *control,
 		       struct sk_buff *skb)
 {
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_mgmt *mgmt;
-	bool high, bcast;
+	bool high, bcast, tx_compl;
 	u32 header_len = 0;
 	struct wcn36xx *wcn = hw->priv;
 
+	tx_compl = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
 	mgmt = (struct ieee80211_mgmt *)skb->data;
 
 	high = !(ieee80211_is_data(mgmt->frame_control) ||
@@ -206,7 +208,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	header_len = ieee80211_is_data_qos(mgmt->frame_control) ?
 		sizeof(struct ieee80211_qos_hdr) :
 		sizeof(struct ieee80211_hdr_3addr);
-	wcn36xx_dxe_tx(hw->priv, skb, bcast, high, header_len);
+	wcn36xx_dxe_tx(hw->priv, skb, bcast, high, header_len, tx_compl);
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
@@ -661,7 +663,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	};
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
-		IEEE80211_HW_HAS_RATE_CONTROL;
+		IEEE80211_HW_HAS_RATE_CONTROL |
+		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |

@@ -270,6 +270,30 @@ static void wcn36xx_dxe_ch_free_skbs(struct wcn36xx *wcn,
 	}
 }
 
+void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
+{
+	struct ieee80211_tx_info *info;
+	struct sk_buff *skb;
+	unsigned long flags;
+
+	spin_lock_irqsave(&wcn->dxe_lock, flags);
+	skb = wcn->tx_ack_skb;
+	wcn->tx_ack_skb = NULL;
+	spin_unlock_irqrestore(&wcn->dxe_lock, flags);
+
+	if (!skb) {
+		wcn36xx_warn("Spurious TX complete indication");
+		return;
+	}
+
+	info = IEEE80211_SKB_CB(skb);
+	if (status == 1)
+		info->flags |= IEEE80211_TX_STAT_ACK;
+	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ack status: %d", status);
+	ieee80211_tx_status_irqsafe(wcn->hw, skb);
+	ieee80211_wake_queues(wcn->hw);
+}
+
 static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
@@ -281,8 +305,11 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 			dma_unmap_single(NULL, ctl->desc->src_addr_l,
 					 ctl->skb->len, DMA_TO_DEVICE);
 			info = IEEE80211_SKB_CB(ctl->skb);
-			ieee80211_tx_info_clear_status(info);
-			ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
+				/* Keep frame until TX status comes */
+				ieee80211_tx_info_clear_status(info);
+				ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+			}
 			ctl->skb = NULL;
 		}
 		ctl = ctl->next;
@@ -479,14 +506,36 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		   struct sk_buff *skb,
 		   u8 broadcast,
 		   bool is_high,
-		   u32 header_len)
+		   u32 header_len, bool tx_ack)
 {
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+	unsigned long flags;
 
 	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
+
+	if (tx_ack) {
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
+		spin_lock_irqsave(&wcn->dxe_lock, flags);
+		if (wcn->tx_ack_skb) {
+			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
+			wcn36xx_warn("tx_ack_skb already set");
+			ieee80211_free_txskb(wcn->hw, skb);
+			return -EINVAL;
+		}
+
+		wcn->tx_ack_skb = skb;
+		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
+
+		/* Only one at a time is supported by fw. Stop the TX queues
+		 * until the ack status gets back.
+		 *
+		 * TODO: Add watchdog in case FW does not answer
+		 */
+		ieee80211_stop_queues(wcn->hw);
+	}
 
 	ctl = ch->head_blk_ctl;
 	ctl->skb = NULL;
@@ -505,9 +554,11 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
 	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
-		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0, hdr);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0, hdr,
+				   tx_ack);
 	} else {
-		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1, hdr);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1, hdr,
+				   tx_ack);
 	}
 
 	ctl = ch->head_blk_ctl;
@@ -684,6 +735,12 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 {
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
+
+	if (wcn->tx_ack_skb) {
+		ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
+		wcn->tx_ack_skb = NULL;
+	}
+
 	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_l_ch);
 	wcn36xx_dxe_ch_free_skbs(wcn, &wcn->dxe_rx_h_ch);
 }

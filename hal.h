@@ -3632,7 +3632,7 @@ struct coex_ind_msg {
 	u32 data[WLAN_COEX_IND_DATA_SIZE];
 };
 
-struct tx_compl_ind_msg {
+struct wcn36xx_hal_tx_compl_ind_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Tx Complete Indication Success or Failure */

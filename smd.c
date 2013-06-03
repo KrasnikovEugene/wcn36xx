@@ -1012,6 +1012,21 @@ static void wcn36xx_smd_notify(void *data, unsigned event)
 		break;
 	}
 }
+
+static int wcn36xx_smd_tx_compl_ind(struct wcn36xx *wcn, void *buf, size_t len)
+{
+	struct wcn36xx_hal_tx_compl_ind_msg *rsp = buf;
+
+	if (len != sizeof(*rsp)) {
+		wcn36xx_warn("Bad TX complete indication");
+		return -EIO;
+	}
+
+	wcn36xx_dxe_tx_ack_ind(wcn, rsp->status);
+
+	return 0;
+}
+
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header *msg_header = buf;
@@ -1057,6 +1072,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_CH_SWITCH_RSP:
 		wcn36xx_smd_switch_channel_rsp(buf, len);
+		break;
+	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+		wcn36xx_smd_tx_compl_ind(wcn, buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
