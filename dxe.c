@@ -20,6 +20,7 @@
  * through high channels managment packets are transfered
  */
 #include <linux/interrupt.h>
+#include <linux/ieee80211.h>
 #include "dxe.h"
 #include "txrx.h"
 #include "wcn36xx.h"
@@ -483,6 +484,7 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
 
 	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
 
@@ -503,9 +505,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
 	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
-		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0, hdr);
 	} else {
-		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1);
+		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 1, hdr);
 	}
 
 	ctl = ch->head_blk_ctl;
