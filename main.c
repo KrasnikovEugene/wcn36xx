@@ -293,6 +293,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct sk_buff *skb = NULL;
+	struct sk_buff *skb2 = NULL;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
 	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
@@ -387,7 +388,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, wcn->iftype,
 					       wcn->addresses[0].addr, false,
 					       wcn->beacon_interval);
-			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
 
 			if (vif->type == NL80211_IFTYPE_ADHOC ||
 			    vif->type == NL80211_IFTYPE_MESH_POINT)
@@ -397,6 +397,11 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						link_state);
+			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+
+			skb2 = ieee80211_proberesp_get(hw, vif);
+			wcn36xx_smd_update_proberesp_tmpl(wcn, skb2);
+
 		} else {
 			/* FIXME: disable beaconing */
 		}
