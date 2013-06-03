@@ -21,11 +21,11 @@
 #include "wcn36xx.h"
 #include "hal.h"
 
-//Max shared size is 4k but we take less.
-#define WCN36XX_NV_FRAGMENT_SIZE 			3072
+/* Max shared size is 4k but we take less.*/
+#define WCN36XX_NV_FRAGMENT_SIZE			3072
 
 #define SMD_MSG_TIMEOUT 200
-#define WCN36XX_SMSM_WLAN_TX_ENABLE	 		0x00000400
+#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 /* The PNO version info be contained in the rsp msg */
 #define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
@@ -41,7 +41,7 @@ enum wcn36xx_fw_msg_result {
 /* SMD requests and responses */
 /******************************/
 struct wcn36xx_fw_msg_status_rsp {
-	u32 	status;
+	u32	status;
 } __packed;
 
 struct wcn36xx;
@@ -69,7 +69,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 			   const u8 *sta_mac);
-int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon, u16 tim_off, u16 p2p_off);
+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
+			    u16 tim_off, u16 p2p_off);
 int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch);
 int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
 int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
@@ -82,7 +83,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 			   u8 keyidx,
 			   u8 keylen,
 			   u8 *key);
-// WCN36XX configuration parameters
+/* WCN36XX configuration parameters */
 struct wcn36xx_fw_cfg {
 	u16		id;
 	u16		len;
