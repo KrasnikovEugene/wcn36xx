@@ -20,11 +20,11 @@
 #include "smd.h"
 #include <linux/ieee80211.h>
 
-// TODO describe all properties
-#define WCN36XX_802_11_HEADER_LEN 	24
+/* TODO describe all properties */
+#define WCN36XX_802_11_HEADER_LEN	24
 #define WCN36XX_BMU_WQ_TX		25
 #define WCN36XX_TID			7
-// broadcast wq ID
+/* broadcast wq ID */
 #define WCN36XX_TX_B_WQ_ID		0xA
 #define WCN36XX_TX_U_WQ_ID		0x9
 struct wcn36xx_pdu {
@@ -33,21 +33,22 @@ struct wcn36xx_pdu {
 	u32	pdu_id:16;
 
 	/* 0x04*/
-	u32 	tail_pdu_idx:16;
-	u32 	head_pdu_idx:16;
+	u32	tail_pdu_idx:16;
+	u32	head_pdu_idx:16;
 
 	/* 0x08*/
-	u32 	pdu_count:7;
-	u32 	mpdu_data_off:9;
-	u32 	mpdu_header_off:8;
-	u32 	mpdu_header_len:8;
+	u32	pdu_count:7;
+	u32	mpdu_data_off:9;
+	u32	mpdu_header_off:8;
+	u32	mpdu_header_len:8;
 
 	/* 0x0c*/
-	u32 	reserved4:8;
-	u32 	tid:4;
-	u32 	reserved3:4;
-	u32 	mpdu_len:16;
+	u32	reserved4:8;
+	u32	tid:4;
+	u32	reserved3:4;
+	u32	mpdu_len:16;
 };
+
 struct wcn36xx_rx_bd {
 	u32	bdt:2;
 	u32	ft:1;
@@ -73,7 +74,7 @@ struct wcn36xx_rx_bd {
 	u32	addr3:8;
 	u32	addr2:8;
 	u32	addr1:8;
-	u32 	dpu_desc_idx:8;
+	u32	dpu_desc_idx:8;
 
 	/* 0x18*/
 	u32	rxp_flags:23;
@@ -88,7 +89,7 @@ struct wcn36xx_rx_bd {
 	u32	pmi_cmd[6];
 
 	/* 0x40 */
-	u32 	reserved7:4;
+	u32	reserved7:4;
 	u32	reorder_slot_id:6;
 	u32	reorder_fwd_id:6;
 	u32	reserved6:12;
@@ -126,21 +127,21 @@ struct wcn36xx_tx_bd {
 	struct wcn36xx_pdu pdu;
 
 	/* 0x14*/
-	u32 	reserved5:7;
-	u32 	queue_id:5;
-	u32 	bd_rate:2;
-	u32 	ack_policy:2;
-	u32 	sta_index:8;
-	u32 	dpu_desc_idx:8;
+	u32	reserved5:7;
+	u32	queue_id:5;
+	u32	bd_rate:2;
+	u32	ack_policy:2;
+	u32	sta_index:8;
+	u32	dpu_desc_idx:8;
 
 	u32	tx_bd_sign;
 	u32	reserved6;
 	u32	dxe_start_time;
 	u32	dxe_end_time;
 
-	/*u32 	tcp_udp_start_off:10;
-	u32 	header_cks:16;
-	u32 	reserved7:6;*/
+	/*u32	tcp_udp_start_off:10;
+	u32	header_cks:16;
+	u32	reserved7:6;*/
 };
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
 void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len);
