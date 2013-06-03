@@ -462,9 +462,13 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		    vif, sta->addr);
 
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
+	    vif->type == NL80211_IFTYPE_MESH_POINT ||
+	    vif->type == NL80211_IFTYPE_AP) {
+		wcn->aid = sta->aid;
 		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
 				       sta->addr);
+		wcn36xx_smd_set_stakey(wcn, 0, 0, 0, NULL);
+	}
 
 	return 0;
 }
@@ -608,7 +612,12 @@ static struct ieee80211_supported_band wcn_band_2ghz = {
 	.bitrates	= wcn_legacy_rates,
 	.n_bitrates	= ARRAY_SIZE(wcn_legacy_rates),
 	.ht_cap		= {
-		.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 |
+		.cap = IEEE80211_HT_CAP_GRN_FLD |
+		       IEEE80211_HT_CAP_SGI_20 |
+		       IEEE80211_HT_CAP_DSSSCCK40 |
+		       IEEE80211_HT_CAP_LSIG_TXOP_PROT|
+		       IEEE80211_HT_CAP_SGI_40 |
+		       IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
 			(1 << IEEE80211_HT_CAP_RX_STBC_SHIFT),
 		.ht_supported = true,
 		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K,
@@ -666,7 +675,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	};
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
-		IEEE80211_HW_HAS_RATE_CONTROL;
+		IEEE80211_HW_HAS_RATE_CONTROL |
+		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
@@ -683,6 +693,11 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->wiphy->cipher_suites = cipher_suites;
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
+	wcn->hw->wiphy->probe_resp_offload =
+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
 
 	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
