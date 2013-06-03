@@ -20,6 +20,7 @@
 #include <linux/completion.h>
 #include <linux/printk.h>
 #include <linux/firmware.h>
+#include <linux/spinlock.h>
 #include <linux/workqueue.h>
 #include <mach/msm_smd.h>
 #include <net/mac80211.h>
@@ -149,9 +150,14 @@ struct wcn36xx {
 	struct wcn36xx_dxe_ch	dxe_rx_l_ch;	/* RX low */
 	struct wcn36xx_dxe_ch	dxe_rx_h_ch;	/* RX high */
 
+	/* For synchronization of DXE resources from BH, IRQ and WQ contexts */
+	spinlock_t	dxe_lock;
+
 	/* Memory pools */
 	struct wcn36xx_dxe_mem_pool mgmt_mem_pool;
 	struct wcn36xx_dxe_mem_pool data_mem_pool;
+
+	struct sk_buff		*tx_ack_skb;
 };
 
 #endif	/* _WCN36XX_H_ */
