@@ -402,7 +402,7 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 out_txirq:
 	free_irq(wcn->tx_irq, wcn);
 out_err:
-	return -ret;
+	return ret;
 
 }
 
