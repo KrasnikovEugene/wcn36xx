@@ -41,15 +41,27 @@ static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 		    addr, *data);
 }
 
+static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
+	int i;
+
+	for (i = 0; i < ch->desc_num && ctl; i++) {
+		next = ctl->next;
+		kfree(ctl);
+		ctl = next;
+	}
+}
+
 static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *prev_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	int i;
 	for (i = 0; i < ch->desc_num; i++) {
-		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
+		cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
-			return -ENOMEM;
+			goto out_fail;
 
 		cur_ctl->ctl_blk_order = i;
 		if (i == 0) {
@@ -64,23 +76,14 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		prev_ctl = cur_ctl;
 	}
 	return 0;
-}
-
-static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
-{
-	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
-	int i;
-
-	for (i = 0; i < ch->desc_num; i++) {
-		next = ctl->next;
-		kfree(ctl);
-		ctl = next;
-	}
+out_fail:
+	wcn36xx_dxe_free_ctl_block(ch);
+	return -ENOMEM;
 }
 
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 {
-	int ret = 0;
+	int ret;
 
 	wcn->dxe_tx_l_ch.ch_type = WCN36XX_DXE_CH_TX_L;
 	wcn->dxe_tx_h_ch.ch_type = WCN36XX_DXE_CH_TX_H;
@@ -107,12 +110,19 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	wcn->dxe_tx_l_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_L;
 	wcn->dxe_tx_h_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_H;
 
-	/* DEX control block allocation */
-	/* TODO: Error handling */
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_h_ch);
+	/* DXE control block allocation */
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_h_ch);
+	if (ret)
+		goto out_err;
 
 	/* TODO most probably do not need this */
 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
@@ -120,7 +130,12 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 		WCN36XX_SMSM_WLAN_TX_ENABLE,
 		WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
 
-	return ret;
+	return 0;
+
+out_err:
+	wcn36xx_error("Failed to allocate DXE control blocks");
+	wcn36xx_dxe_free_ctl_blks(wcn);
+	return -ENOMEM;
 }
 
 void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn)
