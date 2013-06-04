@@ -273,7 +273,7 @@ static void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
 	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg *)buf;
-	wcn36xx_info("channel switched to: %d, status: %d", rsp->channel_number,
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d", rsp->channel_number,
 		     rsp->status);
 }
 
