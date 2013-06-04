@@ -361,7 +361,7 @@ static irqreturn_t wcn36xx_irq_rx_ready(int irq, void *dev)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
 	disable_irq_nosync(wcn->rx_irq);
-	queue_work(wcn->ctl_wq, &wcn->rx_ready_work);
+	queue_work(wcn->wq, &wcn->rx_ready_work);
 	return IRQ_HANDLED;
 }
 static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)

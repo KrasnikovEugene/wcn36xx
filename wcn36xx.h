@@ -101,7 +101,6 @@ struct wcn36xx_dxe_ch;
 struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct workqueue_struct	*wq;
-	struct workqueue_struct	*ctl_wq;
 	struct device		*dev;
 	const struct firmware	*nv;
 	struct mac_address	addresses[2];
