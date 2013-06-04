@@ -700,13 +700,14 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 						  wcn->dev);
 
 		if (status) {
-			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
-				     files[i]);
 			if (i == 0) {
 				/* Assign a random mac with Qualcomm oui */
+				wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
+					     files[i]);
 				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
 				get_random_bytes(wcn->addresses[i].addr + 3, 3);
 			} else {
+				wcn36xx_warn("Failed to read macaddress file, using a random address instead");
 				/* Assign locally administered mac addresses to
 				 * all but the first mac */
 				memcpy(wcn->addresses[i].addr,
