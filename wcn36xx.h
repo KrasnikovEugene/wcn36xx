@@ -140,8 +140,6 @@ struct wcn36xx {
 	struct work_struct	rx_ready_work;
 	struct completion	smd_compl;
 
-	/* Scanning */
-	int			is_scanning;
 	bool			is_joining;
 
 	/* DXE channels */
