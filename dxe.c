@@ -484,6 +484,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	s = wcn->mgmt_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_H;
 	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->mgmt_mem_pool.phy_addr,
 				      GFP_KERNEL);
+	if (!cpu_addr)
+		goto out_err;
 
 	wcn->mgmt_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
@@ -497,9 +499,17 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	s = wcn->data_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_L;
 	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->data_mem_pool.phy_addr,
 				      GFP_KERNEL);
+	if (!cpu_addr)
+		goto out_err;
+
 	wcn->data_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
 	return 0;
+
+out_err:
+	wcn36xx_dxe_free_mem_pools(wcn);
+	wcn36xx_error("Failed to allocate BD mempool");
+	return -ENOMEM;
 }
 
 void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
