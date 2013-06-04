@@ -736,6 +736,9 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
 
+	/* Flush any pending rx work */
+	flush_workqueue(wcn->wq);
+
 	if (wcn->tx_ack_skb) {
 		ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
 		wcn->tx_ack_skb = NULL;
