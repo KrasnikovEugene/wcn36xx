@@ -86,7 +86,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("Failed to start chip");
 		goto out_free_smd_buf;
 	}
-	/* DMA chanel initialization */
+	/* DMA channel initialization */
 	ret = wcn36xx_dxe_init(wcn);
 	if (ret) {
 		wcn36xx_error("DXE init failed");

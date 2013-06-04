@@ -427,7 +427,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
 			break;
 		default:
-			wcn36xx_warn("Unknow received channel");
+			wcn36xx_warn("Unknown channel");
 		}
 
 		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
@@ -465,7 +465,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	}
 
 	if (!int_src)
-		wcn36xx_warn("None DXE interrupt triggerd");
+		wcn36xx_warn("No DXE interrupt pending");
 
 	enable_irq(wcn->rx_irq);
 }
@@ -703,7 +703,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 		WCN36XX_DXE_CH_SRC_ADDR_RX_L,
 		WCN36XX_DXE_WQ_RX_L);
 
-	/* Program preallocated destionation Address */
+	/* Program preallocated destination address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
 		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
@@ -734,7 +734,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 		WCN36XX_DXE_CH_SRC_ADDR_RX_H,
 		WCN36XX_DXE_WQ_RX_H);
 
-	/* Program preallocated destionation Address */
+	/* Program preallocated destination address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_H,
 		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->phy_next_l);
