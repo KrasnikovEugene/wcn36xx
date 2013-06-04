@@ -84,7 +84,7 @@ void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len)
 	bd->pdu.mpdu_len = len;
 }
 void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
-			u8 broadcast, u8 encrypt)
+			u8 broadcast, u8 encrypt, struct ieee80211_hdr *hdr)
 {
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
 	bd->pdu.tid   = WCN36XX_TID;
@@ -103,8 +103,15 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 	} else {
 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
 		/* default rate for unicast */
-		bd->bd_rate = 2;
 		bd->ack_policy = 0;
+		if (ieee80211_is_data(hdr->frame_control))
+			bd->bd_rate = WCN36XX_BD_RATE_DATA;
+		else if (ieee80211_is_mgmt(hdr->frame_control))
+			bd->bd_rate = WCN36XX_BD_RATE_MGMT;
+		else if (ieee80211_is_ctl(hdr->frame_control))
+			bd->bd_rate = WCN36XX_BD_RATE_CTRL;
+		else
+			wcn36xx_warn("frame control type unknown");
 	}
 
 	bd->sta_index = wcn->current_vif->sta_index;
