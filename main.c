@@ -688,7 +688,7 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	const struct firmware *addr_file = NULL;
 	int status;
 	u8 tmp[18];
-	static const u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
+	static const u8 qcom_oui[3] = {0x00, 0x0A, 0xF5};
 	static const char *files[1] = {MAC_ADDR_0};
 	int i;
 
