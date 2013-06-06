@@ -66,19 +66,12 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 
 	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
 
-	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
-	if (ret) {
-		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
-			      ret);
-		goto out_free_dxe_ctl;
-	}
-
 	/* Maximum SMD message size is 4k */
 	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
 	if (!wcn->smd_buf) {
 		wcn36xx_error("Failed to allocate smd buf");
 		ret = -ENOMEM;
-		goto out_free_nv;
+		goto out_free_dxe_ctl;
 	}
 
 	/* TODO pass configuration to FW */
@@ -91,7 +84,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	ret = wcn36xx_smd_start(wcn);
 	if (ret) {
 		wcn36xx_error("Failed to start chip");
-		goto out_free_nv;
+		goto out_free_smd_buf;
 	}
 	/* DMA chanel initialization */
 	ret = wcn36xx_dxe_init(wcn);
@@ -105,8 +98,6 @@ out_smd_stop:
 	wcn36xx_smd_stop(wcn);
 out_free_smd_buf:
 	kfree(wcn->smd_buf);
-out_free_nv:
-	release_firmware(wcn->nv);
 out_free_dxe_pool:
 	wcn36xx_dxe_free_mem_pools(wcn);
 out_free_dxe_ctl:
@@ -128,8 +119,6 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	wcn36xx_dxe_free_mem_pools(wcn);
 	wcn36xx_dxe_free_ctl_blks(wcn);
-
-	release_firmware(wcn->nv);
 
 	kfree(wcn->smd_buf);
 }
@@ -831,15 +820,24 @@ static int __init wcn36xx_init(void)
 	private_hw = hw;
 	wcn->beacon_enable = false;
 
+	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
+	if (ret) {
+		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
+			      ret);
+		goto out_unmap;
+	}
+
 	wcn36xx_read_mac_addresses(wcn);
 	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
 
 	ret = ieee80211_register_hw(wcn->hw);
 	if (ret)
-		goto out_unmap;
+		goto out_free_nv;
 
 	return 0;
 
+out_free_nv:
+	release_firmware(wcn->nv);
 out_unmap:
 	iounmap(wcn->mmio);
 out_wq_ctl:
@@ -861,6 +859,7 @@ static void __exit wcn36xx_exit(void)
 	destroy_workqueue(wcn->ctl_wq);
 	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
+	release_firmware(wcn->nv);
 	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);
