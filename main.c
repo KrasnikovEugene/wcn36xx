@@ -771,14 +771,14 @@ static int __init wcn36xx_init(void)
 		goto out_err;
 	}
 
-	wcn->wq = create_freezable_workqueue("wcn36xx_wq");
+	wcn->wq = create_workqueue("wcn36xx_wq");
 	if (!wcn->wq) {
 		wcn36xx_error("failed to allocate wq");
 		ret = -ENOMEM;
 		goto out_err;
 	}
 
-	wcn->ctl_wq = create_freezable_workqueue("wcn36xx_ctl_wq");
+	wcn->ctl_wq = create_workqueue("wcn36xx_ctl_wq");
 	if (!wcn->ctl_wq) {
 		wcn36xx_error("failed to allocate ctl wq");
 		ret = -ENOMEM;
