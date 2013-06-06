@@ -864,7 +864,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 {
-	struct wcn36xx_hal_delete_bss_req_msg  msg_body;
+	struct wcn36xx_hal_delete_bss_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
 
@@ -946,7 +946,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   u8 keylen,
 			   u8 *key)
 {
-	struct wcn36xx_hal_set_sta_key_req_msg  msg_body;
+	struct wcn36xx_hal_set_sta_key_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_STAKEY_REQ);
 
@@ -972,7 +972,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 			   u8 keylen,
 			   u8 *key)
 {
-	struct wcn36xx_hal_set_bss_key_req_msg  msg_body;
+	struct wcn36xx_hal_set_bss_key_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
 	msg_body.bss_idx = 0;
