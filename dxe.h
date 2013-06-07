@@ -234,5 +234,6 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		   struct sk_buff *skb,
 		   u8 broadcast,
 		   bool is_high,
-		   u32 header_len);
+		   u32 header_len, bool tx_compl);
+void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status);
 #endif	/* _DXE_H_ */

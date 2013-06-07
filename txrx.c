@@ -84,7 +84,8 @@ void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len)
 	bd->pdu.mpdu_len = len;
 }
 void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
-			u8 broadcast, u8 encrypt, struct ieee80211_hdr *hdr)
+			u8 broadcast, u8 encrypt, struct ieee80211_hdr *hdr,
+			bool tx_compl)
 {
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
 	bd->pdu.tid   = WCN36XX_TID;
@@ -118,6 +119,7 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
 
 	bd->dpu_ne = encrypt;
+	bd->tx_comp = tx_compl;
 
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
 	bd->tx_bd_sign = 0xbdbdbdbd;
