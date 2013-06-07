@@ -281,8 +281,10 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 			dma_unmap_single(NULL, ctl->desc->src_addr_l,
 					 ctl->skb->len, DMA_TO_DEVICE);
 			info = IEEE80211_SKB_CB(ctl->skb);
-			ieee80211_tx_info_clear_status(info);
+			info->flags |= IEEE80211_TX_STAT_ACK;
+			ieee80211_wake_queues(wcn->hw);
 			ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+			ieee80211_tx_info_clear_status(info);
 			ctl->skb = NULL;
 		}
 		ctl = ctl->next;
