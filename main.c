@@ -537,6 +537,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn->aid = bss_conf->aid;
 			wcn->en_state = WCN36XX_STA_KEY;
+			wcn->capabilities_info = bss_conf->assoc_capability;
 
 			rcu_read_lock();
 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
@@ -551,6 +552,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
 			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
+			wcn36xx_smd_enable_bcn_filter(wcn);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
