@@ -670,6 +670,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->cipher_suites = cipher_suites;
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 
+	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
 	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
 
