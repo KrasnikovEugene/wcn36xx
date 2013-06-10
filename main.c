@@ -142,8 +142,8 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		wcn->ch = hw->conf.chandef.chan->hw_value;
 		wcn->current_channel = hw->conf.chandef.chan;
-		wcn36xx_info("wcn36xx_config channel switch=%d", wcn->ch);
-		wcn36xx_smd_switch_channel_req(wcn, wcn->ch);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", wcn->ch);
+		wcn36xx_smd_switch_channel(wcn, wcn->ch);
 	}
 
 	return 0;
@@ -261,20 +261,18 @@ out:
 
 static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 {
-
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_init_scan(wcn);
 	wcn36xx_smd_start_scan(wcn, wcn->ch);
-	wcn->is_scanning = 1;
 }
 
 static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
+
 	wcn36xx_smd_end_scan(wcn, wcn->ch);
 	wcn36xx_smd_finish_scan(wcn);
-	wcn->is_scanning = 0;
 }
 
 static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
@@ -690,7 +688,7 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 	const struct firmware *addr_file = NULL;
 	int status;
 	u8 tmp[18];
-	static const u8 qcom_oui[3] = {0x00, 0xA0, 0xC6};
+	static const u8 qcom_oui[3] = {0x00, 0x0A, 0xF5};
 	static const char *files[1] = {MAC_ADDR_0};
 	int i;
 
@@ -702,13 +700,14 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 						  wcn->dev);
 
 		if (status) {
-			wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
-				     files[i]);
 			if (i == 0) {
 				/* Assign a random mac with Qualcomm oui */
+				wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
+					     files[i]);
 				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
 				get_random_bytes(wcn->addresses[i].addr + 3, 3);
 			} else {
+				wcn36xx_warn("Failed to read macaddress file, using a random address instead");
 				/* Assign locally administered mac addresses to
 				 * all but the first mac */
 				memcpy(wcn->addresses[i].addr,
