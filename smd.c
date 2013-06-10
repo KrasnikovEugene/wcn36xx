@@ -493,6 +493,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->aid = wcn->aid;
 
 	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
+	    wcn->iftype == NL80211_IFTYPE_AP ||
 	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
