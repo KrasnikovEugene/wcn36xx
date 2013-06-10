@@ -253,7 +253,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch)
 {
 	struct wcn36xx_hal_switch_channel_req_msg msg_body;
 
