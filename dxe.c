@@ -41,15 +41,27 @@ static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 		    addr, *data);
 }
 
+static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
+{
+	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
+	int i;
+
+	for (i = 0; i < ch->desc_num && ctl; i++) {
+		next = ctl->next;
+		kfree(ctl);
+		ctl = next;
+	}
+}
+
 static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *prev_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	int i;
 	for (i = 0; i < ch->desc_num; i++) {
-		cur_ctl = kmalloc(sizeof(*cur_ctl), GFP_KERNEL);
+		cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
-			return -ENOMEM;
+			goto out_fail;
 
 		cur_ctl->ctl_blk_order = i;
 		if (i == 0) {
@@ -64,23 +76,14 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		prev_ctl = cur_ctl;
 	}
 	return 0;
-}
-
-static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
-{
-	struct wcn36xx_dxe_ctl *ctl = ch->head_blk_ctl, *next;
-	int i;
-
-	for (i = 0; i < ch->desc_num; i++) {
-		next = ctl->next;
-		kfree(ctl);
-		ctl = next;
-	}
+out_fail:
+	wcn36xx_dxe_free_ctl_block(ch);
+	return -ENOMEM;
 }
 
 int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 {
-	int ret = 0;
+	int ret;
 
 	wcn->dxe_tx_l_ch.ch_type = WCN36XX_DXE_CH_TX_L;
 	wcn->dxe_tx_h_ch.ch_type = WCN36XX_DXE_CH_TX_H;
@@ -107,12 +110,19 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	wcn->dxe_tx_l_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_L;
 	wcn->dxe_tx_h_ch.def_ctrl = WCN36XX_DXE_CH_DEFAULT_CTL_TX_H;
 
-	/* DEX control block allocation */
-	/* TODO: Error handling */
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
-	wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_h_ch);
+	/* DXE control block allocation */
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_l_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_tx_h_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_l_ch);
+	if (ret)
+		goto out_err;
+	ret = wcn36xx_dxe_allocate_ctl_block(&wcn->dxe_rx_h_ch);
+	if (ret)
+		goto out_err;
 
 	/* TODO most probably do not need this */
 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
@@ -120,7 +130,12 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 		WCN36XX_SMSM_WLAN_TX_ENABLE,
 		WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
 
-	return ret;
+	return 0;
+
+out_err:
+	wcn36xx_error("Failed to allocate DXE control blocks");
+	wcn36xx_dxe_free_ctl_blks(wcn);
+	return -ENOMEM;
 }
 
 void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn)
@@ -361,7 +376,7 @@ static irqreturn_t wcn36xx_irq_rx_ready(int irq, void *dev)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
 	disable_irq_nosync(wcn->rx_irq);
-	queue_work(wcn->ctl_wq, &wcn->rx_ready_work);
+	queue_work(wcn->wq, &wcn->rx_ready_work);
 	return IRQ_HANDLED;
 }
 static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
@@ -387,7 +402,7 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 out_txirq:
 	free_irq(wcn->tx_irq, wcn);
 out_err:
-	return -ret;
+	return ret;
 
 }
 
@@ -412,7 +427,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
 			break;
 		default:
-			wcn36xx_warn("Unknow received channel");
+			wcn36xx_warn("Unknown channel");
 		}
 
 		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
@@ -450,7 +465,7 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 	}
 
 	if (!int_src)
-		wcn36xx_warn("None DXE interrupt triggerd");
+		wcn36xx_warn("No DXE interrupt pending");
 
 	enable_irq(wcn->rx_irq);
 }
@@ -469,6 +484,8 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	s = wcn->mgmt_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_H;
 	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->mgmt_mem_pool.phy_addr,
 				      GFP_KERNEL);
+	if (!cpu_addr)
+		goto out_err;
 
 	wcn->mgmt_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
@@ -482,9 +499,17 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 	s = wcn->data_mem_pool.chunk_size * WCN36XX_DXE_CH_DESC_NUMB_TX_L;
 	cpu_addr = dma_alloc_coherent(NULL, s, &wcn->data_mem_pool.phy_addr,
 				      GFP_KERNEL);
+	if (!cpu_addr)
+		goto out_err;
+
 	wcn->data_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
 	return 0;
+
+out_err:
+	wcn36xx_dxe_free_mem_pools(wcn);
+	wcn36xx_error("Failed to allocate BD mempool");
+	return -ENOMEM;
 }
 
 void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
@@ -678,7 +703,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 		WCN36XX_DXE_CH_SRC_ADDR_RX_L,
 		WCN36XX_DXE_WQ_RX_L);
 
-	/* Program preallocated destionation Address */
+	/* Program preallocated destination address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
 		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
@@ -709,7 +734,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 		WCN36XX_DXE_CH_SRC_ADDR_RX_H,
 		WCN36XX_DXE_WQ_RX_H);
 
-	/* Program preallocated destionation Address */
+	/* Program preallocated destination address */
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_H,
 		 wcn->dxe_rx_h_ch.head_blk_ctl->desc->phy_next_l);
@@ -735,6 +760,9 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 {
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
+
+	/* Flush any pending rx work */
+	flush_workqueue(wcn->wq);
 
 	if (wcn->tx_ack_skb) {
 		ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
