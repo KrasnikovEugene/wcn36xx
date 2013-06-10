@@ -936,8 +936,6 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 		    "hal update probe rsp len %d bssid %pM",
 		    msg.probe_resp_template_len, msg.bssid);
 
-	dev_kfree_skb(skb);
-
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 };
 
