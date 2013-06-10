@@ -86,7 +86,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("Failed to start chip");
 		goto out_free_smd_buf;
 	}
-	/* DMA chanel initialization */
+	/* DMA channel initialization */
 	ret = wcn36xx_dxe_init(wcn);
 	if (ret) {
 		wcn36xx_error("DXE init failed");
@@ -766,13 +766,6 @@ static int __init wcn36xx_init(void)
 		goto out_err;
 	}
 
-	wcn->ctl_wq = create_workqueue("wcn36xx_ctl_wq");
-	if (!wcn->ctl_wq) {
-		wcn36xx_error("failed to allocate ctl wq");
-		ret = -ENOMEM;
-		goto out_wq;
-	}
-
 	wcn36xx_init_ieee80211(wcn);
 
 	/* Configuring supported rates */
@@ -803,7 +796,7 @@ static int __init wcn36xx_init(void)
 	if (wcnss_memory == NULL) {
 		wcn36xx_error("failed to get wcnss wlan memory map");
 		ret = -ENOMEM;
-		goto out_wq_ctl;
+		goto out_wq;
 	}
 
 	wcn->tx_irq = wcnss_wlan_get_dxe_tx_irq(wcn->dev);
@@ -813,7 +806,7 @@ static int __init wcn36xx_init(void)
 	if (NULL == wcn->mmio) {
 		wcn36xx_error("failed to map io memory");
 		ret = -ENOMEM;
-		goto out_wq_ctl;
+		goto out_wq;
 	}
 
 	private_hw = hw;
@@ -839,8 +832,6 @@ out_free_nv:
 	release_firmware(wcn->nv);
 out_unmap:
 	iounmap(wcn->mmio);
-out_wq_ctl:
-	destroy_workqueue(wcn->ctl_wq);
 out_wq:
 	destroy_workqueue(wcn->wq);
 out_err:
@@ -855,7 +846,6 @@ static void __exit wcn36xx_exit(void)
 	struct wcn36xx *wcn = hw->priv;
 
 	ieee80211_unregister_hw(hw);
-	destroy_workqueue(wcn->ctl_wq);
 	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
 	release_firmware(wcn->nv);
