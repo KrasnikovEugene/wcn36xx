@@ -71,7 +71,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 			   const u8 *sta_mac);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 			    u16 tim_off, u16 p2p_off);
-int wcn36xx_smd_switch_channel_req(struct wcn36xx *wcn, int ch);
+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
 int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
 int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
