@@ -1309,6 +1309,26 @@ int wcn36xx_smd_enable_bcn_filter(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, body->header.len);
 }
 
+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt)
+{
+	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_BMPS_REQ);
+
+	msg_body.bss_index = 0;
+	msg_body.tbtt = tbtt;
+	msg_body.dtim_count = 0;
+	msg_body.dtim_period = 1;
+
+	msg_body.rssi_filter_period = 0;
+	msg_body.num_beacon_per_rssi_average = 0;
+	msg_body.rssi_filter_enable = 0;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1383,6 +1403,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_RMV_STAKEY_RSP:
 	case WCN36XX_HAL_RMV_BSSKEY_RSP:
 	case WCN36XX_HAL_ADD_BCN_FILTER_RSP:
+	case WCN36XX_HAL_ENTER_BMPS_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);

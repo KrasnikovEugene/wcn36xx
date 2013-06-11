@@ -3053,7 +3053,7 @@ struct wcn36xx_hal_enter_bmps_req_msg {
 
 	u32 num_beacon_per_rssi_average;
 	u8 rssi_filter_enable;
-};
+} __packed;
 
 struct wcn36xx_hal_exit_bmps_req_msg {
 	struct wcn36xx_hal_msg_header header;

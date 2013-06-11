@@ -553,6 +553,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       true, wcn->beacon_interval);
 			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
 			wcn36xx_smd_enable_bcn_filter(wcn);
+			wcn36xx_smd_enter_bmps(wcn, bss_conf->sync_tsf);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -731,7 +732,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	};
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
-		IEEE80211_HW_HAS_RATE_CONTROL;
+		IEEE80211_HW_HAS_RATE_CONTROL |
+		IEEE80211_HW_TIMING_BEACON_ONLY;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
