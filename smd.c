@@ -1421,6 +1421,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
 		wcn36xx_smd_tx_compl_ind(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_MISSED_BEACON_IND:
+		wcn36xx_dbg(WCN36XX_DBG_SMD, "Beacon loss!");
+		ieee80211_connection_loss(container_of(((void*)wcn->current_vif), struct ieee80211_vif, drv_priv));
+		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
 	}

@@ -629,6 +629,7 @@ static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
+	wcn->current_vif = NULL;
 	wcn36xx_smd_delete_sta_self(wcn, vif->addr);
 }
 
@@ -733,6 +734,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_HAS_RATE_CONTROL |
+		IEEE80211_HW_CONNECTION_MONITOR	|
 		IEEE80211_HW_TIMING_BEACON_ONLY;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
