@@ -493,6 +493,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->aid = wcn->aid;
 
 	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
+	    wcn->iftype == NL80211_IFTYPE_AP ||
 	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
@@ -934,8 +935,6 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal update probe rsp len %d bssid %pM",
 		    msg.probe_resp_template_len, msg.bssid);
-
-	dev_kfree_skb(skb);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 };
