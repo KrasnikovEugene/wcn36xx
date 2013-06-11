@@ -327,21 +327,50 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 	return ret;
 }
 
+static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
+{
+	struct wcn36xx_hal_cfg *entry;
+	u32 *val;
+
+	if (*len + sizeof(*entry) + sizeof(u32) >= WCN36XX_SMD_BUF_SIZE) {
+		wcn36xx_error("Not enough room for TLV entry");
+		return -ENOMEM;
+	}
+
+	entry = (struct wcn36xx_hal_cfg *) (wcn->smd_buf + *len);
+	entry->id = id;
+	entry->len = sizeof(u32);
+	entry->pad_bytes = 0;
+	entry->reserve = 0;
+
+	val = (u32 *) (entry + 1);
+	*val = value;
+
+	*len += sizeof(*entry) + sizeof(u32);
+
+	return 0;
+}
+
 int wcn36xx_smd_start(struct wcn36xx *wcn)
 {
-	struct wcn36xx_hal_mac_start_req_msg msg_body;
+	struct wcn36xx_hal_mac_start_req_msg msg_body, *body;
+	size_t len;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_REQ);
-
 	msg_body.params.type = DRIVER_TYPE_PRODUCTION;
-	msg_body.params.len = 0;
-
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start type %d",
 		    msg_body.params.type);
+	body = (struct wcn36xx_hal_mac_start_req_msg *) wcn->smd_buf;
+	len = msg_body.header.len;
 
-	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+	put_cfg_tlv_u32(wcn, &len, WCN36XX_HAL_CFG_PS_ENABLE_BCN_FILTER, 1);
+
+	body->header.len = len;
+	body->params.len = len - sizeof(struct wcn36xx_hal_mac_start_req_msg);
+
+	return wcn36xx_smd_send_and_wait(wcn, len);
 }
 
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
