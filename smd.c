@@ -216,6 +216,20 @@ static const char *cmd2name(int cmd)
 	return "UNKNOWN";
 }
 
+static const char *res2name(int id)
+{
+	switch (id) {
+	C2S(WCN36XX_FW_MSG_RESULT_SUCCESS)
+	C2S(WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC)
+	C2S(WCN36XX_FW_MSG_PENDING)
+	C2S(WCN36XX_FW_MSG_FAILURE)
+	C2S(WCN36XX_FW_MSG_RES_FAILURE)
+	C2S(WCN36XX_FW_MSG_RESULT_MEM_FAIL)
+	C2S(WCN36XX_FW_MSG_RESULT_NOT_ALLOWED)
+	}
+	return "UNKNOWN";
+}
+
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
@@ -271,8 +285,14 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 	rsp = (struct wcn36xx_fw_msg_status_rsp *)
 		(buf + sizeof(struct wcn36xx_hal_msg_header));
 
-	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
+	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD RSP %s (%d)",
+		    res2name(rsp->status), rsp->status);
+
+	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+		wcn36xx_warn("SMD command res: %s (%d)", res2name(rsp->status),
+			     rsp->status);
 		return -EIO;
+	}
 	return 0;
 }
 
