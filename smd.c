@@ -989,6 +989,36 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
+			      enum ani_ed_type enc_type,
+			      u8 keyidx)
+{
+	struct wcn36xx_hal_remove_sta_key_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_STAKEY_REQ);
+	msg_body.sta_idx = wcn->current_vif->sta_index;
+	msg_body.enc_type = enc_type;
+	msg_body.key_id = keyidx;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+			      enum ani_ed_type enc_type,
+			      u8 keyidx)
+{
+	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
+	msg_body.bss_idx = 0;
+	msg_body.enc_type = enc_type;
+	msg_body.key_id = keyidx;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1058,6 +1088,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
 	case WCN36XX_HAL_SET_BSSKEY_RSP:
 	case WCN36XX_HAL_SET_STAKEY_RSP:
+	case WCN36XX_HAL_RMV_STAKEY_RSP:
+	case WCN36XX_HAL_RMV_BSSKEY_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
