@@ -23,6 +23,8 @@
 /* Max shared size is 4k but we take less.*/
 #define WCN36XX_NV_FRAGMENT_SIZE			3072
 
+#define WCN36XX_SMD_BUF_SIZE				4096
+
 #define SMD_MSG_TIMEOUT 200
 #define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200

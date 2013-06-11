@@ -217,7 +217,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	}
 
 	/* Maximum SMD message size is 4k */
-	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
+	wcn->smd_buf = kmalloc(WCN36XX_SMD_BUF_SIZE, GFP_KERNEL);
 	if (!wcn->smd_buf) {
 		wcn36xx_error("Failed to allocate smd buf");
 		ret = -ENOMEM;
