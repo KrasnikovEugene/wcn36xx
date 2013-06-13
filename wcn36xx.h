@@ -93,6 +93,7 @@ struct nv_data {
 struct wcn36xx_vif {
 	u8 sta_index;
 	u8 dpu_desc_index;
+	u8 ucast_dpu_signature;
 };
 struct wcn_sta {
 	u8 sta_id;
