@@ -780,19 +780,19 @@ static int __init wcn36xx_init(void)
 
 	/* Configuring supported rates */
 	wcn->supported_rates.op_rate_mode = STA_11n;
-	wcn->supported_rates.llb_rates[0] = 0x82;
-	wcn->supported_rates.llb_rates[1] = 0x84;
-	wcn->supported_rates.llb_rates[2] = 0x8b;
-	wcn->supported_rates.llb_rates[3] = 0x96;
+	wcn->supported_rates.dsss_rates[0] = 0x82;
+	wcn->supported_rates.dsss_rates[1] = 0x84;
+	wcn->supported_rates.dsss_rates[2] = 0x8b;
+	wcn->supported_rates.dsss_rates[3] = 0x96;
 
-	wcn->supported_rates.lla_rates[0] = 0x0C;
-	wcn->supported_rates.lla_rates[1] = 0x12;
-	wcn->supported_rates.lla_rates[2] = 0x18;
-	wcn->supported_rates.lla_rates[3] = 0x24;
-	wcn->supported_rates.lla_rates[4] = 0x30;
-	wcn->supported_rates.lla_rates[5] = 0x48;
-	wcn->supported_rates.lla_rates[6] = 0x60;
-	wcn->supported_rates.lla_rates[7] = 0x6C;
+	wcn->supported_rates.ofdm_rates[0] = 0x0C;
+	wcn->supported_rates.ofdm_rates[1] = 0x12;
+	wcn->supported_rates.ofdm_rates[2] = 0x18;
+	wcn->supported_rates.ofdm_rates[3] = 0x24;
+	wcn->supported_rates.ofdm_rates[4] = 0x30;
+	wcn->supported_rates.ofdm_rates[5] = 0x48;
+	wcn->supported_rates.ofdm_rates[6] = 0x60;
+	wcn->supported_rates.ofdm_rates[7] = 0x6C;
 
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
