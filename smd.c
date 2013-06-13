@@ -505,7 +505,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	sta->listen_interval = 0x8;
 	sta->wmm_enabled = 0;
-	sta->ht_capable = 0;
+	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
 	sta->tx_channel_width_set = 0;
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
@@ -726,7 +726,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 		wcn36xx_warn("Unknown type for bss config: %d", type);
 	}
 
-	bss->nw_type = WCN36XX_HAL_11G_NW_TYPE;
+	bss->nw_type = WCN36XX_HAL_11N_NW_TYPE;
 	bss->short_slot_time_supported = 0;
 	bss->lla_coexist = 0;
 	bss->llb_coexist = 0;
@@ -750,7 +750,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
 	sta->listen_interval = 8;
 	sta->wmm_enabled = 0;
-	sta->ht_capable = 0;
+	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
 	sta->tx_channel_width_set = 0;
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
