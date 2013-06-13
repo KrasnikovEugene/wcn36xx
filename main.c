@@ -101,7 +101,7 @@ static struct ieee80211_channel wcn_5ghz_channels[] = {
 	.hw_value_short = (_hw_rate)  \
 }
 
-static struct ieee80211_rate wcn_legacy_rates[] = {
+static struct ieee80211_rate wcn_2ghz_rates[] = {
 	RATE(10, 0x02, 0),
 	RATE(20, 0x04, IEEE80211_RATE_SHORT_PREAMBLE),
 	RATE(55, 0x0B, IEEE80211_RATE_SHORT_PREAMBLE),
@@ -130,8 +130,8 @@ static struct ieee80211_rate wcn_5ghz_rates[] = {
 static struct ieee80211_supported_band wcn_band_2ghz = {
 	.channels	= wcn_2ghz_channels,
 	.n_channels	= ARRAY_SIZE(wcn_2ghz_channels),
-	.bitrates	= wcn_legacy_rates,
-	.n_bitrates	= ARRAY_SIZE(wcn_legacy_rates),
+	.bitrates	= wcn_2ghz_rates,
+	.n_bitrates	= ARRAY_SIZE(wcn_2ghz_rates),
 	.ht_cap		= {
 		.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 |
 			(1 << IEEE80211_HT_CAP_RX_STBC_SHIFT),
