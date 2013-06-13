@@ -452,6 +452,14 @@ static void wcn36xx_update_allowed_rates(struct wcn36xx *wcn,
 		}
 	}
 
+	if (sta->ht_cap.ht_supported) {
+		memcpy(wcn->supported_rates.supported_mcs_set,
+		       sta->ht_cap.mcs.rx_mask,
+		       sizeof(sta->ht_cap.mcs.rx_mask));
+		BUILD_BUG_ON(sizeof(sta->ht_cap.mcs.rx_mask) >
+			     sizeof(wcn->supported_rates.supported_mcs_set));
+	}
+
 }
 
 static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
