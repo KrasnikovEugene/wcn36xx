@@ -422,6 +422,38 @@ static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 	wcn36xx_smd_finish_scan(wcn);
 }
 
+static void wcn36xx_update_allowed_rates(struct wcn36xx *wcn,
+					 struct ieee80211_sta *sta)
+{
+	int i, size;
+	u16 *rates_table;
+	u32 rates = sta->supp_rates[wcn->hw->conf.chandef.chan->band];
+
+	memset(&wcn->supported_rates, 0, sizeof(wcn->supported_rates));
+	wcn->supported_rates.op_rate_mode = STA_11n;
+
+	size = ARRAY_SIZE(wcn->supported_rates.dsss_rates);
+	rates_table = wcn->supported_rates.dsss_rates;
+	if (wcn->hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ) {
+		for (i = 0; i < size; i++) {
+			if (rates & 0x01) {
+				rates_table[i] = wcn_2ghz_rates[i].hw_value;
+				rates = rates >> 1;
+			}
+		}
+	}
+
+	size = ARRAY_SIZE(wcn->supported_rates.ofdm_rates);
+	rates_table = wcn->supported_rates.ofdm_rates;
+	for (i = 0; i < size; i++) {
+		if (rates & 0x01) {
+			rates_table[i] = wcn_5ghz_rates[i].hw_value;
+			rates = rates >> 1;
+		}
+	}
+
+}
+
 static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				       struct ieee80211_vif *vif,
 				       struct ieee80211_bss_conf *bss_conf,
@@ -472,6 +504,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	if (changed & BSS_CHANGED_ASSOC) {
 		wcn->is_joining = false;
 		if (bss_conf->assoc) {
+			struct ieee80211_sta *sta;
+
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "mac assoc bss %pM vif %pM AID=%d",
 				     bss_conf->bssid,
@@ -480,6 +514,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn->aid = bss_conf->aid;
 			wcn->en_state = WCN36XX_STA_KEY;
+
+			rcu_read_lock();
+			sta = ieee80211_find_sta(vif, bss_conf->bssid);
+			if(sta)
+				wcn36xx_update_allowed_rates(wcn, sta);
+			rcu_read_unlock();
 
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
