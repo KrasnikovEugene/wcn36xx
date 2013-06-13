@@ -100,30 +100,31 @@ static struct ieee80211_channel wcn_5ghz_channels[] = {
 	.hw_value       = (_hw_rate),                   \
 	.hw_value_short = (_hw_rate)  \
 }
+
 static struct ieee80211_rate wcn_legacy_rates[] = {
-	RATE(10, BIT(0), 0),
-	RATE(20, BIT(1), IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(55, BIT(2), IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(110, BIT(3), IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(60, BIT(4), 0),
-	RATE(90, BIT(5), 0),
-	RATE(120, BIT(6), 0),
-	RATE(180, BIT(7), 0),
-	RATE(240, BIT(8), 0),
-	RATE(360, BIT(9), 0),
-	RATE(480, BIT(10), 0),
-	RATE(540, BIT(11), 0)
+	RATE(10, 0x02, 0),
+	RATE(20, 0x04, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(55, 0x0B, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(110, 0x16, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(60, 0x0C, 0),
+	RATE(90, 0x12, 0),
+	RATE(120, 0x18, 0),
+	RATE(180, 0x24, 0),
+	RATE(240, 0x30, 0),
+	RATE(360, 0x48, 0),
+	RATE(480, 0x60, 0),
+	RATE(540, 0x6C, 0)
 };
 
 static struct ieee80211_rate wcn_5ghz_rates[] = {
-	RATE(60, BIT(4), 0),
-	RATE(90, BIT(5), 0),
-	RATE(120, BIT(6), 0),
-	RATE(180, BIT(7), 0),
-	RATE(240, BIT(8), 0),
-	RATE(360, BIT(9), 0),
-	RATE(480, BIT(10), 0),
-	RATE(540, BIT(11), 0)
+	RATE(60, 0x0C, 0),
+	RATE(90, 0x12, 0),
+	RATE(120, 0x18, 0),
+	RATE(180, 0x24, 0),
+	RATE(240, 0x30, 0),
+	RATE(360, 0x48, 0),
+	RATE(480, 0x60, 0),
+	RATE(540, 0x6C, 0)
 };
 
 static struct ieee80211_supported_band wcn_band_2ghz = {
