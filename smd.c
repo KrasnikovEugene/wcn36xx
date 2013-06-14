@@ -355,8 +355,8 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal add sta self status %d "
 		    "self_sta_index %d dpu_index %d",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
-	wcn->current_vif->sta_index = rsp->self_sta_index;
-	wcn->current_vif->dpu_desc_index = rsp->dpu_index;
+	wcn->current_vif->self_sta_index = rsp->self_sta_index;
+	wcn->current_vif->self_dpu_desc_index = rsp->dpu_index;
 
 	return 0;
 }
