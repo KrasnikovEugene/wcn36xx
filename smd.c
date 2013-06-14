@@ -1290,18 +1290,30 @@ static struct beacon_filter_ie bcn_filter_ies[] = {
 int wcn36xx_smd_enable_bcn_filter(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_add_bcn_filter_req_msg msg_body, *body;
+	struct wcn36xx_hal_add_bcn_filter_req_msg_v1 *body_v1;
+	int len = sizeof(*body);
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BCN_FILTER_REQ);
 
 	msg_body.capability_info = wcn->capabilities_info;
 	msg_body.capability_mask = 0x73CF;
 	msg_body.beacon_interval = wcn->beacon_interval;
-	msg_body.ie_num = ARRAY_SIZE(bcn_filter_ies);
-	msg_body.bss_index = 0;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	memcpy(wcn->smd_buf + sizeof(msg_body), bcn_filter_ies,
+	if (!(wcn->fw_major == 1 &&
+	      wcn->fw_minor == 2 &&
+	      wcn->fw_version == 2 &&
+	      wcn->fw_revision == 24)) {
+
+		body_v1 = (struct wcn36xx_hal_add_bcn_filter_req_msg_v1 *) wcn->smd_buf;
+		body_v1->ie_num = ARRAY_SIZE(bcn_filter_ies);
+		body_v1->bss_index = 0;
+		body_v1->header.len = sizeof(*body_v1);
+		len = sizeof(*body_v1);
+	}
+
+	memcpy(wcn->smd_buf + sizeof(len), bcn_filter_ies,
 	       sizeof(bcn_filter_ies));
 	body = (struct wcn36xx_hal_add_bcn_filter_req_msg *) wcn->smd_buf;
 	body->header.len += sizeof(bcn_filter_ies);

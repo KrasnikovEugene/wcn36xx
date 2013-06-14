@@ -3087,6 +3087,15 @@ struct wcn36xx_hal_add_bcn_filter_req_msg {
 	u16 capability_mask;
 	u16 beacon_interval;
 	u16 ie_num;
+} __packed;
+
+struct wcn36xx_hal_add_bcn_filter_req_msg_v1 {
+	struct wcn36xx_hal_msg_header header;
+
+	u16 capability_info;
+	u16 capability_mask;
+	u16 beacon_interval;
+	u16 ie_num;
 	u8 bss_index;
 	u8 reserved;
 } __packed;
