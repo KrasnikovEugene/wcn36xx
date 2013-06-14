@@ -454,10 +454,10 @@ enum sta_rate_mode {
 };
 
 /* 1,2,5.5,11 */
-#define WCN36XX_HAL_NUM_11B_RATES           4
+#define WCN36XX_HAL_NUM_DSSS_RATES           4
 
 /* 6,9,12,18,24,36,48,54 */
-#define WCN36XX_HAL_NUM_11A_RATES           8
+#define WCN36XX_HAL_NUM_OFDM_RATES           8
 
 /* 72,96,108 */
 #define WCN36XX_HAL_NUM_POLARIS_RATES       3
@@ -1026,8 +1026,8 @@ struct wcn36xx_hal_supported_rates {
 
 	/* 11b, 11a and aniLegacyRates are IE rates which gives rate in
 	 * unit of 500Kbps */
-	u16 llb_rates[WCN36XX_HAL_NUM_11B_RATES];
-	u16 lla_rates[WCN36XX_HAL_NUM_11A_RATES];
+	u16 dsss_rates[WCN36XX_HAL_NUM_DSSS_RATES];
+	u16 ofdm_rates[WCN36XX_HAL_NUM_OFDM_RATES];
 	u16 legacy_rates[WCN36XX_HAL_NUM_POLARIS_RATES];
 	u16 reserved;
 
