@@ -97,8 +97,10 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 		bd->queue_id = WCN36XX_TX_B_WQ_ID;
 
 		/* default rate for broadcast */
-		bd->bd_rate = 0;
-
+		if (ieee80211_is_mgmt(hdr->frame_control))
+			bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
+				WCN36XX_BD_RATE_CTRL :
+				WCN36XX_BD_RATE_MGMT;
 		/* No ack needed not unicast */
 		bd->ack_policy = 1;
 	} else {
@@ -108,7 +110,9 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 		if (ieee80211_is_data(hdr->frame_control))
 			bd->bd_rate = WCN36XX_BD_RATE_DATA;
 		else if (ieee80211_is_mgmt(hdr->frame_control))
-			bd->bd_rate = WCN36XX_BD_RATE_MGMT;
+			bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
+				WCN36XX_BD_RATE_CTRL :
+				WCN36XX_BD_RATE_MGMT;
 		else if (ieee80211_is_ctl(hdr->frame_control))
 			bd->bd_rate = WCN36XX_BD_RATE_CTRL;
 		else
