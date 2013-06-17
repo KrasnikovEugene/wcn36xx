@@ -377,11 +377,13 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp");
 		skb = ieee80211_proberesp_get(hw, vif);
-		if (skb) {
-			wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
-			dev_kfree_skb(skb);
-		} else
+		if (!skb) {
 			wcn36xx_error("failed to alloc probereq skb");
+			goto out;
+		}
+
+		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
+		dev_kfree_skb(skb);
 	}
 
 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
@@ -396,11 +398,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       wcn->beacon_interval);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
-			if (skb) {
-				wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
-				dev_kfree_skb(skb);
-			} else
+			if (!skb) {
 				wcn36xx_error("failed to alloc beacon skb");
+				goto out;
+			}
+			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+			dev_kfree_skb(skb);
 
 			if (vif->type == NL80211_IFTYPE_ADHOC ||
 			    vif->type == NL80211_IFTYPE_MESH_POINT)
@@ -414,6 +417,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			/* FIXME: disable beaconing */
 		}
 	}
+out:
+	return;
 }
 
 /* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
