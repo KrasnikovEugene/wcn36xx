@@ -142,6 +142,7 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		wcn->ch = hw->conf.chandef.chan->hw_value;
 		wcn->current_channel = hw->conf.chandef.chan;
+		wcn->band = hw->conf.chandef.chan->band;
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", wcn->ch);
 		wcn36xx_smd_switch_channel(wcn, wcn->ch);
 	}
