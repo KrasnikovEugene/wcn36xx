@@ -627,7 +627,7 @@ static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p", vif);
-	wcn36xx_smd_delete_sta_self(wcn, wcn->addresses[0].addr);
+	wcn36xx_smd_delete_sta_self(wcn, vif->addr);
 }
 
 static int wcn36xx_add_interface(struct ieee80211_hw *hw,
