@@ -734,7 +734,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
 	bss->beacon_interval = beacon_interval;
-	bss->dtim_period = 2;
+	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = wcn->ch;
 	bss->ext_channel = 0;
