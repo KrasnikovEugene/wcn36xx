@@ -115,8 +115,15 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 			wcn36xx_warn("frame control type unknown");
 	}
 
-	bd->sta_index = wcn->current_vif->sta_index;
-	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
+	if (ieee80211_is_data(hdr->frame_control)) {
+		bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
+		bd->queue_id = 0;
+		bd->sta_index = wcn->current_vif->sta_index;
+		bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
+	} else {
+		bd->sta_index = wcn->current_vif->self_sta_index;
+		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
+	}
 
 	bd->dpu_ne = encrypt;
 	bd->tx_comp = tx_compl;
