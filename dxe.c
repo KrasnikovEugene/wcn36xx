@@ -322,8 +322,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 			info = IEEE80211_SKB_CB(ctl->skb);
 			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
 				/* Keep frame until TX status comes */
-				ieee80211_tx_info_clear_status(info);
-				ieee80211_tx_status_irqsafe(wcn->hw, ctl->skb);
+				ieee80211_free_txskb(wcn->hw, ctl->skb);
 			}
 			ctl->skb = NULL;
 		}
@@ -577,7 +576,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	}
 
 	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
-	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state) {
+	/* Do not encrypt NULL and MGMT frames */
+	if (!is_high && WCN36XX_BSS_KEY == wcn->en_state &&
+	    !ieee80211_is_nullfunc(hdr->frame_control)) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE Encription enabled");
 		wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, 0, hdr,
 				   tx_ack);

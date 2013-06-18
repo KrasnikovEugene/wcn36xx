@@ -1874,7 +1874,7 @@ struct wcn36xx_hal_set_sta_key_rsp_msg {
 	u32 status;
 } __packed;
 
-struct remove_bss_key_req_msg {
+struct wcn36xx_hal_remove_bss_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* BSS Index of the BSS */
@@ -1884,24 +1884,24 @@ struct remove_bss_key_req_msg {
 	enum ani_ed_type enc_type;
 
 	/* Key Id */
-	u8 id;
+	u8 key_id;
 
 	/* STATIC/DYNAMIC. Used in Nullifying in Key Descriptors for
 	 * Static/Dynamic keys */
 	enum ani_wep_type wep_type;
-};
+} __packed;
 
-struct remove_bss_key_rsp_msg {
+struct wcn36xx_hal_remove_bss_key_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 /*
  * This is used by PE to Remove the key information on a given station.
  */
-struct remove_sta_key_req_msg {
+struct wcn36xx_hal_remove_sta_key_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* STA Index */
@@ -1917,15 +1917,15 @@ struct remove_sta_key_req_msg {
 	 * of WEP, the same key is used for both broadcast and unicast. */
 	u8 unicast;
 
-};
+} __packed;
 
-struct remove_sta_key_rsp_msg {
+struct wcn36xx_hal_remove_sta_key_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/*success or failure */
 	u32 status;
 
-};
+} __packed;
 
 #ifdef FEATURE_OEM_DATA_SUPPORT
 

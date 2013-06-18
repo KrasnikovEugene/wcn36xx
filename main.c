@@ -364,21 +364,50 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			 key_conf->key,
 			 key_conf->keylen);
 
+	switch (key_conf->cipher) {
+	case WLAN_CIPHER_SUITE_CCMP:
+		enc_type = WCN36XX_HAL_ED_CCMP;
+		break;
+	case WLAN_CIPHER_SUITE_TKIP:
+		enc_type = WCN36XX_HAL_ED_TKIP;
+		break;
+	default:
+		wcn36xx_error("Unsupported key type 0x%x",
+			      key_conf->cipher);
+		ret = -EOPNOTSUPP;
+		goto out;
+		break;
+	}
+
 	switch (cmd) {
 	case SET_KEY:
-		switch (key_conf->cipher) {
-		case WLAN_CIPHER_SUITE_CCMP:
-			enc_type = WCN36XX_HAL_ED_CCMP;
-			break;
-		case WLAN_CIPHER_SUITE_TKIP:
-			enc_type = WCN36XX_HAL_ED_TKIP;
-			break;
-		default:
-			wcn36xx_error("Unsupported key type 0x%x",
-				      key_conf->cipher);
-			ret = -EOPNOTSUPP;
-			goto out;
-			break;
+		if (WCN36XX_STA_KEY == wcn->en_state) {
+			wcn36xx_smd_set_stakey(wcn,
+				enc_type,
+				key_conf->keyidx,
+				key_conf->keylen,
+				key_conf->key);
+			wcn->en_state = WCN36XX_BSS_KEY;
+		} else {
+			wcn36xx_smd_set_bsskey(wcn,
+				enc_type,
+				key_conf->keyidx,
+				key_conf->keylen,
+				key_conf->key);
+		}
+		break;
+	case DISABLE_KEY:
+		if (WCN36XX_BSS_KEY == wcn->en_state) {
+			wcn36xx_smd_remove_bsskey(wcn,
+				enc_type,
+				key_conf->keyidx);
+			wcn->en_state = WCN36XX_STA_KEY;
+		} else {
+			/* do not remove key if disassociated */
+			if (wcn->aid)
+				wcn36xx_smd_remove_stakey(wcn,
+							  enc_type,
+							  key_conf->keyidx);
 		}
 		break;
 	default:
@@ -388,20 +417,6 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		break;
 	}
 
-	if (WCN36XX_STA_KEY == wcn->en_state) {
-		wcn36xx_smd_set_stakey(wcn,
-			enc_type,
-			key_conf->keyidx,
-			key_conf->keylen,
-			key_conf->key);
-		wcn->en_state = WCN36XX_BSS_KEY;
-	} else {
-		wcn36xx_smd_set_bsskey(wcn,
-			enc_type,
-			key_conf->keyidx,
-			key_conf->keylen,
-			key_conf->key);
-	}
 out:
 	return ret;
 }
@@ -476,6 +491,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
 
+	if (changed & BSS_CHANGED_BEACON_INT) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed beacon_int %d",
+			    bss_conf->beacon_int);
+
+		wcn->beacon_interval = bss_conf->beacon_int;
+	}
+
 	if (changed & BSS_CHANGED_BSSID) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
@@ -499,14 +522,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		wcn->ssid.length = bss_conf->ssid_len;
 		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
-	}
-
-	if (changed & BSS_CHANGED_BEACON_INT) {
-		wcn36xx_dbg(WCN36XX_DBG_MAC,
-			    "mac bss changed beacon_int %d",
-			    bss_conf->beacon_int);
-
-		wcn->beacon_interval = bss_conf->beacon_int;
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {

@@ -355,8 +355,8 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal add sta self status %d "
 		    "self_sta_index %d dpu_index %d",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
-	wcn->current_vif->sta_index = rsp->self_sta_index;
-	wcn->current_vif->dpu_desc_index = rsp->dpu_index;
+	wcn->current_vif->self_sta_index = rsp->self_sta_index;
+	wcn->current_vif->self_dpu_desc_index = rsp->dpu_index;
 
 	return 0;
 }
@@ -852,14 +852,16 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config bss rsp status %d bss_idx %d dpu_desc_index %d"
-		    " sta_idx %d self_idx %d bcast_idx %d mac %pM power %d",
+		    " sta_idx %d self_idx %d bcast_idx %d mac %pM"
+		    " power %d ucast_dpu_signature %d",
 		    params->status, params->bss_index, params->dpu_desc_index,
 		    params->bss_sta_index, params->bss_self_sta_index,
 		    params->bss_bcast_sta_idx, params->mac,
-		    params->tx_mgmt_power);
+		    params->tx_mgmt_power, params->ucast_dpu_signature);
 
 	wcn->current_vif->sta_index =  params->bss_sta_index;
 	wcn->current_vif->dpu_desc_index = params->dpu_desc_index;
+	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;
 	return 0;
 }
 
@@ -989,6 +991,36 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
+			      enum ani_ed_type enc_type,
+			      u8 keyidx)
+{
+	struct wcn36xx_hal_remove_sta_key_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_STAKEY_REQ);
+	msg_body.sta_idx = wcn->current_vif->sta_index;
+	msg_body.enc_type = enc_type;
+	msg_body.key_id = keyidx;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+			      enum ani_ed_type enc_type,
+			      u8 keyidx)
+{
+	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
+	msg_body.bss_idx = 0;
+	msg_body.enc_type = enc_type;
+	msg_body.key_id = keyidx;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1058,6 +1090,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_RSP:
 	case WCN36XX_HAL_SET_BSSKEY_RSP:
 	case WCN36XX_HAL_SET_STAKEY_RSP:
+	case WCN36XX_HAL_RMV_STAKEY_RSP:
+	case WCN36XX_HAL_RMV_BSSKEY_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
