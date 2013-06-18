@@ -515,6 +515,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn->beacon_interval = bss_conf->beacon_int;
 	}
 
+	if (changed & BSS_CHANGED_DTIM_PERIOD) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed dtim period %d",
+			    bss_conf->dtim_period);
+
+		wcn->dtim_period = bss_conf->dtim_period;
+	}
+
 	if (changed & BSS_CHANGED_BSSID) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
