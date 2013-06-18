@@ -499,6 +499,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn->beacon_interval = bss_conf->beacon_int;
 	}
 
+	if (changed & BSS_CHANGED_DTIM_PERIOD) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC,
+			    "mac bss changed dtim %d",
+			    bss_conf->dtim_period);
+
+		wcn->dtim_period = bss_conf->dtim_period;
+	}
+
 	if (changed & BSS_CHANGED_BSSID) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
@@ -894,6 +902,7 @@ static int __init wcn36xx_init(void)
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
 	wcn->aid = 0;
+	wcn->dtim_period = 1;
 	wcn->current_vif = NULL;
 	wcn->is_joining = false;
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);

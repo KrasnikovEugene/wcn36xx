@@ -988,7 +988,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
 	bss->beacon_interval = beacon_interval;
-	bss->dtim_period = 2;
+	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = wcn->ch;
 	bss->ext_channel = 0;
@@ -1330,7 +1330,7 @@ int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt)
 	msg_body.bss_index = 0;
 	msg_body.tbtt = tbtt;
 	msg_body.dtim_count = 0;
-	msg_body.dtim_period = 1;
+	msg_body.dtim_period = wcn->dtim_period;
 
 	msg_body.rssi_filter_period = 0;
 	msg_body.num_beacon_per_rssi_average = 0;

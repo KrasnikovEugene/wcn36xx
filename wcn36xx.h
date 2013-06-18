@@ -116,6 +116,7 @@ struct wcn36xx {
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
 	u16			beacon_interval;
+	u8 			dtim_period;
 	u16			capabilities_info;
 
 	u8			fw_revision;
