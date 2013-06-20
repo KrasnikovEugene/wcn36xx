@@ -96,6 +96,8 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
 			      u8 keyidx);
 int wcn36xx_smd_enable_bcn_filter(struct wcn36xx *wcn);
 int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
+int wcn36xx_smd_enter_imps_req(struct wcn36xx *wcn);
+int wcn36xx_smd_exit_imps_req(struct wcn36xx *wcn);
 /* WCN36XX configuration parameters */
 struct wcn36xx_fw_cfg {
 	u16		id;

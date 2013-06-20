@@ -644,13 +644,13 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 				  0,
 				  WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY |
 				  WCN36XX_SMSM_WLAN_TX_ENABLE);
-	} else {
-		/* indicate End Of Packet and generate interrupt on descriptor
-		 * done.
-		 */
-		wcn36xx_dxe_write_register(wcn,
-			ch->reg_ctrl, ch->def_ctrl);
-	}
+	} 
+	/* indicate End Of Packet and generate interrupt on descriptor
+	 * done.
+	 */
+	wcn36xx_dxe_write_register(wcn,
+		ch->reg_ctrl, ch->def_ctrl);
+
 	return 0;
 }
 int wcn36xx_dxe_init(struct wcn36xx *wcn)

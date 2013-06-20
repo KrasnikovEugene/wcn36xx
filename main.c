@@ -238,6 +238,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("DXE init failed");
 		goto out_smd_stop;
 	}
+	wcn36xx_smd_enable_bcn_filter(wcn);
 	return 0;
 
 out_smd_stop:
@@ -292,8 +293,25 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", wcn->ch);
 		wcn36xx_smd_switch_channel(wcn, wcn->ch);
 	}
+	if (changed & IEEE80211_CONF_CHANGE_PS) {
+    if (hw->conf.flags & IEEE80211_CONF_PS) {
+      wcn36xx_info("wcn36xx_config conf CONF_PS SET ");
+	wcn36xx_smd_enter_bmps(wcn, 0);
+    } else {
+      wcn36xx_info("wcn36xx_config conf CONF_PS UNSET ");
+    }
+  }
 
-	return 0;
+  if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+    if (hw->conf.flags & IEEE80211_CONF_IDLE) {
+	wcn36xx_info("wcn36xx_config conf CIEEE80211_CONF_IDLE ");
+      //wcn36xx_smd_enter_imps_req(wcn);
+    } else {
+	wcn36xx_info("wcn36xx_config conf CIEEE80211_CONF_IDLE  unset");
+      //wcn36xx_smd_exit_imps_req(wcn);
+    }
+  }
+return 0;
 }
 
 #define WCN36XX_SUPPORTED_FILTERS (0)
@@ -560,8 +578,10 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
 			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
-			wcn36xx_smd_enable_bcn_filter(wcn);
-			wcn36xx_smd_enter_bmps(wcn, bss_conf->sync_tsf);
+//			wcn36xx_smd_set_bsskey(wcn,0,0,0,NULL);
+//			wcn36xx_smd_set_stakey(wcn,0,0,0,NULL);
+
+//			wcn36xx_smd_enter_bmps(wcn, bss_conf->sync_tsf);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -622,6 +642,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			/* FIXME: disable beaconing */
 		}
 	}
+	if (changed & BSS_CHANGED_PS) {
+		if (bss_conf->ps) {
+			wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss BSS_CHANGED_PS true");
+			wcn36xx_smd_enter_bmps(wcn, bss_conf->sync_tsf);
+		} else 
+			wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss BSS_CHANGED_PS false");
+			wcn36xx_smd_exit_bmps(wcn, bss_conf->sync_tsf);
+	}
 out:
 	return;
 }
@@ -681,7 +709,8 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	}
 
 	wcn->iftype = vif->type;
-
+	wcn36xx_smd_enter_imps_req(wcn);
+	wcn36xx_smd_exit_imps_req(wcn);
 	return 0;
 }
 
@@ -760,6 +789,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_HAS_RATE_CONTROL |
 		IEEE80211_HW_CONNECTION_MONITOR	|
+		IEEE80211_HW_SUPPORTS_PS |
+//		IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
 		IEEE80211_HW_TIMING_BEACON_ONLY;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |

@@ -129,7 +129,7 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
 	}
 
-	bd->dpu_ne = encrypt;
+	bd->dpu_ne = 0;
 	bd->tx_comp = tx_compl;
 
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
