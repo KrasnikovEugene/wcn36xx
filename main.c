@@ -355,6 +355,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 {
 	struct wcn36xx *wcn = hw->priv;
 	int ret = 0;
+	u8 key[WLAN_MAX_KEY_LEN];
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "Key: cmd=0x%x algo:0x%x, "
 		    "id:%d, len:%d flags 0x%x",
@@ -389,19 +390,33 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 					       true,
 					       wcn->beacon_interval);
 
+		if (WCN36XX_HAL_ED_TKIP == wcn->encrypt_type) {
+			/*
+			 * Supplicant is sending key in the wrong order:
+			 * Temporal Key (16 b) - TX MIC (8 b) - RX MIC (8 b)
+			 * but HW expects it to be in the order as described in
+			 * IEEE 802.11 spec (see chapter 11.7) like this:
+			 * Temporal Key (16 b) - RX MIC (8 b) - TX MIC (8 b)
+			 */
+			memcpy(key, key_conf->key, 16);
+			memcpy(key + 16, key_conf->key + 24, 8);
+			memcpy(key + 24, key_conf->key + 16, 8);
+		} else {
+			memcpy(key, key_conf->key, key_conf->keylen);
+		}
 		if (WCN36XX_STA_KEY == wcn->en_state) {
 			wcn36xx_smd_set_stakey(wcn,
 				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
-				key_conf->key);
+				key);
 			wcn->en_state = WCN36XX_BSS_KEY;
 		} else {
 			wcn36xx_smd_set_bsskey(wcn,
 				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
-				key_conf->key);
+				key);
 		}
 		break;
 	case DISABLE_KEY:
