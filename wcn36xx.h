@@ -116,7 +116,7 @@ struct wcn36xx {
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
 	u16			beacon_interval;
-
+	enum ani_ed_type	encrypt_type;
 	u8			fw_revision;
 	u8			fw_version;
 	u8			fw_minor;
