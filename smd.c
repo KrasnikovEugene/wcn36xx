@@ -763,7 +763,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	       sizeof(wcn->supported_rates));
 
 	sta->rmf = 0;
-	sta->encrypt_type = 0;
+	sta->encrypt_type = wcn->encrypt_type;
 	sta->action = 0;
 	sta->uapsd = 0;
 	sta->max_sp_len = 0;

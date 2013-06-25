@@ -355,7 +355,6 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 {
 	struct wcn36xx *wcn = hw->priv;
 	int ret = 0;
-	enum ani_ed_type enc_type;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "Key: cmd=0x%x algo:0x%x, "
 		    "id:%d, len:%d flags 0x%x",
@@ -367,10 +366,10 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 	switch (key_conf->cipher) {
 	case WLAN_CIPHER_SUITE_CCMP:
-		enc_type = WCN36XX_HAL_ED_CCMP;
+		wcn->encrypt_type = WCN36XX_HAL_ED_CCMP;
 		break;
 	case WLAN_CIPHER_SUITE_TKIP:
-		enc_type = WCN36XX_HAL_ED_TKIP;
+		wcn->encrypt_type = WCN36XX_HAL_ED_TKIP;
 		break;
 	default:
 		wcn36xx_error("Unsupported key type 0x%x",
@@ -382,16 +381,24 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 	switch (cmd) {
 	case SET_KEY:
+		/* Reconfigure bss with encrypt_type */
+		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)
+			wcn36xx_smd_config_bss(wcn,
+					       NL80211_IFTYPE_STATION,
+					       sta->addr,
+					       true,
+					       wcn->beacon_interval);
+
 		if (WCN36XX_STA_KEY == wcn->en_state) {
 			wcn36xx_smd_set_stakey(wcn,
-				enc_type,
+				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key_conf->key);
 			wcn->en_state = WCN36XX_BSS_KEY;
 		} else {
 			wcn36xx_smd_set_bsskey(wcn,
-				enc_type,
+				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key_conf->key);
@@ -400,14 +407,14 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	case DISABLE_KEY:
 		if (WCN36XX_BSS_KEY == wcn->en_state) {
 			wcn36xx_smd_remove_bsskey(wcn,
-				enc_type,
+				wcn->encrypt_type,
 				key_conf->keyidx);
 			wcn->en_state = WCN36XX_STA_KEY;
 		} else {
 			/* do not remove key if disassociated */
 			if (wcn->aid)
 				wcn36xx_smd_remove_stakey(wcn,
-							  enc_type,
+							  wcn->encrypt_type,
 							  key_conf->keyidx);
 		}
 		break;
