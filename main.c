@@ -382,14 +382,6 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 	switch (cmd) {
 	case SET_KEY:
-		/* Reconfigure bss with encrypt_type */
-		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)
-			wcn36xx_smd_config_bss(wcn,
-					       NL80211_IFTYPE_STATION,
-					       sta->addr,
-					       true,
-					       wcn->beacon_interval);
-
 		if (WCN36XX_HAL_ED_TKIP == wcn->encrypt_type) {
 			/*
 			 * Supplicant is sending key in the wrong order:
@@ -404,13 +396,20 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		} else {
 			memcpy(key, key_conf->key, key_conf->keylen);
 		}
-		if (WCN36XX_STA_KEY == wcn->en_state) {
+
+		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
+			/* Reconfigure bss with encrypt_type */
+			wcn36xx_smd_config_bss(wcn,
+					       NL80211_IFTYPE_STATION,
+					       sta->addr,
+					       true,
+					       wcn->beacon_interval);
+
 			wcn36xx_smd_set_stakey(wcn,
 				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key);
-			wcn->en_state = WCN36XX_BSS_KEY;
 		} else {
 			wcn36xx_smd_set_bsskey(wcn,
 				wcn->encrypt_type,
@@ -420,11 +419,10 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		}
 		break;
 	case DISABLE_KEY:
-		if (WCN36XX_BSS_KEY == wcn->en_state) {
+		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
 			wcn36xx_smd_remove_bsskey(wcn,
 				wcn->encrypt_type,
 				key_conf->keyidx);
-			wcn->en_state = WCN36XX_STA_KEY;
 		} else {
 			/* do not remove key if disassociated */
 			if (wcn->aid)
@@ -559,7 +557,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				     bss_conf->aid);
 
 			wcn->aid = bss_conf->aid;
-			wcn->en_state = WCN36XX_STA_KEY;
 
 			rcu_read_lock();
 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
@@ -582,7 +579,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    vif->addr,
 				    bss_conf->aid);
 			wcn->aid = 0;
-			wcn->en_state = WCN36XX_STA_KEY;
 			wcn36xx_smd_delete_sta(wcn);
 			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
