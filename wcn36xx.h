@@ -71,7 +71,7 @@ enum wcn36xx_debug_mask {
 #define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
 	if (debug_mask & mask)					\
 		print_hex_dump(KERN_DEBUG, prefix_str,		\
-			       DUMP_PREFIX_ADDRESS, 32, 1,	\
+			       DUMP_PREFIX_OFFSET, 32, 1,	\
 			       buf, len, false);		\
 } while (0)
 
