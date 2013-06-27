@@ -15,7 +15,6 @@
  */
 
 #include "txrx.h"
-#include <linux/ieee80211.h>
 
 #define RSSI0(x) (100 - ((x->phy_stat0 >> 24) & 0xff))
 

@@ -16,9 +16,8 @@
 
 #ifndef _TXRX_H_
 #define _TXRX_H_
+
 #include "wcn36xx.h"
-#include "smd.h"
-#include <linux/ieee80211.h>
 
 /* TODO describe all properties */
 #define WCN36XX_802_11_HEADER_LEN	24

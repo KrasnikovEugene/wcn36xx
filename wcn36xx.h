@@ -25,9 +25,9 @@
 #include <mach/msm_smd.h>
 #include <net/mac80211.h>
 
+#include "hal.h"
 #include "smd.h"
 #include "dxe.h"
-#include "hal.h"
 
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
