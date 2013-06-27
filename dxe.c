@@ -19,11 +19,9 @@
  * through low channels data packets are transfered
  * through high channels managment packets are transfered
  */
-#include <linux/interrupt.h>
-#include <linux/ieee80211.h>
-#include "dxe.h"
-#include "txrx.h"
+
 #include "wcn36xx.h"
+#include "txrx.h"
 
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {

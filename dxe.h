@@ -17,7 +17,6 @@
 #ifndef _DXE_H_
 #define _DXE_H_
 
-#include <linux/dma-mapping.h>
 /*
 TX_LOW	= DMA0
 TX_HIGH	= DMA4

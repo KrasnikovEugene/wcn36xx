@@ -17,9 +17,7 @@
 #ifndef _SMD_H_
 #define _SMD_H_
 
-#include <mach/msm_smd.h>
 #include "wcn36xx.h"
-#include "hal.h"
 
 /* Max shared size is 4k but we take less.*/
 #define WCN36XX_NV_FRAGMENT_SIZE			3072
