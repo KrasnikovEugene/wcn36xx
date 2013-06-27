@@ -16,8 +16,6 @@
 
 #include "smd.h"
 
-#include <linux/etherdevice.h>
-
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;

@@ -15,13 +15,8 @@
  */
 
 #include <linux/module.h>
-#include <linux/qcomwlan_pwrif.h>
-#include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
-#include <linux/etherdevice.h>
 #include "wcn36xx.h"
-#include "dxe.h"
-#include "hal.h"
 
 unsigned int debug_mask;
 module_param(debug_mask, uint, 0644);
