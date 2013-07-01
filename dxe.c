@@ -20,6 +20,7 @@
  * through high channels managment packets are transfered
  */
 
+#include <linux/interrupt.h>
 #include "wcn36xx.h"
 #include "txrx.h"
 
