@@ -716,11 +716,44 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 	return 0;
 }
 
+#ifdef CONFIG_PM
+static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
+{
+	struct wcn36xx *wcn = hw->priv;
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac suspend");
+
+	/* Enter BMPS only in connected state */
+	if (wcn->aid > 0)
+		wcn36xx_smd_enter_bmps(wcn, vif->bss_conf.sync_tsf);
+
+	flush_work(&wcn->rx_ready_work);
+	flush_work(&wcn->smd_work);
+
+	return 0;
+}
+static int wcn36xx_resume(struct ieee80211_hw *hw)
+{
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac resume");
+
+	if (wcn->aid > 0)
+		wcn36xx_smd_exit_bmps(wcn);
+	return 0;
+}
+#endif
+
 static const struct ieee80211_ops wcn36xx_ops = {
 	.start			= wcn36xx_start,
 	.stop			= wcn36xx_stop,
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface	= wcn36xx_remove_interface,
+#ifdef CONFIG_PM
+	.suspend		= wcn36xx_suspend,
+	.resume			= wcn36xx_resume,
+#endif
 	.change_interface	= wcn36xx_change_interface,
 	.config			= wcn36xx_config,
 	.configure_filter	= wcn36xx_configure_filter,
@@ -772,6 +805,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 
 	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
+
+	wcn->hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
+	wcn->hw->wiphy->wowlan.n_patterns = 0;
+
 	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
 
