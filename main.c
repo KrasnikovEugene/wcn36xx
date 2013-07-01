@@ -14,6 +14,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <linux/etherdevice.h>
 #include <linux/module.h>
 #include <linux/wcnss_wlan.h>
 #include "wcn36xx.h"
