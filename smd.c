@@ -20,6 +20,7 @@
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
+	int ret = 0;
 
 	init_completion(&wcn->smd_compl);
 	avail = smd_write_avail(wcn->smd_ch);
@@ -29,19 +30,24 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 		avail = smd_write(wcn->smd_ch, wcn->smd_buf, len);
 		if (avail != len) {
 			wcn36xx_error("Cannot write to SMD channel");
-			return -EAGAIN;
+			ret = -EAGAIN;
+			goto out;
 		}
 	} else {
 		wcn36xx_error("SMD channel can accept only %d bytes", avail);
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	if (wait_for_completion_timeout(&wcn->smd_compl,
 		msecs_to_jiffies(SMD_MSG_TIMEOUT)) <= 0) {
 		wcn36xx_error("Timeout while waiting SMD response");
-		return -ETIME;
+		ret = -ETIME;
+		goto out;
 	}
-	return 0;
+out:
+	mutex_unlock(&wcn->smd_mutex);
+	return ret;
 }
 
 #define INIT_HAL_MSG(msg_body, type) \
@@ -54,6 +60,10 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 
 #define PREPARE_HAL_BUF(send_buf, msg_body) \
 	do {							\
+		struct wcn36xx *__wcn =				\
+			container_of(&send_buf,			\
+				     struct wcn36xx, smd_buf);	\
+		mutex_lock(&__wcn->smd_mutex);                  \
 		memset(send_buf, 0, msg_body.header.len);	\
 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
 	} while (0)						\
@@ -101,6 +111,8 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 			msg_body.header.len = sizeof(msg_body) + fw_bytes_left;
 
 		}
+		/* smd_buf must be protected with  mutex */
+		mutex_lock(&wcn->smd_mutex);
 
 		/* Add load NV request message header */
 		memcpy(wcn->smd_buf, &msg_body,	sizeof(msg_body));

@@ -140,7 +140,13 @@ struct wcn36xx {
 
 	/* SMD related */
 	smd_channel_t		*smd_ch;
+	/*
+	 * smd_buf must be protected with smd_mutex to garantee
+	 * that all messages are sent one after another
+	 */
 	u8			*smd_buf;
+	struct mutex		smd_mutex;
+
 	struct work_struct	smd_work;
 	struct work_struct	start_work;
 	struct work_struct	rx_ready_work;
