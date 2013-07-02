@@ -725,22 +725,36 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
 						 drv_priv);
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac suspend");
 
+	mutex_lock(&wcn->pm_mutex);
 	/* Enter BMPS only in connected state */
 	if (wcn->aid > 0)
 		wcn36xx_smd_enter_bmps(wcn, vif->bss_conf.sync_tsf);
+	wcn->is_suspended = true;
+	wcn->is_con_lost_pending = false;
 
 	flush_work(&wcn->rx_ready_work);
 	flush_work(&wcn->smd_work);
+	mutex_unlock(&wcn->pm_mutex);
 
 	return 0;
 }
 static int wcn36xx_resume(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac resume");
 
+	wcn->is_suspended = false;
 	if (wcn->aid > 0)
 		wcn36xx_smd_exit_bmps(wcn);
+
+	if (wcn->is_con_lost_pending) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "report connection lost");
+		ieee80211_connection_loss(vif);
+	}
+
 	return 0;
 }
 #endif
@@ -929,6 +943,8 @@ static int __init wcn36xx_init(void)
 	wcn->aid = 0;
 	wcn->current_vif = NULL;
 	wcn->is_joining = false;
+
+	mutex_init(&wcn->pm_mutex);
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
 
@@ -985,6 +1001,7 @@ static void __exit wcn36xx_exit(void)
 	struct ieee80211_hw *hw = private_hw;
 	struct wcn36xx *wcn = hw->priv;
 
+	mutex_destroy(&wcn->pm_mutex);
 	ieee80211_unregister_hw(hw);
 	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
