@@ -1085,6 +1085,31 @@ static int wcn36xx_smd_tx_compl_ind(struct wcn36xx *wcn, void *buf, size_t len)
 	return 0;
 }
 
+static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
+					 void *buf,
+					 size_t len)
+{
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
+	mutex_lock(&wcn->pm_mutex);
+	/*
+	 * In suspended state mac80211 is still sleeping and that means we
+	 * cannot notify it about connection lost. Wait until resume and
+	 * then notify mac80211 about it.
+	 */
+	if (wcn->is_suspended) {
+		wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "postpone connection lost notification");
+		wcn->is_con_lost_pending = true;
+	} else {
+		wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed");
+		ieee80211_connection_loss(vif);
+	}
+	mutex_unlock(&wcn->pm_mutex);
+	return 0;
+}
+
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header *msg_header = buf;
@@ -1137,6 +1162,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
 		wcn36xx_smd_tx_compl_ind(wcn, buf, len);
+		break;
+	case WCN36XX_HAL_MISSED_BEACON_IND:
+		wcn36xx_smd_missed_beacon_ind(wcn, buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
