@@ -1020,6 +1020,34 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt)
+{
+	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_BMPS_REQ);
+
+	msg_body.bss_index = 0;
+	msg_body.tbtt = tbtt;
+	msg_body.dtim_period = wcn->dtim_period;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_EXIT_BMPS_REQ);
+
+	msg_body.bss_index = 0;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1057,6 +1085,31 @@ static int wcn36xx_smd_tx_compl_ind(struct wcn36xx *wcn, void *buf, size_t len)
 	return 0;
 }
 
+static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
+					 void *buf,
+					 size_t len)
+{
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
+	mutex_lock(&wcn->pm_mutex);
+	/*
+	 * In suspended state mac80211 is still sleeping and that means we
+	 * cannot notify it about connection lost. Wait until resume and
+	 * then notify mac80211 about it.
+	 */
+	if (wcn->is_suspended) {
+		wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "postpone connection lost notification");
+		wcn->is_con_lost_pending = true;
+	} else {
+		wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed");
+		ieee80211_connection_loss(vif);
+	}
+	mutex_unlock(&wcn->pm_mutex);
+	return 0;
+}
+
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header *msg_header = buf;
@@ -1091,6 +1144,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_SET_STAKEY_RSP:
 	case WCN36XX_HAL_RMV_STAKEY_RSP:
 	case WCN36XX_HAL_RMV_BSSKEY_RSP:
+	case WCN36XX_HAL_ENTER_BMPS_RSP:
+	case WCN36XX_HAL_EXIT_BMPS_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
@@ -1107,6 +1162,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
 		wcn36xx_smd_tx_compl_ind(wcn, buf, len);
+		break;
+	case WCN36XX_HAL_MISSED_BEACON_IND:
+		wcn36xx_smd_missed_beacon_ind(wcn, buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
