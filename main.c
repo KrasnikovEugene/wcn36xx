@@ -528,14 +528,16 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
 
-		if (vif->type == NL80211_IFTYPE_STATION &&
-		    !is_zero_ether_addr(bss_conf->bssid)) {
+		if (!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false,
 					       wcn->beacon_interval);
+		} else {
+			wcn->is_joining = false;
+			wcn36xx_smd_delete_bss(wcn);
 		}
 	}
 
@@ -584,7 +586,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    bss_conf->aid);
 			wcn->aid = 0;
 			wcn36xx_smd_delete_sta(wcn);
-			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
 						bss_conf->bssid,
 						vif->addr,
