@@ -3597,12 +3597,12 @@ struct wcn36xx_hal_configure_apps_cpu_wakeup_state_rsp_msg {
 struct wcn36xx_hal_dump_cmd_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
-	u32 argument1;
-	u32 argument2;
-	u32 argument3;
-	u32 argument4;
-	u32 argument5;
-};
+	u32 arg1;
+	u32 arg2;
+	u32 arg3;
+	u32 arg4;
+	u32 arg5;
+} __packed;
 
 struct wcn36xx_hal_dump_cmd_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -3616,7 +3616,7 @@ struct wcn36xx_hal_dump_cmd_rsp_msg {
 	/* FIXME: Currently considering the the responce will be less than
 	 * 100bytes */
 	u8 rsp_buffer[DUMPCMD_RSP_BUFFER];
-};
+} __packed;
 
 #define WLAN_COEX_IND_DATA_SIZE (4)
 #define WLAN_COEX_IND_TYPE_DISABLE_HB_MONITOR (0)

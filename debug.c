@@ -82,6 +82,46 @@ static const struct file_operations fops_wcn36xx_bmps = {
 	.write =       write_file_bool_bmps,
 };
 
+static ssize_t write_file_bool_dump(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	struct wcn36xx *wcn = file->private_data;
+	char buf[255], *tmp;
+	int buf_size;
+	u32 arg[WCN36xx_MAX_DUMP_ARGS];
+	int i;
+
+	memset(buf, 0, sizeof(buf));
+	memset(arg, 0, sizeof(arg));
+
+	buf_size = min(count, (sizeof(buf) - 1));
+	if (copy_from_user(buf, user_buf, buf_size))
+		return -EFAULT;
+
+	tmp = buf;
+	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
+		char *begin;
+		begin = strsep(&tmp, " ");
+		if (begin == NULL)
+			break;
+
+		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
+			break;
+	}
+
+	wcn36xx_info("DUMP args is %d %d %d %d %d\n", arg[0], arg[1], arg[2],
+		     arg[3], arg[4]);
+	wcn36xx_smd_dump_cmd_req(wcn, arg[0], arg[1], arg[2], arg[3], arg[4]);
+
+	return count;
+}
+
+static const struct file_operations fops_wcn36xx_dump = {
+	.open  =       wcn36xx_debugfs_open,
+	.write =       write_file_bool_dump,
+};
+
 #define ADD_FILE_BOOL(name, mode, fop, priv_data)		\
 	do {							\
 		struct dentry *d;				\
@@ -108,6 +148,7 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
 	}
 	ADD_FILE_BOOL(bmps_switcher, S_IRUSR | S_IWUSR,
 		      &fops_wcn36xx_bmps, wcn);
+	ADD_FILE_BOOL(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
 }
 
 void wcn36xx_debugfs_exit(struct wcn36xx *wcn)

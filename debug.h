@@ -24,6 +24,8 @@
 
 #include <linux/kernel.h>
 
+#define WCN36xx_MAX_DUMP_ARGS	5
+
 struct wcn36xx_dfs_file {
 	struct dentry *dentry;
 	u32 value;
@@ -32,6 +34,7 @@ struct wcn36xx_dfs_file {
 struct wcn36xx_dfs_entry {
 	struct dentry *rootdir;
 	struct wcn36xx_dfs_file file_bmps_switcher;
+	struct wcn36xx_dfs_file file_dump;
 };
 
 void wcn36xx_debugfs_init(struct wcn36xx *wcn);
