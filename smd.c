@@ -1066,6 +1066,25 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
+
+int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
+			     u32 arg3, u32 arg4, u32 arg5)
+{
+	struct wcn36xx_hal_dump_cmd_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DUMP_COMMAND_REQ);
+
+	msg_body.arg1 = arg1;
+	msg_body.arg2 = arg2;
+	msg_body.arg3 = arg3;
+	msg_body.arg4 = arg4;
+	msg_body.arg5 = arg5;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1164,6 +1183,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_RMV_BSSKEY_RSP:
 	case WCN36XX_HAL_ENTER_BMPS_RSP:
 	case WCN36XX_HAL_EXIT_BMPS_RSP:
+	case WCN36XX_HAL_DUMP_COMMAND_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);
