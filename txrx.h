@@ -151,5 +151,5 @@ int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
 void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len);
 void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 			u8 broadcast, struct ieee80211_hdr *hdr,
-			bool tx_compl);
+			bool tx_compl, struct wcn_sta *sta_priv);
 #endif	/* _TXRX_H_ */
