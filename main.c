@@ -711,6 +711,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 		    vif, sta->addr);
 
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		wcn36xx_smd_delete_sta(wcn);
 
