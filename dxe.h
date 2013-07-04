@@ -17,6 +17,8 @@
 #ifndef _DXE_H_
 #define _DXE_H_
 
+#include "wcn36xx.h"
+
 /*
 TX_LOW	= DMA0
 TX_HIGH	= DMA4
@@ -221,6 +223,7 @@ struct wcn36xx_dxe_mem_pool {
 	dma_addr_t	phy_addr;
 };
 struct wcn36xx;
+struct wcn_sta;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_rx_ready_work(struct work_struct *work);
@@ -233,6 +236,8 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		   struct sk_buff *skb,
 		   u8 broadcast,
 		   bool is_high,
-		   u32 header_len, bool tx_compl);
+		   u32 header_len,
+		   bool tx_compl,
+		   struct wcn_sta *sta_priv);
 void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status);
 #endif	/* _DXE_H_ */

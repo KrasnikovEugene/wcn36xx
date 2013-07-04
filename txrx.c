@@ -84,7 +84,7 @@ void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len)
 }
 void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 			u8 broadcast, struct ieee80211_hdr *hdr,
-			bool tx_compl)
+			bool tx_compl, struct wcn_sta *sta_priv)
 {
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
 	bd->pdu.tid   = WCN36XX_TID;
@@ -123,7 +123,8 @@ void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
 		bd->queue_id = 0;
 		bd->sta_index = wcn->current_vif->sta_index;
 		bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
-		if (ieee80211_is_nullfunc(hdr->frame_control))
+		if (ieee80211_is_nullfunc(hdr->frame_control) ||
+		    (sta_priv && !sta_priv->is_data_encrypted))
 			bd->dpu_ne = 1;
 
 	} else {
