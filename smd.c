@@ -526,7 +526,13 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
 	sta->dsss_cck_mode_40mhz = 0;
-	sta->sta_index = 1;
+	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
+	    wcn->iftype == NL80211_IFTYPE_AP ||
+	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
+		sta->sta_index = 0xFF;
+	else
+		sta->sta_index = 1;
+
 	sta->bssid_index = 0;
 	sta->p2p = 0;
 
