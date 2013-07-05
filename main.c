@@ -14,7 +14,6 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <linux/etherdevice.h>
 #include <linux/module.h>
 #include <linux/wcnss_wlan.h>
 #include "wcn36xx.h"
@@ -309,46 +308,14 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 		       struct ieee80211_tx_control *control,
 		       struct sk_buff *skb)
 {
-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-	struct ieee80211_mgmt *mgmt;
-	bool high, bcast, tx_compl;
-	u32 header_len = 0;
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn_sta *sta_priv = NULL;
 
 	if (control->sta)
 		sta_priv = (struct wcn_sta *)control->sta->drv_priv;
 
-	tx_compl = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
-	mgmt = (struct ieee80211_mgmt *)skb->data;
-
-	high = !(ieee80211_is_data(mgmt->frame_control) ||
-		 ieee80211_is_data_qos(mgmt->frame_control));
-
-	bcast = is_broadcast_ether_addr(mgmt->da) ||
-		is_multicast_ether_addr(mgmt->da);
-
-	/*
-	 * In joining state trick hardware that probe is sent as unicast even
-	 * if address is broadcast.
-	 */
-	if (wcn->is_joining && ieee80211_is_probe_req(mgmt->frame_control))
-		bcast = false;
-	wcn36xx_dbg(WCN36XX_DBG_TX,
-		    "tx skb %p len %d fc %04x sn %d %s %s",
-		    skb, skb->len, __le16_to_cpu(mgmt->frame_control),
-		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(mgmt->seq_ctrl)),
-		    high ? "high" : "low", bcast ? "bcast" : "ucast");
-
-	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
-
-	header_len = ieee80211_is_data_qos(mgmt->frame_control) ?
-		sizeof(struct ieee80211_qos_hdr) :
-		sizeof(struct ieee80211_hdr_3addr);
-	wcn36xx_dxe_tx(hw->priv, skb, bcast, high,
-		       header_len, tx_compl, sta_priv);
+	wcn36xx_start_tx(wcn, sta_priv, skb);
 }
-
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			   struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta,
