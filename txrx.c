@@ -73,68 +73,147 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	return 0;
 }
-void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len)
+
+static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
+			 u32 mpdu_header_len,
+			 u32 len)
 {
-	memset(bd, 0, sizeof(*bd));
-	bd->pdu.mpdu_header_len = header_len;
+	bd->pdu.mpdu_header_len = mpdu_header_len;
 	bd->pdu.mpdu_header_off = sizeof(*bd);
 	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
 		bd->pdu.mpdu_header_off;
 	bd->pdu.mpdu_len = len;
+	bd->pdu.tid = WCN36XX_TID;
 }
-void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
-			u8 broadcast, struct ieee80211_hdr *hdr,
-			bool tx_compl, struct wcn_sta *sta_priv)
-{
-	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
-	bd->pdu.tid   = WCN36XX_TID;
-	bd->pdu.reserved3 = 0xd;
 
-	if (broadcast) {
+static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
+				struct wcn36xx *wcn,
+				struct wcn_sta *sta_priv,
+				struct ieee80211_hdr *hdr,
+				bool bcast)
+{
+	bd->bd_rate = WCN36XX_BD_RATE_DATA;
+	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
+	bd->sta_index = wcn->current_vif->sta_index;
+	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
+	if (ieee80211_is_nullfunc(hdr->frame_control) ||
+	   (sta_priv && !sta_priv->is_data_encrypted))
+		bd->dpu_ne = 1;
+	if (bcast) {
+		bd->ub = 1;
+		bd->ack_policy = 1;
+	}
+}
+
+static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
+				struct wcn36xx *wcn,
+				struct ieee80211_hdr *hdr,
+				bool bcast)
+{
+	bd->sta_index = wcn->current_vif->self_sta_index;
+	bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
+	bd->dpu_ne = 1;
+
+	/* default rate for unicast */
+	if (ieee80211_is_mgmt(hdr->frame_control))
+		bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
+			WCN36XX_BD_RATE_CTRL :
+			WCN36XX_BD_RATE_MGMT;
+	else if (ieee80211_is_ctl(hdr->frame_control))
+		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
+	else
+		wcn36xx_warn("frame control type unknown");
+
+	/*
+	 * In joining state trick hardware that probe is sent as
+	 * unicast even if address is broadcast.
+	 */
+	if (wcn->is_joining &&
+	    ieee80211_is_probe_req(hdr->frame_control))
+		bcast = false;
+
+	if (bcast) {
 		/* broadcast */
 		bd->ub = 1;
-		bd->queue_id = WCN36XX_TX_B_WQ_ID;
-
-		/* default rate for broadcast */
-		if (ieee80211_is_mgmt(hdr->frame_control))
-			bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
-				WCN36XX_BD_RATE_CTRL :
-				WCN36XX_BD_RATE_MGMT;
 		/* No ack needed not unicast */
 		bd->ack_policy = 1;
-	} else {
+		bd->queue_id = WCN36XX_TX_B_WQ_ID;
+	} else
 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
-		/* default rate for unicast */
-		bd->ack_policy = 0;
-		if (ieee80211_is_data(hdr->frame_control))
-			bd->bd_rate = WCN36XX_BD_RATE_DATA;
-		else if (ieee80211_is_mgmt(hdr->frame_control))
-			bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
-				WCN36XX_BD_RATE_CTRL :
-				WCN36XX_BD_RATE_MGMT;
-		else if (ieee80211_is_ctl(hdr->frame_control))
-			bd->bd_rate = WCN36XX_BD_RATE_CTRL;
-		else
-			wcn36xx_warn("frame control type unknown");
+}
+
+int wcn36xx_start_tx(struct wcn36xx *wcn,
+		     struct wcn_sta *sta_priv,
+		     struct sk_buff *skb)
+{
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+	unsigned long flags;
+	bool is_low = ieee80211_is_data(hdr->frame_control);
+	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
+		is_multicast_ether_addr(hdr->addr1);
+	struct wcn36xx_tx_bd *bd = wcn36xx_dxe_get_next_bd(wcn, is_low);
+
+	if (!bd) {
+		/*
+		 * TX DXE are used in pairs. One for the BD and one for the
+		 * actual frame. The BD DXE's has a preallocated buffer while
+		 * the skb ones does not. If this isn't true something is really
+		 * wierd. TODO: Recover from this situation
+		 */
+
+		wcn36xx_error("bd address may not be NULL for BD DXE");
+		return -EINVAL;
+	}
+	memset(bd, 0, sizeof(*bd));
+
+	wcn36xx_dbg(WCN36XX_DBG_TX,
+		    "tx skb %p len %d fc %04x sn %d %s %s",
+		    skb, skb->len, __le16_to_cpu(hdr->frame_control),
+		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl)),
+		    is_low ? "low" : "high", bcast ? "bcast" : "ucast");
+
+	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
+
+	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
+
+	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
+	if (bd->tx_comp) {
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
+		spin_lock_irqsave(&wcn->dxe_lock, flags);
+		if (wcn->tx_ack_skb) {
+			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
+			wcn36xx_warn("tx_ack_skb already set");
+			ieee80211_free_txskb(wcn->hw, skb);
+			return -EINVAL;
+		}
+
+		wcn->tx_ack_skb = skb;
+		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
+
+		/* Only one at a time is supported by fw. Stop the TX queues
+		 * until the ack status gets back.
+		 *
+		 * TODO: Add watchdog in case FW does not answer
+		 */
+		ieee80211_stop_queues(wcn->hw);
 	}
 
-	if (ieee80211_is_data(hdr->frame_control)) {
-		bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
-		bd->queue_id = 0;
-		bd->sta_index = wcn->current_vif->sta_index;
-		bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
-		if (ieee80211_is_nullfunc(hdr->frame_control) ||
-		    (sta_priv && !sta_priv->is_data_encrypted))
-			bd->dpu_ne = 1;
+	wcn36xx_set_tx_pdu(bd, ieee80211_is_data_qos(hdr->frame_control) ?
+			   sizeof(struct ieee80211_qos_hdr) :
+			   sizeof(struct ieee80211_hdr_3addr),
+			   skb->len);
 
+	/* Data frames served first*/
+	if (is_low) {
+		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
 	} else {
-		bd->sta_index = wcn->current_vif->self_sta_index;
-		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
-		bd->dpu_ne = 1;
+		/* MGMT and CTRL frames are handeld here*/
+		wcn36xx_set_tx_mgmt(bd, wcn, hdr, bcast);
 	}
-
-	bd->tx_comp = tx_compl;
 
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
 	bd->tx_bd_sign = 0xbdbdbdbd;
+
+	return wcn36xx_dxe_tx_frame(wcn, skb, is_low);
 }
