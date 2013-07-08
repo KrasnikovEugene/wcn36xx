@@ -716,7 +716,7 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
 
 	mutex_lock(&wcn->pm_mutex);
 	/* Enter BMPS only in connected state */
-	if (wcn->aid > 0)
+	if ((wcn->aid > 0) && (wcn->pw_state != WCN36XX_BMPS))
 		wcn36xx_pmc_enter_bmps_state(wcn, vif->bss_conf.sync_tsf);
 	wcn->is_suspended = true;
 	wcn->is_con_lost_pending = false;
