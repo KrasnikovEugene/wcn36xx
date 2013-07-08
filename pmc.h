@@ -18,23 +18,18 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+#ifndef _WCN36XX_PMC_H_
+#define _WCN36XX_PMC_H_
 
-#ifndef _WCN36XX_DEBUG_H_
-#define _WCN36XX_DEBUG_H_
+struct wcn36xx;
 
-#include <linux/kernel.h>
-
-struct wcn36xx_dfs_file {
-	struct dentry *dentry;
-	u32 value;
+enum wcn36xx_power_state {
+	WCN36XX_FULL_POWER,
+	WCN36XX_BMPS
 };
 
-struct wcn36xx_dfs_entry {
-	struct dentry *rootdir;
-	struct wcn36xx_dfs_file file_bmps_switcher;
-};
-
-void wcn36xx_debugfs_init(struct wcn36xx *wcn);
-void wcn36xx_debugfs_exit(struct wcn36xx *wcn);
-
-#endif	/* _WCN36XX_DEBUG_H_ */
+int wcn36xx_pmc_init(struct wcn36xx *wcn);
+int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tbtt);
+int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn);
+int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn);
+#endif	/* _WCN36XX_PMC_H_ */
