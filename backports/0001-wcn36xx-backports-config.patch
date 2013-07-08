@@ -1,0 +1,125 @@
+From 5f8af8a8090439dcf34d1948a48dc192c3f4efaf Mon Sep 17 00:00:00 2001
+From: Coil <dev@skyshaper.net>
+Date: Thu, 4 Jul 2013 10:11:54 +0200
+Subject: [PATCH 1/1] wcn36xx backports config
+
+---
+ backport/defconfigs/wcn36xx                        | 12 +++++++
+ copy-list.mac80211                                 | 38 ++++++++++++++++++++++
+ copy-list.wcn36xx                                  | 11 +++++++
+ .../0005-wcn36xx-make-kconfig/wcn36xx.patch        | 21 ++++++++++++
+ 4 files changed, 82 insertions(+)
+ create mode 100644 backport/defconfigs/wcn36xx
+ create mode 100644 copy-list.mac80211
+ create mode 100644 copy-list.wcn36xx
+ create mode 100644 patches/unified-drivers/network/0005-wcn36xx-make-kconfig/wcn36xx.patch
+
+diff --git a/backport/defconfigs/wcn36xx b/backport/defconfigs/wcn36xx
+new file mode 100644
+index 0000000..d7105bf
+--- /dev/null
++++ b/backport/defconfigs/wcn36xx
+@@ -0,0 +1,12 @@
++CPTCFG_CFG80211=m
++CPTCFG_CFG80211_DEFAULT_PS=y
++CPTCFG_CFG80211_DEBUGFS=y
++CPTCFG_MAC80211=m
++# CPTCFG_MAC80211_RC_PID is not set
++# CPTCFG_MAC80211_RC_MINSTREL is not set
++# CPTCFG_MAC80211_RC_DEFAULT_MINSTREL is not set
++CPTCFG_MAC80211_DEBUGFS=y
++CPTCFG_MAC80211_MESSAGE_TRACING=y
++CPTCFG_WLAN=y
++CPTCFG_ATH_CARDS=m
++CPTCFG_WCN36XX=m
+diff --git a/copy-list.mac80211 b/copy-list.mac80211
+new file mode 100644
+index 0000000..48e9ecf
+--- /dev/null
++++ b/copy-list.mac80211
+@@ -0,0 +1,38 @@
++#
++# This file specifies which sources are copied from the kernel
++# into the backports package.
++#
++# Directories must end with a slash (e.g. "net/wireless/") and
++# are then copied with all their contents.
++#
++# It is also possible to rename while copying, to do so list
++# old name -> new name
++# Note that in this case the spaces are needed: " -> "
++#
++
++COPYING
++MAINTAINERS
++
++# 802.11
++drivers/net/wireless/Kconfig
++drivers/net/wireless/Makefile
++
++include/linux/ieee80211.h
++include/linux/pci_ids.h
++
++include/uapi/linux/nl80211.h
++include/linux/rfkill.h -> include/linux/rfkill_backport.h
++include/uapi/linux/rfkill.h -> include/uapi/linux/rfkill_backport.h
++
++include/net/cfg80211.h
++include/net/cfg80211-wext.h
++include/net/ieee80211_radiotap.h
++include/net/mac80211.h
++include/net/regulatory.h
++
++net/Makefile
++net/Kconfig
++net/wireless/
++net/mac80211/
++
++drivers/net/wireless/ath/
+diff --git a/copy-list.wcn36xx b/copy-list.wcn36xx
+new file mode 100644
+index 0000000..795262a
+--- /dev/null
++++ b/copy-list.wcn36xx
+@@ -0,0 +1,11 @@
++#
++# To use this, use the --extra-driver argument to gentree.py,
++# like this:
++#	--extra-driver /path/to/alx/ copy-list.alx
++#
++# This probably needs to be changed to target/linux/src/
++# to support "make linux-src" in alx, but then the Makefile
++# is not good ...
++#
++wcn36xx/ -> drivers/net/wireless/ath/wcn36xx/
++
+diff --git a/patches/unified-drivers/network/0005-wcn36xx-make-kconfig/wcn36xx.patch b/patches/unified-drivers/network/0005-wcn36xx-make-kconfig/wcn36xx.patch
+new file mode 100644
+index 0000000..4b14f65
+--- /dev/null
++++ b/patches/unified-drivers/network/0005-wcn36xx-make-kconfig/wcn36xx.patch
+@@ -0,0 +1,21 @@
++diff -ur backport-fixup/drivers/net/wireless/ath/Kconfig backport-wcn/drivers/net/wireless/ath/Kconfig
++--- backport-fixup/drivers/net/wireless/ath/Kconfig	2013-07-04 09:47:48.000000000 +0200
+++++ backport-wcn/drivers/net/wireless/ath/Kconfig	2013-07-04 09:48:55.000000000 +0200
++@@ -32,5 +32,6 @@
++ source "drivers/net/wireless/ath/ar5523/Kconfig"
++ source "drivers/net/wireless/ath/wil6210/Kconfig"
++ source "drivers/net/wireless/ath/ath10k/Kconfig"
+++source "drivers/net/wireless/ath/wcn36xx/Kconfig"
++ 
++ endif
++diff -ur backport-fixup/drivers/net/wireless/ath/Makefile backport-wcn/drivers/net/wireless/ath/Makefile
++--- backport-fixup/drivers/net/wireless/ath/Makefile	2013-07-04 09:47:48.000000000 +0200
+++++ backport-wcn/drivers/net/wireless/ath/Makefile	2013-07-04 09:49:48.000000000 +0200
++@@ -5,6 +5,7 @@
++ obj-$(CONFIG_AR5523)		+= ar5523/
++ obj-$(CONFIG_WIL6210)		+= wil6210/
++ obj-$(CONFIG_ATH10K)		+= ath10k/
+++obj-$(CONFIG_WCN36XX)		+= wcn36xx/
++ 
++ obj-$(CONFIG_ATH_COMMON)	+= ath.o
++ 
+-- 
+1.8.3.1
+
