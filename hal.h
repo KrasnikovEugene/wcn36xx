@@ -3044,6 +3044,7 @@ struct wcn36xx_hal_host_offload_req_msg {
 /* Enable or disable keep alive */
 #define WCN36XX_HAL_KEEP_ALIVE_DISABLE   0
 #define WCN36XX_HAL_KEEP_ALIVE_ENABLE    1
+#define WCN36XX_KEEP_ALIVE_TIME_PERIOD	 30 /* unit: s */
 
 /* Keep Alive request. */
 struct wcn36xx_hal_keep_alive_req_msg {
@@ -3055,7 +3056,7 @@ struct wcn36xx_hal_keep_alive_req_msg {
 	u8 dest_ipv4_addr[WCN36XX_HAL_IPV4_ADDR_LEN];
 	u8 dest_addr[ETH_ALEN];
 	u8 bss_index;
-};
+} __packed;
 
 struct wcn36xx_hal_rssi_threshold_req_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -3597,12 +3598,12 @@ struct wcn36xx_hal_configure_apps_cpu_wakeup_state_rsp_msg {
 struct wcn36xx_hal_dump_cmd_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
-	u32 argument1;
-	u32 argument2;
-	u32 argument3;
-	u32 argument4;
-	u32 argument5;
-};
+	u32 arg1;
+	u32 arg2;
+	u32 arg3;
+	u32 arg4;
+	u32 arg5;
+} __packed;
 
 struct wcn36xx_hal_dump_cmd_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -3616,7 +3617,7 @@ struct wcn36xx_hal_dump_cmd_rsp_msg {
 	/* FIXME: Currently considering the the responce will be less than
 	 * 100bytes */
 	u8 rsp_buffer[DUMPCMD_RSP_BUFFER];
-};
+} __packed;
 
 #define WLAN_COEX_IND_DATA_SIZE (4)
 #define WLAN_COEX_IND_TYPE_DISABLE_HB_MONITOR (0)
