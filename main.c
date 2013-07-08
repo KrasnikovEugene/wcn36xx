@@ -176,6 +176,13 @@ static const struct ieee80211_iface_combination if_comb = {
 	.num_different_channels = 1,
 };
 
+#ifdef CONFIG_PM
+static const struct wiphy_wowlan_support wowlan_support = {
+	.flags = WIPHY_WOWLAN_ANY,
+	.n_patterns = 0,
+};
+#endif
+
 static int wcn36xx_start(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
@@ -491,7 +498,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn->beacon_interval = bss_conf->beacon_int;
 	}
 
-	if (changed & BSS_CHANGED_DTIM_PERIOD) {
+	if (changed & BSS_CHANGED_BEACON_INFO) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
 			    "mac bss changed dtim period %d",
 			    bss_conf->dtim_period);
@@ -798,8 +805,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
 
-	wcn->hw->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;
-	wcn->hw->wiphy->wowlan.n_patterns = 0;
+#ifdef CONFIG_PM
+	wcn->hw->wiphy->wowlan = &wowlan_support;
+#endif
 
 	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
