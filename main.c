@@ -956,6 +956,7 @@ static int __init wcn36xx_init(void)
 	wcn->is_joining = false;
 
 	mutex_init(&wcn->pm_mutex);
+	mutex_init(&wcn->smd_mutex);
 	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
 	wcn->hw->wiphy->addresses = wcn->addresses;
 
@@ -1013,6 +1014,7 @@ static void __exit wcn36xx_exit(void)
 	struct wcn36xx *wcn = hw->priv;
 
 	mutex_destroy(&wcn->pm_mutex);
+	mutex_destroy(&wcn->smd_mutex);
 	ieee80211_unregister_hw(hw);
 	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
