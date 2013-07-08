@@ -18,23 +18,25 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+#include "wcn36xx.h"
 
-#ifndef _WCN36XX_DEBUG_H_
-#define _WCN36XX_DEBUG_H_
+int wcn36xx_pmc_init(struct wcn36xx *wcn)
+{
+	wcn->pw_state = WCN36XX_FULL_POWER;
+	return 0;
+}
 
-#include <linux/kernel.h>
+int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn, u64 tsf)
+{
+	/* TODO: Make sure the TX chain clean */
+	wcn36xx_smd_enter_bmps(wcn, tsf);
+	wcn->pw_state = WCN36XX_BMPS;
+	return 0;
+}
 
-struct wcn36xx_dfs_file {
-	struct dentry *dentry;
-	u32 value;
-};
-
-struct wcn36xx_dfs_entry {
-	struct dentry *rootdir;
-	struct wcn36xx_dfs_file file_bmps_switcher;
-};
-
-void wcn36xx_debugfs_init(struct wcn36xx *wcn);
-void wcn36xx_debugfs_exit(struct wcn36xx *wcn);
-
-#endif	/* _WCN36XX_DEBUG_H_ */
+int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn)
+{
+	wcn36xx_smd_exit_bmps(wcn);
+	wcn->pw_state = WCN36XX_FULL_POWER;
+	return 0;
+}

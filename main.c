@@ -241,6 +241,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("DXE init failed");
 		goto out_smd_stop;
 	}
+	wcn36xx_pmc_init(wcn);
 	wcn36xx_debugfs_init(wcn);
 	return 0;
 
@@ -487,6 +488,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
+
 	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
@@ -715,7 +717,7 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
 	mutex_lock(&wcn->pm_mutex);
 	/* Enter BMPS only in connected state */
 	if (wcn->aid > 0)
-		wcn36xx_smd_enter_bmps(wcn, vif->bss_conf.sync_tsf);
+		wcn36xx_pmc_enter_bmps_state(wcn, vif->bss_conf.sync_tsf);
 	wcn->is_suspended = true;
 	wcn->is_con_lost_pending = false;
 
