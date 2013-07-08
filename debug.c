@@ -64,6 +64,7 @@ static ssize_t write_file_bool_bmps(struct file *file,
 	case 'y':
 	case 'Y':
 	case '1':
+		wcn36xx_enable_keep_alive_null_packet(wcn);
 		wcn36xx_pmc_enter_bmps_state(wcn, vif->bss_conf.sync_tsf);
 		break;
 	case 'n':
