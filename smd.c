@@ -1067,6 +1067,31 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+/* Notice: This function should be called after associated, or else it
+ * will be invalid
+ */
+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
+{
+	struct wcn36xx_hal_keep_alive_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_KEEP_ALIVE_REQ);
+
+	if (packet_type == WCN36XX_HAL_KEEP_ALIVE_NULL_PKT) {
+		msg_body.bss_index = 0;
+		msg_body.packet_type = WCN36XX_HAL_KEEP_ALIVE_NULL_PKT;
+		msg_body.time_period = WCN36XX_KEEP_ALIVE_TIME_PERIOD;
+	} else if (packet_type == WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP) {
+		/* TODO: it also support ARP response type */
+	} else {
+		wcn36xx_warn("unknow keep alive packet type %d", packet_type);
+		return -1;
+	}
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
 			     u32 arg3, u32 arg4, u32 arg5)
 {
@@ -1183,6 +1208,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_RMV_BSSKEY_RSP:
 	case WCN36XX_HAL_ENTER_BMPS_RSP:
 	case WCN36XX_HAL_EXIT_BMPS_RSP:
+	case WCN36XX_HAL_KEEP_ALIVE_RSP:
 	case WCN36XX_HAL_DUMP_COMMAND_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
