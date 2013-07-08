@@ -24,6 +24,13 @@
 #include "wcn36xx.h"
 #include "txrx.h"
 
+void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low)
+{
+	struct wcn36xx_dxe_ch *ch = is_low ?
+		&wcn->dxe_tx_l_ch :
+		&wcn->dxe_tx_h_ch;
+	return ch->head_blk_ctl->bd_cpu_addr;
+}
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
@@ -525,62 +532,18 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 	}
 }
 
-int wcn36xx_dxe_tx(struct wcn36xx *wcn,
-		   struct sk_buff *skb,
-		   u8 broadcast,
-		   bool is_high,
-		   u32 header_len,
-		   bool tx_ack,
-		   struct wcn_sta *sta_priv)
+int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+			 struct sk_buff *skb,
+			 bool is_low)
 {
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-	unsigned long flags;
 
-	ch = is_high ? &wcn->dxe_tx_h_ch : &wcn->dxe_tx_l_ch;
-
-	if (tx_ack) {
-		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
-		spin_lock_irqsave(&wcn->dxe_lock, flags);
-		if (wcn->tx_ack_skb) {
-			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-			wcn36xx_warn("tx_ack_skb already set");
-			ieee80211_free_txskb(wcn->hw, skb);
-			return -EINVAL;
-		}
-
-		wcn->tx_ack_skb = skb;
-		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-
-		/* Only one at a time is supported by fw. Stop the TX queues
-		 * until the ack status gets back.
-		 *
-		 * TODO: Add watchdog in case FW does not answer
-		 */
-		ieee80211_stop_queues(wcn->hw);
-	}
+	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
 
 	ctl = ch->head_blk_ctl;
 	ctl->skb = NULL;
-	desc = ctl->desc;
-	if (!ctl->bd_cpu_addr) {
-		/* TX DXE are used in pairs. One for the BD and one for the
-		   actual frame. The BD DXE's has a preallocated buffer while
-		   the skb ones does not. If this isn't true something is really
-		   wierd. TODO: Recover from this situation
-		 */
-
-		wcn36xx_error("bd_cpu_addr may not be NULL for BD DXE");
-		return -EINVAL;
-	}
-
-	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
-	wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast,
-			   hdr, tx_ack, sta_priv);
-
-	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
 
 	/* Set source address of the BD we send */

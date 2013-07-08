@@ -27,6 +27,7 @@
 
 #include "hal.h"
 #include "smd.h"
+#include "txrx.h"
 #include "dxe.h"
 
 #define DRIVER_PREFIX "wcn36xx: "
