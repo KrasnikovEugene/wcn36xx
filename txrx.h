@@ -17,6 +17,7 @@
 #ifndef _TXRX_H_
 #define _TXRX_H_
 
+#include <linux/etherdevice.h>
 #include "wcn36xx.h"
 
 /* TODO describe all properties */
@@ -147,9 +148,13 @@ struct wcn36xx_tx_bd {
 	u32	header_cks:16;
 	u32	reserved7:6;*/
 };
+
+struct wcn_sta;
+struct wcn36xx;
+
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
-void wcn36xx_prepare_tx_bd(struct wcn36xx_tx_bd *bd, u32 len, u32 header_len);
-void wcn36xx_fill_tx_bd(struct wcn36xx *wcn, struct wcn36xx_tx_bd *bd,
-			u8 broadcast, struct ieee80211_hdr *hdr,
-			bool tx_compl, struct wcn_sta *sta_priv);
+int wcn36xx_start_tx(struct wcn36xx *wcn,
+		     struct wcn_sta *sta_priv,
+		     struct sk_buff *skb);
+
 #endif	/* _TXRX_H_ */
