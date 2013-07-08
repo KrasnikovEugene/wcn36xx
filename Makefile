@@ -9,7 +9,8 @@ ifneq ($(KERNELRELEASE),)
 				main.o \
 				dxe.o \
 				txrx.o \
-				smd.o
+				smd.o \
+				debug.o
 
 	obj-m := wcn36xx.o
 else

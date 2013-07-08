@@ -241,6 +241,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		wcn36xx_error("DXE init failed");
 		goto out_smd_stop;
 	}
+	wcn36xx_debugfs_init(wcn);
 	return 0;
 
 out_smd_stop:
@@ -262,6 +263,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop");
 
+	wcn36xx_debugfs_exit(wcn);
 	wcn36xx_smd_stop(wcn);
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
