@@ -314,6 +314,10 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	bool high, bcast, tx_compl;
 	u32 header_len = 0;
 	struct wcn36xx *wcn = hw->priv;
+	struct wcn_sta *sta_priv = NULL;
+
+	if (control->sta)
+		sta_priv = (struct wcn_sta *)control->sta->drv_priv;
 
 	tx_compl = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
 	mgmt = (struct ieee80211_mgmt *)skb->data;
@@ -341,7 +345,8 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	header_len = ieee80211_is_data_qos(mgmt->frame_control) ?
 		sizeof(struct ieee80211_qos_hdr) :
 		sizeof(struct ieee80211_hdr_3addr);
-	wcn36xx_dxe_tx(hw->priv, skb, bcast, high, header_len, tx_compl);
+	wcn36xx_dxe_tx(hw->priv, skb, bcast, high,
+		       header_len, tx_compl, sta_priv);
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
@@ -350,6 +355,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			   struct ieee80211_key_conf *key_conf)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct wcn_sta *sta_priv = (struct wcn_sta *)sta->drv_priv;
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
@@ -394,6 +400,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		}
 
 		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
+			sta_priv->is_data_encrypted = true;
 			/* Reconfigure bss with encrypt_type */
 			wcn36xx_smd_config_bss(wcn,
 					       NL80211_IFTYPE_STATION,
@@ -420,6 +427,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 				wcn->encrypt_type,
 				key_conf->keyidx);
 		} else {
+			sta_priv->is_data_encrypted = false;
 			/* do not remove key if disassociated */
 			if (wcn->aid)
 				wcn36xx_smd_remove_stakey(wcn,
@@ -528,14 +536,16 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed_bssid %pM",
 			    bss_conf->bssid);
 
-		if (vif->type == NL80211_IFTYPE_STATION &&
-		    !is_zero_ether_addr(bss_conf->bssid)) {
+		if (!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, wcn->ch);
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false,
 					       wcn->beacon_interval);
+		} else {
+			wcn->is_joining = false;
+			wcn36xx_smd_delete_bss(wcn);
 		}
 	}
 
@@ -584,7 +594,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    bss_conf->aid);
 			wcn->aid = 0;
 			wcn36xx_smd_delete_sta(wcn);
-			wcn36xx_smd_delete_bss(wcn);
 			wcn36xx_smd_set_link_st(wcn,
 						bss_conf->bssid,
 						vif->addr,
@@ -693,10 +702,11 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
+	    vif->type == NL80211_IFTYPE_MESH_POINT) {
+		wcn->aid = sta->aid;
 		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
 				       sta->addr);
-
+	}
 	return 0;
 }
 
@@ -710,6 +720,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 		    vif, sta->addr);
 
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		wcn36xx_smd_delete_sta(wcn);
 

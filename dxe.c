@@ -529,7 +529,9 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 		   struct sk_buff *skb,
 		   u8 broadcast,
 		   bool is_high,
-		   u32 header_len, bool tx_ack)
+		   u32 header_len,
+		   bool tx_ack,
+		   struct wcn_sta *sta_priv)
 {
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
@@ -575,7 +577,8 @@ int wcn36xx_dxe_tx(struct wcn36xx *wcn,
 	}
 
 	wcn36xx_prepare_tx_bd(ctl->bd_cpu_addr, skb->len, header_len);
-	wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast, hdr, tx_ack);
+	wcn36xx_fill_tx_bd(wcn, ctl->bd_cpu_addr, broadcast,
+			   hdr, tx_ack, sta_priv);
 
 	ctl = ch->head_blk_ctl;
 	desc = ctl->desc;
