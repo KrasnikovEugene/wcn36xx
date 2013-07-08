@@ -29,6 +29,8 @@
 #include "smd.h"
 #include "txrx.h"
 #include "dxe.h"
+#include "pmc.h"
+#include "debug.h"
 
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
@@ -50,6 +52,8 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_MAC		= 0x00000400,
 	WCN36XX_DBG_BEACON	= 0x00000800,
 	WCN36XX_DBG_BEACON_DUMP	= 0x00001000,
+	WCN36XX_DBG_PMC		= 0x00002000,
+	WCN36XX_DBG_PMC_DUMP	= 0x00004000,
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
@@ -169,6 +173,12 @@ struct wcn36xx {
 	struct wcn36xx_dxe_mem_pool data_mem_pool;
 
 	struct sk_buff		*tx_ack_skb;
+
+	/* Power management */
+	enum wcn36xx_power_state     pw_state;
+
+	/* Debug file system entry */
+	struct wcn36xx_dfs_entry    dfs;
 };
 
 #endif	/* _WCN36XX_H_ */
