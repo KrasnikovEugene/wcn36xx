@@ -1110,6 +1110,73 @@ int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
+static inline void set_feat_caps(u32 *bitmap,
+				 enum place_holder_in_cap_bitmap cap)
+{
+	int arr_idx, bit_idx;
+	if (cap < 0 || cap > 127) {
+		wcn36xx_warn("error cap idx %d", cap);
+	} else {
+		arr_idx = cap / 32;
+		bit_idx = cap % 32;
+		bitmap[arr_idx] |= (1 << bit_idx);
+	}
+}
+
+static inline int get_feat_caps(u32 *bitmap,
+				enum place_holder_in_cap_bitmap cap)
+{
+	int arr_idx, bit_idx;
+	int ret = 0;
+
+	if (cap < 0 || cap > 127) {
+		wcn36xx_warn("error cap idx %d", cap);
+		return -1;
+	} else {
+		arr_idx = cap / 32;
+		bit_idx = cap % 32;
+		ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
+		return ret;
+	}
+}
+
+static inline void clear_feat_caps(u32 *bitmap,
+				enum place_holder_in_cap_bitmap cap)
+{
+	int arr_idx, bit_idx;
+
+	if (cap < 0 || cap > 127) {
+		wcn36xx_warn("error cap idx %d", cap);
+	} else {
+		arr_idx = cap / 32;
+		bit_idx = cap % 32;
+		bitmap[arr_idx] &= ~(1 << bit_idx);
+	}
+}
+
+int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_feat_caps_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_REQ);
+
+	set_feat_caps(msg_body.feat_caps, STA_POWERSAVE);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+/* FW sends its capability bitmap as a response */
+int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
+{
+	/* TODO: print the caps of rsp for comapre */
+	if (wcn36xx_smd_rsp_status_check(buf, len)) {
+		wcn36xx_warn("error response for caps exchange");
+	}
+	return 0;
+}
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1229,6 +1296,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_MISSED_BEACON_IND:
 		wcn36xx_smd_missed_beacon_ind(wcn, buf, len);
+		break;
+	case WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_RSP:
+		wcn36xx_smd_feature_caps_exchange_rsp(buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
