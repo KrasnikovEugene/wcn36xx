@@ -685,8 +685,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		wcn->aid = sta->aid;
-		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
-				       sta->addr, vif->type);
+		wcn36xx_smd_config_sta(wcn, vif->addr, sta->addr, vif->type);
 	}
 	return 0;
 }
