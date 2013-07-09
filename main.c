@@ -789,6 +789,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->flags = IEEE80211_HW_SIGNAL_DBM |
 		IEEE80211_HW_HAS_RATE_CONTROL |
+		IEEE80211_HW_SUPPORTS_PS |
+		IEEE80211_HW_CONNECTION_MONITOR |
 		IEEE80211_HW_TIMING_BEACON_ONLY;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
