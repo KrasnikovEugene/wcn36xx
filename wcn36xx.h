@@ -98,6 +98,7 @@ struct wcn36xx_vif {
 	u8 self_sta_index;
 	u8 self_dpu_desc_index;
 };
+
 struct wcn_sta {
 	u8 sta_id;
 	bool is_data_encrypted;
@@ -113,7 +114,6 @@ struct wcn36xx {
 	struct ieee80211_channel *current_channel;
 	enum ieee80211_band	band;
 	struct wcn36xx_hal_mac_ssid ssid;
-	enum nl80211_iftype	iftype;
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
 	u16			beacon_interval;

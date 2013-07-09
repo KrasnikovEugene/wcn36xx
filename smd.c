@@ -490,7 +490,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 }
 
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
-			   const u8 *sta_mac)
+			   const u8 *sta_mac, enum nl80211_iftype iftype)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
 	struct wcn36xx_hal_config_sta_params *sta;
@@ -503,9 +503,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	sta->aid = wcn->aid;
 
-	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
-	    wcn->iftype == NL80211_IFTYPE_AP ||
-	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
+	if (iftype == NL80211_IFTYPE_ADHOC ||
+	    iftype == NL80211_IFTYPE_AP ||
+	    iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
 		sta->type = 0;
@@ -538,9 +538,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
 	sta->dsss_cck_mode_40mhz = 0;
-	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
-	    wcn->iftype == NL80211_IFTYPE_AP ||
-	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
+	if (iftype == NL80211_IFTYPE_ADHOC ||
+	    iftype == NL80211_IFTYPE_AP ||
+	    iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->sta_index = 0xFF;
 	else
 		sta->sta_index = 1;
