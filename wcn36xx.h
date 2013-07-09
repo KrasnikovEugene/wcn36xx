@@ -80,6 +80,8 @@ enum wcn36xx_debug_mask {
 			       buf, len, false);		\
 } while (0)
 
+#define WCN36XX_HW_CHANNEL(__wcn) (__wcn->hw->conf.chandef.chan->hw_value)
+
 static inline void buff_to_be(u32 *buf, size_t len)
 {
 	int i;
@@ -110,7 +112,6 @@ struct wcn36xx {
 	struct device		*dev;
 	const struct firmware	*nv;
 	struct mac_address	addresses[2];
-	int			ch;
 	struct ieee80211_channel *current_channel;
 	enum ieee80211_band	band;
 	struct wcn36xx_hal_mac_ssid ssid;
