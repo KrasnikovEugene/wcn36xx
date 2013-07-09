@@ -292,11 +292,11 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x", changed);
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-		wcn->ch = hw->conf.chandef.chan->hw_value;
+		int ch = WCN36XX_HW_CHANNEL(wcn);
 		wcn->current_channel = hw->conf.chandef.chan;
 		wcn->band = hw->conf.chandef.chan->band;
-		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", wcn->ch);
-		wcn36xx_smd_switch_channel(wcn, wcn->ch);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", ch);
+		wcn36xx_smd_switch_channel(wcn, ch);
 	}
 
 	return 0;
@@ -428,14 +428,14 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_init_scan(wcn);
-	wcn36xx_smd_start_scan(wcn, wcn->ch);
+	wcn36xx_smd_start_scan(wcn, WCN36XX_HW_CHANNEL(wcn));
 }
 
 static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
-	wcn36xx_smd_end_scan(wcn, wcn->ch);
+	wcn36xx_smd_end_scan(wcn, WCN36XX_HW_CHANNEL(wcn));
 	wcn36xx_smd_finish_scan(wcn);
 }
 
@@ -517,7 +517,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		if (!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
-					 vif->addr, wcn->ch);
+					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false,
 					       wcn->beacon_interval);
