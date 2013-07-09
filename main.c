@@ -741,8 +741,8 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac resume");
 
 	wcn->is_suspended = false;
-	if (wcn->aid > 0)
-		wcn36xx_smd_exit_bmps(wcn);
+	if (wcn->pw_state == WCN36XX_BMPS)
+		wcn36xx_pmc_exit_bmps_state(wcn);
 
 	if (wcn->is_con_lost_pending) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "report connection lost");
