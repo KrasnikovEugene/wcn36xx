@@ -83,7 +83,7 @@ static const struct file_operations fops_wcn36xx_bmps = {
 	.write =       write_file_bool_bmps,
 };
 
-static ssize_t write_file_bool_dump(struct file *file,
+static ssize_t write_file_dump(struct file *file,
 				    const char __user *user_buf,
 				    size_t count, loff_t *ppos)
 {
@@ -120,10 +120,10 @@ static ssize_t write_file_bool_dump(struct file *file,
 
 static const struct file_operations fops_wcn36xx_dump = {
 	.open  =       wcn36xx_debugfs_open,
-	.write =       write_file_bool_dump,
+	.write =       write_file_dump,
 };
 
-#define ADD_FILE_BOOL(name, mode, fop, priv_data)		\
+#define ADD_FILE(name, mode, fop, priv_data)		\
 	do {							\
 		struct dentry *d;				\
 		d = debugfs_create_file(__stringify(name),	\
@@ -147,9 +147,9 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
 		wcn36xx_warn("Create the debugfs failed");
 		dfs->rootdir = NULL;
 	}
-	ADD_FILE_BOOL(bmps_switcher, S_IRUSR | S_IWUSR,
+	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
 		      &fops_wcn36xx_bmps, wcn);
-	ADD_FILE_BOOL(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
+	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
 }
 
 void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
