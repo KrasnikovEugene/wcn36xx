@@ -562,7 +562,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
-			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
+			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr, vif->type);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -597,7 +597,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
-			wcn36xx_smd_config_bss(wcn, wcn->iftype,
+			wcn36xx_smd_config_bss(wcn, vif->type,
 					       wcn->addresses[0].addr, false,
 					       wcn->beacon_interval);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
@@ -665,8 +665,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		return -EOPNOTSUPP;
 	}
 
-	wcn->iftype = vif->type;
-
 	return 0;
 }
 
@@ -683,7 +681,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		wcn->aid = sta->aid;
 		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
-				       sta->addr);
+				       sta->addr, vif->type);
 	}
 	return 0;
 }
