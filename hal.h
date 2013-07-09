@@ -509,6 +509,12 @@ enum wcn36xx_hal_ht_operating_mode {
 	WCN36XX_HAL_HT_OP_MODE_MAX = WCN36XX_HAL_MAX_ENUM_SIZE
 };
 
+enum wcn36xx_hal_ht_secondary_chan_off {
+	WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_NONE = 0,
+	WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_UP = 1,
+	WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_DOWN = 3,
+};
+
 /* Encryption type enum used with peer */
 enum ani_ed_type {
 	WCN36XX_HAL_ED_NONE,
