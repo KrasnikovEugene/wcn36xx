@@ -590,9 +590,22 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	/* Move the head of the ring to the next empty descriptor */
 	 ch->head_blk_ctl = ctl->next;
 
-	/* indicate End Of Packet and generate interrupt on descriptor done */
-	wcn36xx_dxe_write_register(wcn,
-		ch->reg_ctrl, ch->def_ctrl);
+	/*
+	 * When connected and trying to send data frame chip can be in sleep
+	 * mode and writing to the register will not wake up the chip. Instead
+	 * notify chip about new frame through SMSM bus.
+	 */
+	if (wcn->pw_state == WCN36XX_BMPS) {
+		smsm_change_state(SMSM_APPS_STATE,
+				  0,
+				  WCN36XX_SMSM_WLAN_TX_ENABLE);
+	} else {
+		/* indicate End Of Packet and generate interrupt on descriptor
+		 * done.
+		 */
+		wcn36xx_dxe_write_register(wcn,
+			ch->reg_ctrl, ch->def_ctrl);
+	}
 	return 0;
 }
 int wcn36xx_dxe_init(struct wcn36xx *wcn)
