@@ -559,7 +559,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
 			if(sta)
 				wcn36xx_update_allowed_rates(wcn, sta);
-			rcu_read_unlock();
 
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
@@ -567,8 +566,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
-			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr);
-
+			wcn36xx_smd_config_sta(wcn, sta, vif->addr);
+			rcu_read_unlock();
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "disassociated bss %pM vif %pM AID=%d",
@@ -687,7 +686,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		wcn->aid = sta->aid;
-		wcn36xx_smd_config_sta(wcn, wcn->addresses[0].addr,
+		wcn36xx_smd_config_sta(wcn, sta,
 				       sta->addr);
 	}
 	return 0;
