@@ -385,6 +385,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			sta_priv->is_data_encrypted = true;
 			/* Reconfigure bss with encrypt_type */
 			wcn36xx_smd_config_bss(wcn,
+					       sta,
 					       NL80211_IFTYPE_STATION,
 					       sta->addr,
 					       true,
@@ -491,6 +492,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct sk_buff *skb = NULL;
+	struct ieee80211_sta *sta;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
 
@@ -523,9 +525,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, wcn->ch);
-			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+			rcu_read_lock();
+			sta = ieee80211_find_sta(vif, bss_conf->bssid);
+			wcn36xx_smd_config_bss(wcn, sta, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid, false,
 					       wcn->beacon_interval);
+			rcu_read_unlock();
 		} else {
 			wcn->is_joining = false;
 			wcn36xx_smd_delete_bss(wcn);
@@ -545,8 +550,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	if (changed & BSS_CHANGED_ASSOC) {
 		wcn->is_joining = false;
 		if (bss_conf->assoc) {
-			struct ieee80211_sta *sta;
-
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "mac assoc bss %pM vif %pM AID=%d",
 				     bss_conf->bssid,
@@ -563,7 +566,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
-			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+			wcn36xx_smd_config_bss(wcn, sta, NL80211_IFTYPE_STATION,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
 			wcn36xx_smd_config_sta(wcn, sta, vif->addr);
@@ -601,9 +604,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
-			wcn36xx_smd_config_bss(wcn, wcn->iftype,
+			rcu_read_lock();
+			sta = ieee80211_find_sta(vif, bss_conf->bssid);
+			wcn36xx_smd_config_bss(wcn, sta, wcn->iftype,
 					       wcn->addresses[0].addr, false,
 					       wcn->beacon_interval);
+			rcu_read_unlock();
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
