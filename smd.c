@@ -412,6 +412,17 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.self_sta_mac_addr, vif, ETH_ALEN);
 	msg_body.channel = ch;
+
+	if (conf_is_ht40_minus(&wcn->hw->conf))
+		msg_body.secondary_channel_offset =
+			PHY_DOUBLE_CHANNEL_HIGH_PRIMARY;
+	else if (conf_is_ht40_plus(&wcn->hw->conf))
+		msg_body.secondary_channel_offset =
+			PHY_DOUBLE_CHANNEL_LOW_PRIMARY;
+	else
+		msg_body.secondary_channel_offset =
+			PHY_SINGLE_CHANNEL_CENTERED;
+
 	msg_body.link_state = WCN36XX_HAL_LINK_PREASSOC_STATE;
 
 	msg_body.max_tx_power = 0xbf;
@@ -517,7 +528,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->listen_interval = 0x8;
 	sta->wmm_enabled = 0;
 	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
-	sta->tx_channel_width_set = 0;
+	sta->tx_channel_width_set = conf_is_ht40(&wcn->hw->conf);
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
 	sta->max_ampdu_size = 0;
@@ -754,9 +765,14 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->rifs_mode = 0;
 	bss->beacon_interval = beacon_interval;
 	bss->dtim_period = wcn->dtim_period;
-	bss->tx_channel_width_set = 0;
+	bss->tx_channel_width_set = conf_is_ht40(&wcn->hw->conf);
 	bss->oper_channel = wcn->ch;
-	bss->ext_channel = 0;
+	if (conf_is_ht40_minus(&wcn->hw->conf))
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_DOWN;
+	else if (conf_is_ht40_plus(&wcn->hw->conf))
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_UP;
+	else
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_NONE;
 	bss->reserved = 0;
 
 	memcpy(&sta->bssid, bssid, ETH_ALEN);
@@ -768,7 +784,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	sta->listen_interval = 8;
 	sta->wmm_enabled = 0;
 	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
-	sta->tx_channel_width_set = 0;
+	sta->tx_channel_width_set = conf_is_ht40(&wcn->hw->conf);
 	sta->rifs_mode = 0;
 	sta->lsig_txop_protection = 0;
 	sta->max_ampdu_size = 0;
