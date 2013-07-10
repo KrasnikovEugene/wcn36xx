@@ -83,7 +83,7 @@ static const struct file_operations fops_wcn36xx_bmps = {
 	.write =       write_file_bool_bmps,
 };
 
-static ssize_t write_file_bool_dump(struct file *file,
+static ssize_t write_file_dump(struct file *file,
 				    const char __user *user_buf,
 				    size_t count, loff_t *ppos)
 {
@@ -120,10 +120,45 @@ static ssize_t write_file_bool_dump(struct file *file,
 
 static const struct file_operations fops_wcn36xx_dump = {
 	.open  =       wcn36xx_debugfs_open,
-	.write =       write_file_bool_dump,
+	.write =       write_file_dump,
 };
 
-#define ADD_FILE_BOOL(name, mode, fop, priv_data)		\
+static ssize_t read_file_debug_mask(struct file *file, char __user *user_buf,
+				   size_t count, loff_t *ppos)
+{
+	char buf[32];
+	unsigned int len;
+	len = snprintf(buf, 32, "0x%08x\n", debug_mask);
+	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
+}
+
+static ssize_t write_file_debug_mask(struct file *file,
+				    const char __user *user_buf,
+				    size_t count, loff_t *ppos)
+{
+	unsigned long mask;
+	char buf[32];
+	ssize_t len;
+
+	len = min(count, sizeof(buf) - 1);
+	if (copy_from_user(buf, user_buf, len))
+		return -EFAULT;
+
+	buf[len] = '\0';
+	if (kstrtoul(buf, 0, &mask))
+		return -EINVAL;
+
+	debug_mask = mask;
+	return count;
+}
+
+static const struct file_operations fops_wcn36xx_debug_mask = {
+	.open  =       wcn36xx_debugfs_open,
+	.read  =       read_file_debug_mask,
+	.write =       write_file_debug_mask,
+};
+
+#define ADD_FILE(name, mode, fop, priv_data)		\
 	do {							\
 		struct dentry *d;				\
 		d = debugfs_create_file(__stringify(name),	\
@@ -147,9 +182,11 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
 		wcn36xx_warn("Create the debugfs failed");
 		dfs->rootdir = NULL;
 	}
-	ADD_FILE_BOOL(bmps_switcher, S_IRUSR | S_IWUSR,
+	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
 		      &fops_wcn36xx_bmps, wcn);
-	ADD_FILE_BOOL(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
+	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
+	ADD_FILE(debug_mask, S_IRUSR | S_IWUSR,
+		      &fops_wcn36xx_debug_mask, wcn);
 }
 
 void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
