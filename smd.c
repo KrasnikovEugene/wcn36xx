@@ -218,13 +218,13 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_start_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_start_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ);
 
-	msg_body.scan_channel = (u8)ch;
+	msg_body.scan_channel = WCN36XX_HW_CHANNEL(wcn);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -233,13 +233,13 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_end_scan(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_end_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_end_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ);
 
-	msg_body.scan_channel = (u8)ch;
+	msg_body.scan_channel = WCN36XX_HW_CHANNEL(wcn);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -490,7 +490,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 }
 
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
-			   const u8 *sta_mac)
+			   const u8 *sta_mac, enum nl80211_iftype iftype)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
 	struct wcn36xx_hal_config_sta_params *sta;
@@ -503,9 +503,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	sta->aid = wcn->aid;
 
-	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
-	    wcn->iftype == NL80211_IFTYPE_AP ||
-	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
+	if (iftype == NL80211_IFTYPE_ADHOC ||
+	    iftype == NL80211_IFTYPE_AP ||
+	    iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
 		sta->type = 0;
@@ -538,9 +538,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
 	sta->dsss_cck_mode_40mhz = 0;
-	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
-	    wcn->iftype == NL80211_IFTYPE_AP ||
-	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
+	if (iftype == NL80211_IFTYPE_ADHOC ||
+	    iftype == NL80211_IFTYPE_AP ||
+	    iftype == NL80211_IFTYPE_MESH_POINT)
 		sta->sta_index = 0xFF;
 	else
 		sta->sta_index = 1;
@@ -755,7 +755,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->beacon_interval = beacon_interval;
 	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
-	bss->oper_channel = wcn->ch;
+	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
 	bss->ext_channel = 0;
 	bss->reserved = 0;
 

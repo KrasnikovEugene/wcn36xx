@@ -37,8 +37,8 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	skb_pull(skb, bd->pdu.mpdu_header_off);
 
 	status.mactime = 10;
-	status.freq = wcn->current_channel->center_freq;
-	status.band = wcn->current_channel->band;
+	status.freq = WCN36XX_CENTER_FREQ(wcn);
+	status.band = WCN36XX_BAND(wcn);
 	status.signal = -RSSI0(bd);
 	status.antenna = 1;
 	status.rate_idx = 1;
@@ -116,7 +116,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 
 	/* default rate for unicast */
 	if (ieee80211_is_mgmt(hdr->frame_control))
-		bd->bd_rate = (wcn->band == IEEE80211_BAND_5GHZ) ?
+		bd->bd_rate = (WCN36XX_BAND(wcn) == IEEE80211_BAND_5GHZ) ?
 			WCN36XX_BD_RATE_CTRL :
 			WCN36XX_BD_RATE_MGMT;
 	else if (ieee80211_is_ctl(hdr->frame_control))

@@ -80,6 +80,10 @@ enum wcn36xx_debug_mask {
 			       buf, len, false);		\
 } while (0)
 
+#define WCN36XX_HW_CHANNEL(__wcn) (__wcn->hw->conf.chandef.chan->hw_value)
+#define WCN36XX_BAND(__wcn) (__wcn->hw->conf.chandef.chan->band)
+#define WCN36XX_CENTER_FREQ(__wcn) (__wcn->hw->conf.chandef.chan->center_freq)
+
 static inline void buff_to_be(u32 *buf, size_t len)
 {
 	int i;
@@ -98,6 +102,7 @@ struct wcn36xx_vif {
 	u8 self_sta_index;
 	u8 self_dpu_desc_index;
 };
+
 struct wcn_sta {
 	u8 sta_id;
 	bool is_data_encrypted;
@@ -109,11 +114,7 @@ struct wcn36xx {
 	struct device		*dev;
 	const struct firmware	*nv;
 	struct mac_address	addresses[2];
-	int			ch;
-	struct ieee80211_channel *current_channel;
-	enum ieee80211_band	band;
 	struct wcn36xx_hal_mac_ssid ssid;
-	enum nl80211_iftype	iftype;
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
 	u16			beacon_interval;
