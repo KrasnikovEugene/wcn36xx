@@ -489,8 +489,8 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
-			   const u8 *sta_mac, enum nl80211_iftype iftype)
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+			   const u8 *bssid, const u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
 	struct wcn36xx_hal_config_sta_params *sta;
@@ -503,9 +503,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	sta->aid = wcn->aid;
 
-	if (iftype == NL80211_IFTYPE_ADHOC ||
-	    iftype == NL80211_IFTYPE_AP ||
-	    iftype == NL80211_IFTYPE_MESH_POINT)
+	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_AP ||
+	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		sta->type = 1;
 	else
 		sta->type = 0;
@@ -538,9 +538,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 	sta->delayed_ba_support = 0;
 	sta->max_ampdu_duration = 0;
 	sta->dsss_cck_mode_40mhz = 0;
-	if (iftype == NL80211_IFTYPE_ADHOC ||
-	    iftype == NL80211_IFTYPE_AP ||
-	    iftype == NL80211_IFTYPE_MESH_POINT)
+	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_AP ||
+	    vif->type == NL80211_IFTYPE_MESH_POINT)
 		sta->sta_index = 0xFF;
 	else
 		sta->sta_index = 1;
@@ -703,9 +703,8 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
-			   const u8 *bssid, bool update,
-			   u16 beacon_interval)
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+			   const u8 *bssid, bool update, u16 beacon_interval)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
@@ -722,25 +721,25 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 
 	memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
 
-	if (type == NL80211_IFTYPE_STATION) {
+	if (vif->type == NL80211_IFTYPE_STATION) {
 		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
 
 		/* STA */
 		bss->oper_mode = 1;
 
-	} else if (type == NL80211_IFTYPE_AP) {
+	} else if (vif->type == NL80211_IFTYPE_AP) {
 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
 
 		/* AP */
 		bss->oper_mode = 0;
-	} else if (type == NL80211_IFTYPE_ADHOC ||
-		   type == NL80211_IFTYPE_MESH_POINT) {
+	} else if (vif->type == NL80211_IFTYPE_ADHOC ||
+		   vif->type == NL80211_IFTYPE_MESH_POINT) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
 
 		/* STA */
 		bss->oper_mode = 1;
 	} else {
-		wcn36xx_warn("Unknown type for bss config: %d", type);
+		wcn36xx_warn("Unknown type for bss config: %d", vif->type);
 	}
 
 	bss->nw_type = WCN36XX_HAL_11N_NW_TYPE;
