@@ -384,11 +384,12 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		if (IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags) {
 			sta_priv->is_data_encrypted = true;
 			/* Reconfigure bss with encrypt_type */
-			wcn36xx_smd_config_bss(wcn,
-					       vif,
-					       sta->addr,
-					       true,
-					       wcn->beacon_interval);
+			if (NL80211_IFTYPE_STATION == vif->type)
+				wcn36xx_smd_config_bss(wcn,
+						       vif,
+						       sta->addr,
+						       true,
+						       wcn->beacon_interval);
 
 			wcn36xx_smd_set_stakey(wcn,
 				wcn->encrypt_type,
