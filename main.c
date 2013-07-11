@@ -431,14 +431,14 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_init_scan(wcn);
-	wcn36xx_smd_start_scan(wcn);
+	wcn36xx_smd_start_scan(wcn, WCN36XX_HW_CHANNEL(wcn));
 }
 
 static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
-	wcn36xx_smd_end_scan(wcn);
+	wcn36xx_smd_end_scan(wcn, WCN36XX_HW_CHANNEL(wcn));
 	wcn36xx_smd_finish_scan(wcn);
 }
 
