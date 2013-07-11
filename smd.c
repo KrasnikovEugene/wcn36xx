@@ -218,13 +218,13 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_start_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_start_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ);
 
-	msg_body.scan_channel = (u8)ch;
+	msg_body.scan_channel = WCN36XX_HW_CHANNEL(wcn);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -233,13 +233,13 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, int ch)
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
-int wcn36xx_smd_end_scan(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_end_scan(struct wcn36xx *wcn)
 {
 	struct wcn36xx_hal_end_scan_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ);
 
-	msg_body.scan_channel = (u8)ch;
+	msg_body.scan_channel = WCN36XX_HW_CHANNEL(wcn);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
