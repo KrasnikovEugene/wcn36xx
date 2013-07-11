@@ -17,6 +17,45 @@
 #include <linux/etherdevice.h>
 #include "smd.h"
 
+#define IS_BIT_SET(x, y) ((x) & (y) ? 1 : 0)
+static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
+		struct wcn36xx_hal_config_sta_params *sta_params)
+{
+	if (sta->ht_cap.ht_supported) {
+		sta_params->ht_capable = sta->ht_cap.ht_supported;
+		sta_params->tx_channel_width_set = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+		sta_params->lsig_txop_protection = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_LSIG_TXOP_PROT);
+		// TODO double check it this is correct with size
+		sta_params->max_ampdu_size = sta->ht_cap.ampdu_factor;
+		sta_params->max_ampdu_density = sta->ht_cap.ampdu_density;
+		sta_params->max_amsdu_size = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_MAX_AMSDU);
+		sta_params->sgi_20Mhz = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_SGI_20);
+		sta_params->sgi_40mhz = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_SGI_40);
+		sta_params->green_field_capable = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_GRN_FLD);
+		sta_params->delayed_ba_support = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_DELAY_BA);
+		sta_params->dsss_cck_mode_40mhz = IS_BIT_SET(sta->ht_cap.cap,
+			IEEE80211_HT_CAP_DSSSCCK40);
+	}
+}
+
+static void wcn36xx_smd_set_sta_params(struct ieee80211_sta *sta,
+		struct wcn36xx_hal_config_sta_params *sta_params)
+{
+	if (sta) {
+		memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
+		sta_params->wmm_enabled = sta->wme;
+		sta_params->max_sp_len = sta->max_sp;
+		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
+	}
+}
+
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int avail;
@@ -412,6 +451,15 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
 	memcpy(&msg_body.bssid, bssid, ETH_ALEN);
 	memcpy(&msg_body.self_sta_mac_addr, vif, ETH_ALEN);
 	msg_body.channel = ch;
+	if (conf_is_ht40_minus(&wcn->hw->conf))
+		msg_body.secondary_channel_offset =
+			PHY_DOUBLE_CHANNEL_HIGH_PRIMARY;
+	else if (conf_is_ht40_plus(&wcn->hw->conf))
+		msg_body.secondary_channel_offset =
+			PHY_DOUBLE_CHANNEL_LOW_PRIMARY;
+	else
+		msg_body.secondary_channel_offset =
+			PHY_SINGLE_CHANNEL_CENTERED;
 	msg_body.link_state = WCN36XX_HAL_LINK_PREASSOC_STATE;
 
 	msg_body.max_tx_power = 0xbf;
@@ -489,64 +537,47 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_sta *sta,
 			   const u8 *sta_mac)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
-	struct wcn36xx_hal_config_sta_params *sta;
+	struct wcn36xx_hal_config_sta_params *sta_params;
 
 	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_STA_REQ);
 
-	sta = &msg.sta_params;
-
-	memcpy(&sta->bssid, bssid, ETH_ALEN);
-
-	sta->aid = wcn->aid;
-
+	sta_params = &msg.sta_params;
+	sta_params->aid = wcn->aid;
 	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
 	    wcn->iftype == NL80211_IFTYPE_AP ||
 	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
-		sta->type = 1;
+		sta_params->type = 1;
 	else
-		sta->type = 0;
+		sta_params->type = 0;
 
-	sta->short_preamble_supported = 0;
+	sta_params->short_preamble_supported = 0;
 
-	memcpy(&sta->mac, sta_mac, ETH_ALEN);
+	memcpy(&sta_params->mac, sta_mac, ETH_ALEN);
 
-	sta->listen_interval = 0x8;
-	sta->wmm_enabled = 0;
-	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
-	sta->tx_channel_width_set = 0;
-	sta->rifs_mode = 0;
-	sta->lsig_txop_protection = 0;
-	sta->max_ampdu_size = 0;
-	sta->max_ampdu_density = 0;
-	sta->sgi_40mhz = 0;
-	sta->sgi_20Mhz = 0;
-
-	memcpy(&sta->supported_rates, &wcn->supported_rates,
+	sta_params->listen_interval = 0x8;
+	sta_params->rifs_mode = 0;
+	wcn36xx_smd_set_sta_params(sta, sta_params);
+	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
 		sizeof(wcn->supported_rates));
 
-	sta->rmf = 0;
-	sta->encrypt_type = 0;
-	sta->action = 0;
-	sta->uapsd = 0;
-	sta->max_sp_len = 0;
-	sta->green_field_capable = 0;
-	sta->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
-	sta->delayed_ba_support = 0;
-	sta->max_ampdu_duration = 0;
-	sta->dsss_cck_mode_40mhz = 0;
+	sta_params->rmf = 0;
+	sta_params->encrypt_type = 0;
+	sta_params->action = 0;
+	sta_params->uapsd = 0;
+	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
 	if (wcn->iftype == NL80211_IFTYPE_ADHOC ||
 	    wcn->iftype == NL80211_IFTYPE_AP ||
 	    wcn->iftype == NL80211_IFTYPE_MESH_POINT)
-		sta->sta_index = 0xFF;
+		sta_params->sta_index = 0xFF;
 	else
-		sta->sta_index = 1;
+		sta_params->sta_index = 1;
 
-	sta->bssid_index = 0;
-	sta->p2p = 0;
+	sta_params->bssid_index = 0;
+	sta_params->p2p = 0;
 
 	if (!(wcn->fw_major == 1 &&
 	      wcn->fw_minor == 2 &&
@@ -558,8 +589,10 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config sta action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
-		    sta->action, sta->sta_index, sta->bssid_index,
-		    sta->bssid, sta->type, sta->mac, sta->aid);
+		    sta_params->action, sta_params->sta_index,
+		    sta_params->bssid_index, sta_params->bssid,
+		    sta_params->type, sta_params->mac,
+		    sta_params->aid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
@@ -703,18 +736,18 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
-			   const u8 *bssid, bool update,
-			   u16 beacon_interval)
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_sta *sta,
+			   enum nl80211_iftype type, const u8 *bssid,
+			   bool update, u16 beacon_interval)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
-	struct wcn36xx_hal_config_sta_params *sta;
+	struct wcn36xx_hal_config_sta_params *sta_params;
 
 	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_BSS_REQ);
 
 	bss = &msg.bss_params;
-	sta = &bss->sta;
+	sta_params = &bss->sta;
 
 	WARN_ON(is_zero_ether_addr(bssid));
 
@@ -756,42 +789,33 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = wcn->ch;
-	bss->ext_channel = 0;
+	if (conf_is_ht40_minus(&wcn->hw->conf))
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_DOWN;
+	else if (conf_is_ht40_plus(&wcn->hw->conf))
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_UP;
+	else
+		bss->ext_channel = WCN36XX_HAL_HT_SECONDARY_CHAN_OFF_NONE;
 	bss->reserved = 0;
 
-	memcpy(&sta->bssid, bssid, ETH_ALEN);
+	sta_params->aid = wcn->aid;
+	sta_params->type = 0;
+	sta_params->short_preamble_supported = 0;
+	memcpy(&sta_params->mac, &wcn->addresses[0], ETH_ALEN);
 
-	sta->aid = wcn->aid;
-	sta->type = 0;
-	sta->short_preamble_supported = 0;
-	memcpy(&sta->mac, &wcn->addresses[0], ETH_ALEN);
-	sta->listen_interval = 8;
-	sta->wmm_enabled = 0;
-	sta->ht_capable = wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
-	sta->tx_channel_width_set = 0;
-	sta->rifs_mode = 0;
-	sta->lsig_txop_protection = 0;
-	sta->max_ampdu_size = 0;
-	sta->max_ampdu_density = 0;
-	sta->sgi_40mhz = 0;
-	sta->sgi_20Mhz = 0;
+	sta_params->listen_interval = 8;
+	sta_params->rifs_mode = 0;
 
-	memcpy(&sta->supported_rates, &wcn->supported_rates,
+	wcn36xx_smd_set_sta_params(sta, sta_params);
+	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
 	       sizeof(wcn->supported_rates));
 
-	sta->rmf = 0;
-	sta->encrypt_type = wcn->encrypt_type;
-	sta->action = 0;
-	sta->uapsd = 0;
-	sta->max_sp_len = 0;
-	sta->green_field_capable = 0;
-	sta->mimo_ps = 0;
-	sta->delayed_ba_support = 0;
-	sta->max_ampdu_duration = 0;
-	sta->dsss_cck_mode_40mhz = 0;
-	sta->sta_index = 0xff;
-	sta->bssid_index = 0;
-	sta->p2p = 0;
+	sta_params->encrypt_type = wcn->encrypt_type;
+	sta_params->action = 0;
+	sta_params->uapsd = 0;
+	sta_params->mimo_ps = 0;
+	sta_params->sta_index = 0xff;
+	sta_params->bssid_index = 0;
+	sta_params->p2p = 0;
 
 	/* wcn->ssid is only valid in AP and IBSS mode */
 	bss->ssid.length = wcn->ssid.length;
@@ -823,10 +847,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 	bss->max_tx_power = 0x10;
 
 	if (update) {
-		sta->bssid_index = 0;
+		sta_params->bssid_index = 0;
 		bss->action = 1;
 	} else {
-		sta->bssid_index = 0xff;
+		sta_params->bssid_index = 0xff;
 		bss->action = 0;
 	}
 	if (!(wcn->fw_major == 1 &&
@@ -844,8 +868,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM",
-		    sta->bssid, sta->action, sta->sta_index,
-		    sta->bssid_index, sta->aid, sta->type, sta->mac);
+		    sta_params->bssid, sta_params->action,
+		    sta_params->sta_index, sta_params->bssid_index,
+		    sta_params->aid, sta_params->type,
+		    sta_params->mac);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
