@@ -19,7 +19,6 @@
 
 #include <linux/completion.h>
 #include <linux/printk.h>
-#include <linux/firmware.h>
 #include <linux/spinlock.h>
 #include <linux/workqueue.h>
 #include <mach/msm_smd.h>
@@ -112,7 +111,6 @@ struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct workqueue_struct	*wq;
 	struct device		*dev;
-	const struct firmware	*nv;
 	struct mac_address	addresses[2];
 	struct wcn36xx_hal_mac_ssid ssid;
 	u16			aid;
