@@ -571,6 +571,9 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 {
 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
 	struct config_sta_rsp_params *params;
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -584,6 +587,10 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 		return -EIO;
 	}
 
+	if (vif->type == NL80211_IFTYPE_AP) {
+		wcn->current_vif->sta_index = params->sta_index;
+		wcn->current_vif->dpu_desc_index = params->dpu_index;
+	}
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d",
 		    params->status, params->sta_index, params->bssid_index,
