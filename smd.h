@@ -62,11 +62,11 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 			    const u8 *sta_mac,
 			    enum wcn36xx_hal_link_state state);
-int wcn36xx_smd_config_bss(struct wcn36xx *wcn, enum nl80211_iftype type,
+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			   const u8 *bssid, bool update, u16 beacon_interval);
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
-int wcn36xx_smd_config_sta(struct wcn36xx *wcn, const u8 *bssid,
-			   const u8 *sta_mac, enum nl80211_iftype iftype);
+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+			   const u8 *bssid, const u8 *sta_mac);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 			    u16 tim_off, u16 p2p_off);
 int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);

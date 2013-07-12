@@ -128,11 +128,13 @@ static struct ieee80211_supported_band wcn_band_2ghz = {
 	.bitrates	= wcn_2ghz_rates,
 	.n_bitrates	= ARRAY_SIZE(wcn_2ghz_rates),
 	.ht_cap		= {
-		.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 |
-			(1 << IEEE80211_HT_CAP_RX_STBC_SHIFT),
+		.cap = IEEE80211_HT_CAP_GRN_FLD
+			| IEEE80211_HT_CAP_SGI_20
+			| IEEE80211_HT_CAP_DSSSCCK40
+			| IEEE80211_HT_CAP_LSIG_TXOP_PROT,
 		.ht_supported = true,
-		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K,
-		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8,
+		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K,
+		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
 		.mcs = {
 			.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
 			.rx_highest = cpu_to_le16(72),
@@ -383,7 +385,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			sta_priv->is_data_encrypted = true;
 			/* Reconfigure bss with encrypt_type */
 			wcn36xx_smd_config_bss(wcn,
-					       NL80211_IFTYPE_STATION,
+					       vif,
 					       sta->addr,
 					       true,
 					       wcn->beacon_interval);
@@ -521,7 +523,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
-			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+			wcn36xx_smd_config_bss(wcn, vif,
 					       bss_conf->bssid, false,
 					       wcn->beacon_interval);
 		} else {
@@ -562,10 +564,11 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
-			wcn36xx_smd_config_bss(wcn, NL80211_IFTYPE_STATION,
+			wcn36xx_smd_config_bss(wcn, vif,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
-			wcn36xx_smd_config_sta(wcn, bss_conf->bssid, vif->addr, vif->type);
+			wcn36xx_smd_config_sta(wcn, vif, bss_conf->bssid,
+					       vif->addr);
 
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -600,7 +603,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
-			wcn36xx_smd_config_bss(wcn, vif->type,
+			wcn36xx_smd_config_bss(wcn, vif,
 					       wcn->addresses[0].addr, false,
 					       wcn->beacon_interval);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
@@ -683,7 +686,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		wcn->aid = sta->aid;
-		wcn36xx_smd_config_sta(wcn, vif->addr, sta->addr, vif->type);
+		wcn36xx_smd_config_sta(wcn, vif, vif->addr, sta->addr);
 	}
 	return 0;
 }
