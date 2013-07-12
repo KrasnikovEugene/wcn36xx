@@ -574,8 +574,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, vif,
 					       bss_conf->bssid,
 					       true, wcn->beacon_interval);
-			wcn36xx_smd_config_sta(wcn, vif, sta, bss_conf->bssid,
-					       vif->addr);
+			wcn36xx_smd_config_sta(wcn, vif, sta);
 			rcu_read_unlock();
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -693,7 +692,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		wcn->aid = sta->aid;
-		wcn36xx_smd_config_sta(wcn, vif, sta, vif->addr, sta->addr);
+		wcn36xx_smd_config_sta(wcn, vif, sta);
 	}
 	return 0;
 }
