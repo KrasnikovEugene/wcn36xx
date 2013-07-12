@@ -47,9 +47,22 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
 	}
 }
 
-static void wcn36xx_smd_set_sta_params(struct ieee80211_sta *sta,
+static void wcn36xx_smd_set_sta_params(struct ieee80211_vif *vif,
+		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
+	/*
+	 * In STA mode ieee80211_sta contains bssid and ieee80211_vif
+	 * contains our mac address. In  AP mode we are bssid so vif
+	 * contains bssid and ieee80211_sta contains mac.
+	 */
+	if (NL80211_IFTYPE_STATION == vif->type) {
+		memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
+		memcpy(&sta_params->mac, vif->addr, ETH_ALEN);
+	} else {
+		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
+		memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
+	}
 	sta_params->wmm_enabled = sta->wme;
 	sta_params->max_sp_len = sta->max_sp;
 	wcn36xx_smd_set_sta_ht_params(sta, sta_params);
@@ -535,8 +548,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 }
 
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-			   struct ieee80211_sta *sta, const u8 *bssid,
-			   const u8 *sta_mac)
+			   struct ieee80211_sta *sta)
 {
 	struct wcn36xx_hal_config_sta_req_msg msg;
 	struct wcn36xx_hal_config_sta_params *sta_params;
@@ -544,8 +556,6 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_STA_REQ);
 
 	sta_params = &msg.sta_params;
-
-	memcpy(&sta_params->bssid, bssid, ETH_ALEN);
 
 	sta_params->aid = wcn->aid;
 
@@ -558,8 +568,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	sta_params->short_preamble_supported = 0;
 
-	memcpy(&sta_params->mac, sta_mac, ETH_ALEN);
-	wcn36xx_smd_set_sta_params(sta, sta_params);
+	wcn36xx_smd_set_sta_params(vif, sta, sta_params);
 	sta_params->listen_interval = 0x8;
 	sta_params->rifs_mode = 0;
 
