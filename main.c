@@ -16,6 +16,7 @@
 
 #include <linux/module.h>
 #include <linux/wcnss_wlan.h>
+#include <linux/firmware.h>
 #include "wcn36xx.h"
 
 unsigned int debug_mask;
@@ -964,24 +965,15 @@ static int __init wcn36xx_init(void)
 	private_hw = hw;
 	wcn->beacon_enable = false;
 
-	ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
-	if (ret) {
-		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE,
-			      ret);
-		goto out_unmap;
-	}
-
 	wcn36xx_read_mac_addresses(wcn);
 	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
 
 	ret = ieee80211_register_hw(wcn->hw);
 	if (ret)
-		goto out_free_nv;
+		goto out_unmap;
 
 	return 0;
 
-out_free_nv:
-	release_firmware(wcn->nv);
 out_unmap:
 	iounmap(wcn->mmio);
 out_wq:
@@ -1002,7 +994,6 @@ static void __exit wcn36xx_exit(void)
 	ieee80211_unregister_hw(hw);
 	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
-	release_firmware(wcn->nv);
 	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);

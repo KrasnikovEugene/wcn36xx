@@ -15,6 +15,7 @@
  */
 
 #include <linux/etherdevice.h>
+#include <linux/firmware.h>
 #include "smd.h"
 
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
@@ -84,22 +85,27 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 {
+	const struct firmware *nv;
 	struct nv_data *nv_d;
 	struct wcn36xx_hal_nv_img_download_req_msg msg_body;
 	int fw_bytes_left;
-	int ret = 0, fw_size, i = 0;
+	int ret;
 	u16 fm_offset = 0;
-	i = 0;
 
-	nv_d = (struct nv_data *)wcn->nv->data;
-	fw_size = wcn->nv->size;
+	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
+	if (ret) {
+		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE, ret);
+		goto out_free_nv;
+	}
+
+	nv_d = (struct nv_data *)nv->data;
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ);
 
 	msg_body.header.len += WCN36XX_NV_FRAGMENT_SIZE;
 
 	msg_body.frag_number = 0;
 	do {
-		fw_bytes_left = wcn->nv->size - fm_offset - 4;
+		fw_bytes_left = nv->size - fm_offset - 4;
 		if (fw_bytes_left > WCN36XX_NV_FRAGMENT_SIZE) {
 			msg_body.last_fragment = 0;
 			msg_body.nv_img_buffer_size = WCN36XX_NV_FRAGMENT_SIZE;
@@ -131,6 +137,9 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 		fm_offset += WCN36XX_NV_FRAGMENT_SIZE;
 
 	} while (msg_body.last_fragment != 1);
+
+out_free_nv:
+	release_firmware(nv);
 
 	return ret;
 }
