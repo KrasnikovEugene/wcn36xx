@@ -756,7 +756,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta, const u8 *bssid,
-			   bool update, u16 beacon_interval)
+			   bool update)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
@@ -803,7 +803,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->lln_non_gf_coexist = 0;
 	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
-	bss->beacon_interval = beacon_interval;
+	bss->beacon_interval = wcn->beacon_interval;
 	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
