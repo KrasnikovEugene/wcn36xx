@@ -319,6 +319,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 {
 	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
 	struct ieee80211_tx_info *info;
+	unsigned long flags;
 
 	while (ctl != ch->head_blk_ctl &&
 	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
@@ -330,6 +331,13 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 				/* Keep frame until TX status comes */
 				ieee80211_free_txskb(wcn->hw, ctl->skb);
 			}
+			spin_lock_irqsave(&ctl->skb_lock, flags);
+			if (wcn->queues_stopped) {
+				wcn->queues_stopped = false;
+				ieee80211_wake_queues(wcn->hw);
+			}
+			spin_unlock_irqrestore(&ctl->skb_lock, flags);
+
 			ctl->skb = NULL;
 		}
 		ctl = ctl->next;
@@ -539,10 +547,24 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	struct wcn36xx_dxe_ctl *ctl = NULL;
 	struct wcn36xx_dxe_desc *desc = NULL;
 	struct wcn36xx_dxe_ch *ch = NULL;
+	unsigned long flags;
 
 	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
 
 	ctl = ch->head_blk_ctl;
+	spin_lock_irqsave(&ctl->next->skb_lock, flags);
+	/*
+	 * If skb is not null that means that we reached the tail of the ring
+	 * hence ring is full. Stop queues to let mac80211 back off until ring
+	 * has an empty slot again.
+	 */
+	if (NULL != ctl->next->skb) {
+		ieee80211_stop_queues(wcn->hw);
+		wcn->queues_stopped = true;
+		spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+		return -EBUSY;
+	}
+	spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
 	ctl->skb = NULL;
 	desc = ctl->desc;
 
