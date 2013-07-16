@@ -390,8 +390,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 						       vif,
 						       sta,
 						       sta->addr,
-						       true,
-						       wcn->beacon_interval);
+						       true);
 
 			wcn36xx_smd_set_stakey(wcn,
 				wcn->encrypt_type,
@@ -527,8 +526,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       bss_conf->bssid, false,
-					       wcn->beacon_interval);
+					       bss_conf->bssid, false);
 		} else {
 			wcn->is_joining = false;
 			wcn36xx_smd_delete_bss(wcn);
@@ -573,7 +571,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
-					       true, wcn->beacon_interval);
+					       true);
 			wcn36xx_smd_config_sta(wcn, vif, sta);
 			rcu_read_unlock();
 		} else {
@@ -610,8 +608,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       wcn->addresses[0].addr, false,
-					       wcn->beacon_interval);
+					       wcn->addresses[0].addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
