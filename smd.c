@@ -47,10 +47,20 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
 	}
 }
 
-static void wcn36xx_smd_set_sta_params(struct ieee80211_vif *vif,
+static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+		struct ieee80211_vif *vif,
 		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
+	if (vif->type == NL80211_IFTYPE_ADHOC ||
+	    vif->type == NL80211_IFTYPE_AP ||
+	    vif->type == NL80211_IFTYPE_MESH_POINT)
+		sta_params->type = 1;
+	else
+		sta_params->type = 0;
+
+	sta_params->aid = wcn->aid;
+	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 	/*
 	 * In STA mode ieee80211_sta contains bssid and ieee80211_vif
 	 * contains our mac address. In  AP mode we are bssid so vif
@@ -566,19 +576,9 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	sta_params = &msg.sta_params;
 
-	sta_params->aid = wcn->aid;
-
-	if (vif->type == NL80211_IFTYPE_ADHOC ||
-	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
-		sta_params->type = 1;
-	else
-		sta_params->type = 0;
-
 	sta_params->short_preamble_supported = 0;
 
-	wcn36xx_smd_set_sta_params(vif, sta, sta_params);
-	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
+	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 	sta_params->rifs_mode = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
@@ -827,11 +827,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_NONE;
 	bss->reserved = 0;
 	if (sta)
-		wcn36xx_smd_set_sta_params(vif, sta, sta_params);
-	sta_params->aid = wcn->aid;
-	sta_params->type = 0;
+		wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 	sta_params->short_preamble_supported = 0;
-	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 	sta_params->rifs_mode = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
