@@ -755,7 +755,8 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 }
 
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-			   const u8 *bssid, bool update, u16 beacon_interval)
+			   struct ieee80211_sta *sta, const u8 *bssid,
+			   bool update, u16 beacon_interval)
 {
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
@@ -808,24 +809,13 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
 	bss->ext_channel = 0;
 	bss->reserved = 0;
-
-	memcpy(&sta_params->bssid, bssid, ETH_ALEN);
-
+	if (sta)
+		wcn36xx_smd_set_sta_params(vif, sta, sta_params);
 	sta_params->aid = wcn->aid;
 	sta_params->type = 0;
 	sta_params->short_preamble_supported = 0;
-	memcpy(&sta_params->mac, &wcn->addresses[0], ETH_ALEN);
 	sta_params->listen_interval = 8;
-	sta_params->wmm_enabled = 0;
-	sta_params->ht_capable =
-		wcn->supported_rates.supported_mcs_set[0] ? 1 : 0;
-	sta_params->tx_channel_width_set = 0;
 	sta_params->rifs_mode = 0;
-	sta_params->lsig_txop_protection = 0;
-	sta_params->max_ampdu_size = 0;
-	sta_params->max_ampdu_density = 0;
-	sta_params->sgi_40mhz = 0;
-	sta_params->sgi_20Mhz = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
 	       sizeof(wcn->supported_rates));
@@ -834,12 +824,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	sta_params->encrypt_type = wcn->encrypt_type;
 	sta_params->action = 0;
 	sta_params->uapsd = 0;
-	sta_params->max_sp_len = 0;
-	sta_params->green_field_capable = 0;
 	sta_params->mimo_ps = 0;
-	sta_params->delayed_ba_support = 0;
 	sta_params->max_ampdu_duration = 0;
-	sta_params->dsss_cck_mode_40mhz = 0;
 	sta_params->sta_index = 0xff;
 	sta_params->bssid_index = 0;
 	sta_params->p2p = 0;
