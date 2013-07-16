@@ -578,7 +578,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	sta_params->short_preamble_supported = 0;
 
 	wcn36xx_smd_set_sta_params(vif, sta, sta_params);
-	sta_params->listen_interval = 0x8;
+	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 	sta_params->rifs_mode = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
@@ -831,7 +831,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	sta_params->aid = wcn->aid;
 	sta_params->type = 0;
 	sta_params->short_preamble_supported = 0;
-	sta_params->listen_interval = 8;
+	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 	sta_params->rifs_mode = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
