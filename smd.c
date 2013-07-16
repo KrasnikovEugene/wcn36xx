@@ -812,7 +812,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->lln_non_gf_coexist = 0;
 	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
-	bss->beacon_interval = wcn->beacon_interval;
+	bss->beacon_interval = vif->bss_conf.beacon_int;
 	bss->dtim_period = wcn->dtim_period;
 	bss->tx_channel_width_set = 0;
 	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
@@ -855,10 +855,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->ht = 0;
 	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
-	bss->ht_oper_mode = 0;
+	bss->ht_oper_mode = vif->bss_conf.ht_operation_mode;
 	bss->dual_cts_protection = 0;
 	bss->max_probe_resp_retry_limit = 0;
-	bss->hidden_ssid = 0;
+	bss->hidden_ssid = vif->bss_conf.hidden_ssid;
 	bss->proxy_probe_resp = 0;
 	bss->edca_params_valid = 0;
 
