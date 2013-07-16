@@ -501,14 +501,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
 
-	if (changed & BSS_CHANGED_BEACON_INT) {
-		wcn36xx_dbg(WCN36XX_DBG_MAC,
-			    "mac bss changed beacon_int %d",
-			    bss_conf->beacon_int);
-
-		wcn->beacon_interval = bss_conf->beacon_int;
-	}
-
 	if (changed & BSS_CHANGED_BEACON_INFO) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
 			    "mac bss changed dtim period %d",
