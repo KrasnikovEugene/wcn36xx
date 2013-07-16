@@ -388,9 +388,9 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			if (NL80211_IFTYPE_STATION == vif->type)
 				wcn36xx_smd_config_bss(wcn,
 						       vif,
+						       sta,
 						       sta->addr,
-						       true,
-						       wcn->beacon_interval);
+						       true);
 
 			wcn36xx_smd_set_stakey(wcn,
 				wcn->encrypt_type,
@@ -501,14 +501,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x",
 		    vif, changed);
 
-	if (changed & BSS_CHANGED_BEACON_INT) {
-		wcn36xx_dbg(WCN36XX_DBG_MAC,
-			    "mac bss changed beacon_int %d",
-			    bss_conf->beacon_int);
-
-		wcn->beacon_interval = bss_conf->beacon_int;
-	}
-
 	if (changed & BSS_CHANGED_BEACON_INFO) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
 			    "mac bss changed dtim period %d",
@@ -525,9 +517,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->is_joining = true;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
-			wcn36xx_smd_config_bss(wcn, vif,
-					       bss_conf->bssid, false,
-					       wcn->beacon_interval);
+			wcn36xx_smd_config_bss(wcn, vif, NULL,
+					       bss_conf->bssid, false);
 		} else {
 			wcn->is_joining = false;
 			wcn36xx_smd_delete_bss(wcn);
@@ -567,13 +558,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			}
 			wcn36xx_update_allowed_rates(wcn, sta);
 
-
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
-			wcn36xx_smd_config_bss(wcn, vif,
+			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
-					       true, wcn->beacon_interval);
+					       true);
 			wcn36xx_smd_config_sta(wcn, vif, sta);
 			rcu_read_unlock();
 		} else {
@@ -609,9 +599,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
-			wcn36xx_smd_config_bss(wcn, vif,
-					       wcn->addresses[0].addr, false,
-					       wcn->beacon_interval);
+			wcn36xx_smd_config_bss(wcn, vif, NULL,
+					       wcn->addresses[0].addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {

@@ -115,7 +115,6 @@ struct wcn36xx {
 	struct wcn36xx_hal_mac_ssid ssid;
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
-	u16			beacon_interval;
 	u8			dtim_period;
 	enum ani_ed_type	encrypt_type;
 
