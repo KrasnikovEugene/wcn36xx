@@ -814,7 +814,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->rifs_mode = 0;
 	bss->beacon_interval = vif->bss_conf.beacon_int;
 	bss->dtim_period = wcn->dtim_period;
-	bss->tx_channel_width_set = 0;
+	if (sta && sta->ht_cap.ht_supported)
+		bss->tx_channel_width_set =
+			test_bit(IEEE80211_HT_CAP_SUP_WIDTH_20_40,
+				(unsigned long *)&sta->ht_cap.cap);
 	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
 	if (conf_is_ht40_minus(&wcn->hw->conf))
 		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
