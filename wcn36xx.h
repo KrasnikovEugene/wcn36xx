@@ -165,6 +165,7 @@ struct wcn36xx {
 
 	/* For synchronization of DXE resources from BH, IRQ and WQ contexts */
 	spinlock_t	dxe_lock;
+	bool                    queues_stopped;
 
 	/* Memory pools */
 	struct wcn36xx_dxe_mem_pool mgmt_mem_pool;
