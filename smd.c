@@ -54,10 +54,13 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 {
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
+	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		sta_params->type = 1;
-	else
+		sta_params->sta_index = 0xFF;
+	} else {
 		sta_params->type = 0;
+		sta_params->sta_index = 1;
+	}
 
 	sta_params->aid = wcn->aid;
 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
@@ -70,6 +73,20 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		memcpy(&sta_params->mac, vif->addr, ETH_ALEN);
 	else
 		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
+
+	sta_params->encrypt_type = wcn->encrypt_type;
+	sta_params->short_preamble_supported = 0;
+	sta_params->rifs_mode = 0;
+	sta_params->rmf = 0;
+	sta_params->action = 0;
+	sta_params->uapsd = 0;
+	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
+	sta_params->max_ampdu_duration = 0;
+	sta_params->bssid_index = 0;
+	sta_params->p2p = 0;
+
+	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
+		sizeof(wcn->supported_rates));
 
 	if (sta) {
 		if (NL80211_IFTYPE_STATION == vif->type)
@@ -580,29 +597,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	sta_params = &msg.sta_params;
 
-	sta_params->short_preamble_supported = 0;
-
 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
-	sta_params->rifs_mode = 0;
-
-	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
-		sizeof(wcn->supported_rates));
-
-	sta_params->rmf = 0;
-	sta_params->encrypt_type = 0;
-	sta_params->action = 0;
-	sta_params->uapsd = 0;
-	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
-	sta_params->max_ampdu_duration = 0;
-	if (vif->type == NL80211_IFTYPE_ADHOC ||
-	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
-		sta_params->sta_index = 0xFF;
-	else
-		sta_params->sta_index = 1;
-
-	sta_params->bssid_index = 0;
-	sta_params->p2p = 0;
 
 	if (!(wcn->fw_major == 1 &&
 	      wcn->fw_minor == 2 &&
@@ -831,21 +826,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_NONE;
 	bss->reserved = 0;
 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
-	sta_params->short_preamble_supported = 0;
-	sta_params->rifs_mode = 0;
-
-	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
-	       sizeof(wcn->supported_rates));
-
-	sta_params->rmf = 0;
-	sta_params->encrypt_type = wcn->encrypt_type;
-	sta_params->action = 0;
-	sta_params->uapsd = 0;
-	sta_params->mimo_ps = 0;
-	sta_params->max_ampdu_duration = 0;
-	sta_params->sta_index = 0xff;
-	sta_params->bssid_index = 0;
-	sta_params->p2p = 0;
 
 	/* wcn->ssid is only valid in AP and IBSS mode */
 	bss->ssid.length = wcn->ssid.length;
