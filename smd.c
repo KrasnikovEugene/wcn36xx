@@ -34,6 +34,28 @@ static void wcn36xx_smd_set_bss_nw_type(struct wcn36xx *wcn,
 		bss_params->nw_type = WCN36XX_HAL_11B_NW_TYPE;
 }
 
+static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
+		struct ieee80211_sta *sta,
+		struct wcn36xx_hal_config_bss_params *bss_params)
+{
+	if (sta && sta->ht_cap.ht_supported) {
+		unsigned long caps = sta->ht_cap.cap;
+		bss_params->ht = sta->ht_cap.ht_supported;
+		bss_params->tx_channel_width_set =
+			test_bit(IEEE80211_HT_CAP_SUP_WIDTH_20_40, &caps);
+		bss_params->lsig_tx_op_protection_full_support =
+			test_bit(IEEE80211_HT_CAP_LSIG_TXOP_PROT, &caps);
+
+		bss_params->ht_oper_mode = vif->bss_conf.ht_operation_mode;
+		bss_params->lln_non_gf_coexist =
+			!!(vif->bss_conf.ht_operation_mode &
+			   IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
+		/* IEEE80211_HT_STBC_PARAM_DUAL_CTS_PROT */
+		bss_params->dual_cts_protection = 0;
+		/* IEEE80211_HT_OP_MODE_PROTECTION_20MHZ */
+		bss_params->ht20_coexist = 0;
+	}
+}
 static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
@@ -823,20 +845,16 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		wcn36xx_smd_set_bss_nw_type(wcn, sta, bss);
 	else
 		bss->nw_type = WCN36XX_HAL_11N_NW_TYPE;
-	bss->short_slot_time_supported = 0;
+	bss->short_slot_time_supported = vif->bss_conf.use_short_slot;
 	bss->lla_coexist = 0;
 	bss->llb_coexist = 0;
 	bss->llg_coexist = 0;
-	bss->ht20_coexist = 0;
-	bss->lln_non_gf_coexist = 0;
-	bss->lsig_tx_op_protection_full_support = 0;
 	bss->rifs_mode = 0;
 	bss->beacon_interval = vif->bss_conf.beacon_int;
 	bss->dtim_period = wcn->dtim_period;
-	if (sta && sta->ht_cap.ht_supported)
-		bss->tx_channel_width_set =
-			test_bit(IEEE80211_HT_CAP_SUP_WIDTH_20_40,
-				(unsigned long *)&sta->ht_cap.cap);
+
+	wcn36xx_smd_set_bss_ht_params(vif, sta, bss);
+
 	bss->oper_channel = WCN36XX_HW_CHANNEL(wcn);
 	if (conf_is_ht40_minus(&wcn->hw->conf))
 		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
@@ -851,15 +869,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->ssid.length = wcn->ssid.length;
 	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
 
-	bss->action = 0;
-
 	/* FIXME: set rateset */
 
-	bss->ht = 0;
 	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
-	bss->ht_oper_mode = vif->bss_conf.ht_operation_mode;
-	bss->dual_cts_protection = 0;
 	bss->max_probe_resp_retry_limit = 0;
 	bss->hidden_ssid = vif->bss_conf.hidden_ssid;
 	bss->proxy_probe_resp = 0;
@@ -874,7 +887,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->wcn36xx_hal_persona = 1;
 	bss->spectrum_mgt_enable = 0;
 	bss->tx_mgmt_power = 0;
-	bss->max_tx_power = 0x10;
+	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
 
 	if (update) {
 		sta_params->bssid_index = 0;
