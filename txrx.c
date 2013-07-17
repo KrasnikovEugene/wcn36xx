@@ -32,6 +32,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 	bd = (struct wcn36xx_rx_bd *)skb->data;
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
+	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP,
+			 "BD   <<< ", (char *)bd,
+			 sizeof(struct wcn36xx_rx_bd));
 
 	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
 	skb_pull(skb, bd->pdu.mpdu_header_off);
