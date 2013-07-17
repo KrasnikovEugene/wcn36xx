@@ -83,6 +83,8 @@ enum wcn36xx_debug_mask {
 #define WCN36XX_BAND(__wcn) (__wcn->hw->conf.chandef.chan->band)
 #define WCN36XX_CENTER_FREQ(__wcn) (__wcn->hw->conf.chandef.chan->center_freq)
 #define WCN36XX_LISTEN_INTERVAL(__wcn) (__wcn->hw->conf.listen_interval)
+#define WCN36XX_FLAGS(__wcn) (__wcn->hw->flags)
+#define WCN36XX_MAX_POWER(__wcn) (__wcn->hw->conf.chandef.chan->max_power)
 
 static inline void buff_to_be(u32 *buf, size_t len)
 {
