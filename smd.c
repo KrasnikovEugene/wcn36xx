@@ -66,16 +66,20 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	 * contains our mac address. In  AP mode we are bssid so vif
 	 * contains bssid and ieee80211_sta contains mac.
 	 */
-	if (NL80211_IFTYPE_STATION == vif->type) {
-		memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
+	if (NL80211_IFTYPE_STATION == vif->type)
 		memcpy(&sta_params->mac, vif->addr, ETH_ALEN);
-	} else {
+	else
 		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
-		memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
+
+	if (sta) {
+		if (NL80211_IFTYPE_STATION == vif->type)
+			memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
+		else
+			memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
+		sta_params->wmm_enabled = sta->wme;
+		sta_params->max_sp_len = sta->max_sp;
+		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
 	}
-	sta_params->wmm_enabled = sta->wme;
-	sta_params->max_sp_len = sta->max_sp;
-	wcn36xx_smd_set_sta_ht_params(sta, sta_params);
 }
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
@@ -826,8 +830,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	else
 		bss->ext_channel = IEEE80211_HT_PARAM_CHA_SEC_NONE;
 	bss->reserved = 0;
-	if (sta)
-		wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
+	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 	sta_params->short_preamble_supported = 0;
 	sta_params->rifs_mode = 0;
 
