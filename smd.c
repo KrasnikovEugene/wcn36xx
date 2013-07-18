@@ -826,12 +826,13 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 		/* STA */
 		bss->oper_mode = 1;
-
+		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_MODE;
 	} else if (vif->type == NL80211_IFTYPE_AP) {
 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
 
 		/* AP */
 		bss->oper_mode = 0;
+		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
 	} else if (vif->type == NL80211_IFTYPE_ADHOC ||
 		   vif->type == NL80211_IFTYPE_MESH_POINT) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
@@ -884,7 +885,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	/* FIXME: set ext_set_sta_key_param */
 
-	bss->wcn36xx_hal_persona = 1;
 	bss->spectrum_mgt_enable = 0;
 	bss->tx_mgmt_power = 0;
 	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
