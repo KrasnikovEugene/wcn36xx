@@ -320,9 +320,12 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
 	struct ieee80211_tx_info *info;
 	unsigned long flags;
-
-	while (ctl != ch->head_blk_ctl &&
-	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+	/*
+	 * Make at least one loop of do-while because in case ring is
+	 * completely full head and tail are pointing to the same element
+	 * and while-do will not make any cycles.
+	 */
+	do {
 		if (ctl->skb) {
 			dma_unmap_single(NULL, ctl->desc->src_addr_l,
 					 ctl->skb->len, DMA_TO_DEVICE);
@@ -341,7 +344,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 			ctl->skb = NULL;
 		}
 		ctl = ctl->next;
-	}
+	} while (ctl != ch->head_blk_ctl &&
+	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
 	ch->tail_blk_ctl = ctl;
 }
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
