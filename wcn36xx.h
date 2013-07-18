@@ -96,7 +96,15 @@ struct nv_data {
 	int	is_valid;
 	void	*table;
 };
+/**
+ * struct wcn36xx_vif - holds VIF related fields
+ *
+ * @bss_index: bss_index is initially set to 0xFF. bss_index is received from
+ * HW after first config_bss call and must be used in delete_bss and
+ * enter/exit_bmps.
+ */
 struct wcn36xx_vif {
+	u8 bss_index;
 	u8 sta_index;
 	u8 dpu_desc_index;
 	u8 ucast_dpu_signature;
