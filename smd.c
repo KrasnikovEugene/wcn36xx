@@ -122,7 +122,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	sta_params->uapsd = 0;
 	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
 	sta_params->max_ampdu_duration = 0;
-	sta_params->bssid_index = 0;
+	sta_params->bssid_index = wcn->current_vif->bss_index;
 	sta_params->p2p = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
@@ -889,13 +889,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->tx_mgmt_power = 0;
 	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
 
-	if (update) {
-		sta_params->bssid_index = 0;
-		bss->action = 1;
-	} else {
-		sta_params->bssid_index = 0xff;
-		bss->action = 0;
-	}
+	bss->action = update;
 	if (!(wcn->fw_major == 1 &&
 		wcn->fw_minor == 2 &&
 		wcn->fw_version == 2 &&
@@ -945,6 +939,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 		    params->bss_bcast_sta_idx, params->mac,
 		    params->tx_mgmt_power, params->ucast_dpu_signature);
 
+	wcn->current_vif->bss_index = params->bss_index;
 	wcn->current_vif->sta_index =  params->bss_sta_index;
 	wcn->current_vif->dpu_desc_index = params->dpu_desc_index;
 	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;
@@ -957,7 +952,7 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
 
-	msg_body.bss_index = 0;
+	msg_body.bss_index = wcn->current_vif->bss_index;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -1114,7 +1109,7 @@ int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt)
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_BMPS_REQ);
 
-	msg_body.bss_index = 0;
+	msg_body.bss_index = wcn->current_vif->bss_index;
 	msg_body.tbtt = tbtt;
 	msg_body.dtim_period = wcn->dtim_period;
 
@@ -1129,7 +1124,7 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_EXIT_BMPS_REQ);
 
-	msg_body.bss_index = 0;
+	msg_body.bss_index = wcn->current_vif->bss_index;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -1146,7 +1141,7 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_KEEP_ALIVE_REQ);
 
 	if (packet_type == WCN36XX_HAL_KEEP_ALIVE_NULL_PKT) {
-		msg_body.bss_index = 0;
+		msg_body.bss_index = wcn->current_vif->bss_index;
 		msg_body.packet_type = WCN36XX_HAL_KEEP_ALIVE_NULL_PKT;
 		msg_body.time_period = WCN36XX_KEEP_ALIVE_TIME_PERIOD;
 	} else if (packet_type == WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP) {
