@@ -115,6 +115,7 @@ struct wcn36xx_vif {
 };
 
 struct wcn_sta {
+	u16 tid;
 	u8 sta_id;
 	bool is_data_encrypted;
 };

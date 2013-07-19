@@ -79,14 +79,15 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 
 static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
 			 u32 mpdu_header_len,
-			 u32 len)
+			 u32 len,
+			 u16 tid)
 {
 	bd->pdu.mpdu_header_len = mpdu_header_len;
 	bd->pdu.mpdu_header_off = sizeof(*bd);
 	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
 		bd->pdu.mpdu_header_off;
 	bd->pdu.mpdu_len = len;
-	bd->pdu.tid = WCN36XX_TID;
+	bd->pdu.tid = tid;
 }
 
 static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
@@ -202,17 +203,28 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		ieee80211_stop_queues(wcn->hw);
 	}
 
-	wcn36xx_set_tx_pdu(bd, ieee80211_is_data_qos(hdr->frame_control) ?
-			   sizeof(struct ieee80211_qos_hdr) :
-			   sizeof(struct ieee80211_hdr_3addr),
-			   skb->len);
-
 	/* Data frames served first*/
 	if (is_low) {
+		/*
+		 * Sometimes in AP mode mac80211 is trying to send data
+		 * frame to nobody. Why?
+		 */
+		if (!sta_priv)
+			wcn36xx_warn("Sending data packet to nobody");
 		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
+		wcn36xx_set_tx_pdu(bd,
+			   ieee80211_is_data_qos(hdr->frame_control) ?
+			   sizeof(struct ieee80211_qos_hdr) :
+			   sizeof(struct ieee80211_hdr_3addr),
+			   skb->len, sta_priv ? sta_priv->tid : 0);
 	} else {
 		/* MGMT and CTRL frames are handeld here*/
 		wcn36xx_set_tx_mgmt(bd, wcn, hdr, bcast);
+		wcn36xx_set_tx_pdu(bd,
+			   ieee80211_is_data_qos(hdr->frame_control) ?
+			   sizeof(struct ieee80211_qos_hdr) :
+			   sizeof(struct ieee80211_hdr_3addr),
+			   skb->len, WCN36XX_TID);
 	}
 
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
