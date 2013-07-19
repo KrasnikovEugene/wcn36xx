@@ -758,11 +758,13 @@ int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 		    u8 buf_size)
 {
 	struct wcn36xx *wcn = hw->priv;
-
+	struct wcn_sta *sta_priv = NULL;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d",
 		    action, tid);
 	switch (action) {
 	case IEEE80211_AMPDU_RX_START:
+		sta_priv = (struct wcn_sta *)sta->drv_priv;
+		sta_priv->tid = tid;
 		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 0);
 		wcn36xx_smd_add_ba(wcn);
 		wcn36xx_smd_trigger_ba(wcn);
