@@ -751,6 +751,43 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
 }
 #endif
 
+int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+		    struct ieee80211_vif *vif,
+		    enum ieee80211_ampdu_mlme_action action,
+		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
+		    u8 buf_size)
+{
+	struct wcn36xx *wcn = hw->priv;
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d",
+		    action, tid);
+	switch (action) {
+	case IEEE80211_AMPDU_RX_START:
+		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 0);
+		wcn36xx_smd_add_ba(wcn);
+		wcn36xx_smd_trigger_ba(wcn);
+		ieee80211_start_tx_ba_session(sta, tid, 0);
+		break;
+	case IEEE80211_AMPDU_RX_STOP:
+		wcn36xx_smd_del_ba(wcn, tid);
+		break;
+	case IEEE80211_AMPDU_TX_START:
+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+		break;
+	case IEEE80211_AMPDU_TX_OPERATIONAL:
+		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 1);
+		break;
+	/* Not supported so far*/
+	case IEEE80211_AMPDU_TX_STOP_CONT:
+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+		break;
+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+		break;
+	}
+	return 0;
+}
+
 static const struct ieee80211_ops wcn36xx_ops = {
 	.start			= wcn36xx_start,
 	.stop			= wcn36xx_stop,
@@ -771,6 +808,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.set_rts_threshold	= wcn36xx_set_rts_threshold,
 	.sta_add		= wcn36xx_sta_add,
 	.sta_remove		= wcn36xx_sta_remove,
+	.ampdu_action		= wcn36xx_ampdu_action,
 };
 
 static struct ieee80211_hw *wcn36xx_alloc_hw(void)
@@ -794,6 +832,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 		IEEE80211_HW_HAS_RATE_CONTROL |
 		IEEE80211_HW_SUPPORTS_PS |
 		IEEE80211_HW_CONNECTION_MONITOR |
+		IEEE80211_HW_AMPDU_AGGREGATION |
 		IEEE80211_HW_TIMING_BEACON_ONLY;
 
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
