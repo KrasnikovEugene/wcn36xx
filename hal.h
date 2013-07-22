@@ -1387,14 +1387,14 @@ struct wcn36xx_hal_mac_ssid {
 /* Concurrency role. These are generic IDs that identify the various roles
  *  in the software system. */
 enum wcn36xx_hal_con_mode {
-	HAL_STA_MODE = 0,
+	WCN36XX_HAL_STA_MODE = 0,
 
 	/* to support softAp mode . This is misleading. It means AP MODE only. */
-	HAL_STA_SAP_MODE = 1,
+	WCN36XX_HAL_STA_SAP_MODE = 1,
 
-	HAL_P2P_CLIENT_MODE,
-	HAL_P2P_GO_MODE,
-	HAL_MONITOR_MODE,
+	WCN36XX_HAL_P2P_CLIENT_MODE,
+	WCN36XX_HAL_P2P_GO_MODE,
+	WCN36XX_HAL_MONITOR_MODE,
 };
 
 /* This is a bit pattern to be set for each mode
