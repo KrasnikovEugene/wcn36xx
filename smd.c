@@ -1241,6 +1241,80 @@ int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
 	return 0;
 }
 
+int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
+		struct ieee80211_sta *sta,
+		u16 tid,
+		u16 *ssn,
+		u8 direction)
+{
+	struct wcn36xx_hal_add_ba_session_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BA_SESSION_REQ);
+
+	msg_body.sta_index = wcn->current_vif->sta_index;
+	memcpy(&msg_body.mac_addr, sta->addr, ETH_ALEN);
+	msg_body.dialog_token = 0x10;
+	msg_body.tid = tid;
+
+	/*Immediate BA because Delayed BA is not supported*/
+	msg_body.policy = 1;
+	msg_body.buffer_size = WCN36XX_AGGR_BUFFER_SIZE;
+	msg_body.timeout = 0;
+	if (ssn)
+		msg_body.ssn = *ssn;
+	msg_body.direction = direction;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+int wcn36xx_smd_add_ba(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_add_ba_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BA_REQ);
+
+	msg_body.session_id = 0;
+	msg_body.win_size = WCN36XX_AGGR_BUFFER_SIZE;
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid)
+{
+	struct wcn36xx_hal_del_ba_req_msg msg_body;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DEL_BA_REQ);
+
+	msg_body.sta_index = wcn->current_vif->sta_index;
+	msg_body.tid = tid;
+	msg_body.direction = 0;
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn)
+{
+	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
+	struct wcn36xx_hal_trigget_ba_req_candidate *candidate;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_TRIGGER_BA_REQ);
+
+	msg_body.session_id = 0;
+	msg_body.candidate_cnt = 1;
+	msg_body.header.len += sizeof(*candidate);
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	candidate = (struct wcn36xx_hal_trigget_ba_req_candidate *)
+		(wcn->smd_buf + sizeof(msg_body));
+	candidate->sta_index = wcn->current_vif->sta_index;
+	candidate->tid_bitmap = 1;
+	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
+}
+
 static void wcn36xx_smd_notify(void *data, unsigned event)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)data;
@@ -1341,6 +1415,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_EXIT_BMPS_RSP:
 	case WCN36XX_HAL_KEEP_ALIVE_RSP:
 	case WCN36XX_HAL_DUMP_COMMAND_RSP:
+	case WCN36XX_HAL_ADD_BA_SESSION_RSP:
+	case WCN36XX_HAL_ADD_BA_RSP:
+	case WCN36XX_HAL_DEL_BA_RSP:
+	case WCN36XX_HAL_TRIGGER_BA_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);

@@ -439,9 +439,13 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 		switch (ch->ch_type) {
 		case WCN36XX_DXE_CH_RX_L:
 			dxe->ctrl = WCN36XX_DXE_CTRL_RX_L;
+			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+						   WCN36XX_DXE_INT_CH1_MASK);
 			break;
 		case WCN36XX_DXE_CH_RX_H:
 			dxe->ctrl = WCN36XX_DXE_CTRL_RX_H;
+			wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR,
+						   WCN36XX_DXE_INT_CH3_MASK);
 			break;
 		default:
 			wcn36xx_warn("Unknown channel");

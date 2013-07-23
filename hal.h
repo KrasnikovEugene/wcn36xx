@@ -2418,7 +2418,7 @@ struct del_ts_rsp_msg {
 
 /* Start of BLOCK ACK related Parameters */
 
-struct add_ba_session_req_msg {
+struct wcn36xx_hal_add_ba_session_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
@@ -2459,9 +2459,9 @@ struct add_ba_session_req_msg {
 	   1 - Originator
 	   0 - Recipient */
 	u8 direction;
-};
+} __packed;
 
-struct add_ba_session_rsp_msg {
+struct wcn36xx_hal_add_ba_session_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
@@ -2486,23 +2486,23 @@ struct add_ba_session_rsp_msg {
 
 	/* Starting Sequence Number */
 	u16 ssn;
-};
+} __packed;
 
-struct add_ba_req_msg {
+struct wcn36xx_hal_add_ba_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Session Id */
 	u8 session_id;
 
 	/* Reorder Window Size */
-	u8 win_Size;
-
+	u8 win_size;
+/* Old FW 1.2.2.4 does not support this*/
 #ifdef FEATURE_ON_CHIP_REORDERING
 	u8 reordering_done_on_chip;
 #endif
-};
+} __packed;
 
-struct add_ba_rsp_msg {
+struct wcn36xx_hal_add_ba_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
@@ -2510,7 +2510,7 @@ struct add_ba_rsp_msg {
 
 	/* Dialog token */
 	u8 dialog_token;
-};
+} __packed;
 
 struct add_ba_info {
 	u16 ba_enable:1;
@@ -2518,17 +2518,17 @@ struct add_ba_info {
 	u16 reserved:3;
 };
 
-struct trigger_ba_rsp_candidate {
+struct wcn36xx_hal_trigger_ba_rsp_candidate {
 	u8 sta_addr[ETH_ALEN];
 	struct add_ba_info ba_info[STACFG_MAX_TC];
-};
+} __packed;
 
-struct trigget_ba_req_candidate {
+struct wcn36xx_hal_trigget_ba_req_candidate {
 	u8 sta_index;
 	u8 tid_bitmap;
-};
+} __packed;
 
-struct trigger_ba_req_msg {
+struct wcn36xx_hal_trigger_ba_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Session Id */
@@ -2539,9 +2539,9 @@ struct trigger_ba_req_msg {
 	 */
 	u16 candidate_cnt;
 
-};
+} __packed;
 
-struct trigger_ba_rsp_msg {
+struct wcn36xx_hal_trigger_ba_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* TO SUPPORT BT-AMP */
@@ -2554,9 +2554,9 @@ struct trigger_ba_rsp_msg {
 	 * Rsp Candidate List(tTriggerRspBaCandidate)
 	 */
 	u16 candidate_cnt;
-};
+} __packed;
 
-struct del_ba_req_msg {
+struct wcn36xx_hal_del_ba_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* Station Index */
@@ -2569,14 +2569,14 @@ struct del_ba_req_msg {
 	   1 - Originator
 	   0 - Recipient */
 	u8 direction;
-};
+} __packed;
 
-struct del_ba_rsp_msg {
+struct wcn36xx_hal_del_ba_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/* success or failure */
 	u32 status;
-};
+} __packed;
 
 struct tsm_stats_req_msg {
 	struct wcn36xx_hal_msg_header header;
