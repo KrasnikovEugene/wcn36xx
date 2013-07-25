@@ -329,10 +329,10 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 		       struct sk_buff *skb)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn_sta *sta_priv = NULL;
+	struct wcn36xx_sta *sta_priv = NULL;
 
 	if (control->sta)
-		sta_priv = (struct wcn_sta *)control->sta->drv_priv;
+		sta_priv = (struct wcn36xx_sta *)control->sta->drv_priv;
 
 	wcn36xx_start_tx(wcn, sta_priv, skb);
 }
@@ -342,7 +342,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			   struct ieee80211_key_conf *key_conf)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn_sta *sta_priv = (struct wcn_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
@@ -758,12 +758,12 @@ int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 		    u8 buf_size)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn_sta *sta_priv = NULL;
+	struct wcn36xx_sta *sta_priv = NULL;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d",
 		    action, tid);
 	switch (action) {
 	case IEEE80211_AMPDU_RX_START:
-		sta_priv = (struct wcn_sta *)sta->drv_priv;
+		sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 		sta_priv->tid = tid;
 		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 0);
 		wcn36xx_smd_add_ba(wcn);
@@ -866,7 +866,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	SET_IEEE80211_DEV(wcn->hw, wcn->dev);
 
-	wcn->hw->sta_data_size = sizeof(struct wcn_sta);
+	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
 
 

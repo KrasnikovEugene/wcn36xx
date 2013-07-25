@@ -114,7 +114,7 @@ struct wcn36xx_vif {
 	u8 self_dpu_desc_index;
 };
 
-struct wcn_sta {
+struct wcn36xx_sta {
 	u16 tid;
 	u8 sta_id;
 	bool is_data_encrypted;

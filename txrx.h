@@ -149,12 +149,12 @@ struct wcn36xx_tx_bd {
 	u32	reserved7:6;*/
 };
 
-struct wcn_sta;
+struct wcn36xx_sta;
 struct wcn36xx;
 
 int  wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb);
 int wcn36xx_start_tx(struct wcn36xx *wcn,
-		     struct wcn_sta *sta_priv,
+		     struct wcn36xx_sta *sta_priv,
 		     struct sk_buff *skb);
 
 #endif	/* _TXRX_H_ */
