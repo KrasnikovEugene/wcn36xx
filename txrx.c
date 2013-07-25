@@ -92,7 +92,7 @@ static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
 
 static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 				struct wcn36xx *wcn,
-				struct wcn_sta *sta_priv,
+				struct wcn36xx_sta *sta_priv,
 				struct ieee80211_hdr *hdr,
 				bool bcast)
 {
@@ -147,7 +147,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 }
 
 int wcn36xx_start_tx(struct wcn36xx *wcn,
-		     struct wcn_sta *sta_priv,
+		     struct wcn36xx_sta *sta_priv,
 		     struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
