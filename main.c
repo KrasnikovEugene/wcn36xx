@@ -186,6 +186,13 @@ static const struct wiphy_wowlan_support wowlan_support = {
 };
 #endif
 
+static inline u8 get_sta_index(struct ieee80211_vif *vif,
+			       struct wcn36xx_sta *sta_priv)
+{
+	return NL80211_IFTYPE_STATION == vif->type ?
+	       sta_priv->bss_sta_index :
+	       sta_priv->sta_index;
+}
 static int wcn36xx_start(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
@@ -400,7 +407,8 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 				wcn->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
-				key);
+				key,
+				get_sta_index(vif, sta_priv));
 		} else {
 			wcn36xx_smd_set_bsskey(wcn,
 				wcn->encrypt_type,
@@ -419,8 +427,9 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			/* do not remove key if disassociated */
 			if (wcn->aid)
 				wcn36xx_smd_remove_stakey(wcn,
-							  wcn->encrypt_type,
-							  key_conf->keyidx);
+					wcn->encrypt_type,
+					key_conf->keyidx,
+					get_sta_index(vif, sta_priv));
 		}
 		break;
 	default:
@@ -544,6 +553,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn->is_joining = false;
 		if (bss_conf->assoc) {
 			struct ieee80211_sta *sta;
+			struct wcn36xx_sta *sta_priv;
 
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
 				    "mac assoc bss %pM vif %pM AID=%d",
@@ -561,15 +571,17 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				rcu_read_unlock();
 				goto out;
 			}
+			sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+
 			wcn36xx_update_allowed_rates(wcn, sta);
 
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 						vif->addr,
 						WCN36XX_HAL_LINK_POSTASSOC_STATE);
+			wcn->sta = sta_priv;
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
 					       true);
-			wcn36xx_smd_config_sta(wcn, vif, sta);
 			rcu_read_unlock();
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -578,7 +590,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    vif->addr,
 				    bss_conf->aid);
 			wcn->aid = 0;
-			wcn36xx_smd_delete_sta(wcn);
 			wcn36xx_smd_set_link_st(wcn,
 						bss_conf->bssid,
 						vif->addr,
@@ -682,12 +693,9 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM",
 		    vif, sta->addr);
 
-	if (vif->type == NL80211_IFTYPE_ADHOC ||
-	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT) {
-		wcn->aid = sta->aid;
-		wcn36xx_smd_config_sta(wcn, vif, sta);
-	}
+	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
+	wcn->aid = sta->aid;
+	wcn36xx_smd_config_sta(wcn, vif, sta);
 	return 0;
 }
 
@@ -696,14 +704,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 			      struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM",
-		    vif, sta->addr);
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d",
+		    vif, sta->addr, sta_priv->sta_index);
 
-	if (vif->type == NL80211_IFTYPE_ADHOC ||
-	    vif->type == NL80211_IFTYPE_AP ||
-	    vif->type == NL80211_IFTYPE_MESH_POINT)
-		wcn36xx_smd_delete_sta(wcn);
+	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
 
 	return 0;
 }
@@ -761,23 +767,25 @@ int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 	struct wcn36xx_sta *sta_priv = NULL;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d",
 		    action, tid);
+	sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 	switch (action) {
 	case IEEE80211_AMPDU_RX_START:
-		sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 		sta_priv->tid = tid;
-		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 0);
+		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 0,
+			get_sta_index(vif, sta_priv));
 		wcn36xx_smd_add_ba(wcn);
-		wcn36xx_smd_trigger_ba(wcn);
+		wcn36xx_smd_trigger_ba(wcn, get_sta_index(vif, sta_priv));
 		ieee80211_start_tx_ba_session(sta, tid, 0);
 		break;
 	case IEEE80211_AMPDU_RX_STOP:
-		wcn36xx_smd_del_ba(wcn, tid);
+		wcn36xx_smd_del_ba(wcn, tid, get_sta_index(vif, sta_priv));
 		break;
 	case IEEE80211_AMPDU_TX_START:
 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
 		break;
 	case IEEE80211_AMPDU_TX_OPERATIONAL:
-		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 1);
+		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 1,
+			get_sta_index(vif, sta_priv));
 		break;
 	/* Not supported so far*/
 	case IEEE80211_AMPDU_TX_STOP_CONT:

@@ -57,7 +57,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
 int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status);
 int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
-int wcn36xx_smd_delete_sta(struct wcn36xx *wcn);
+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
 int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
 int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 			    const u8 *sta_mac,
@@ -76,7 +76,8 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
 			   u8 keyidx,
 			   u8 keylen,
-			   u8 *key);
+			   u8 *key,
+			   u8 sta_index);
 int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
 			   u8 keyidx,
@@ -84,7 +85,8 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 			   u8 *key);
 int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
 			      enum ani_ed_type enc_type,
-			      u8 keyidx);
+			      u8 keyidx,
+			      u8 sta_index);
 int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
 			      enum ani_ed_type enc_type,
 			      u8 keyidx);
@@ -99,10 +101,11 @@ int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
 		struct ieee80211_sta *sta,
 		u16 tid,
 		u16 *ssn,
-		u8 direction);
+		u8 direction,
+		u8 sta_index);
 int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
-int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid);
-int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn);
+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
 /* WCN36XX configuration parameters */
 struct wcn36xx_fw_cfg {
 	u16		id;
