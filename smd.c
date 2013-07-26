@@ -514,13 +514,13 @@ int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_delete_sta(struct wcn36xx *wcn)
+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index)
 {
 	struct wcn36xx_hal_delete_sta_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_STA_REQ);
 
-	msg_body.sta_index = 1;
+	msg_body.sta_index = sta_index;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -661,9 +661,6 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 {
 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
 	struct config_sta_rsp_params *params;
-	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
-						 struct ieee80211_vif,
-						 drv_priv);
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -677,9 +674,10 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 		return -EIO;
 	}
 
-	if (vif->type == NL80211_IFTYPE_AP) {
-		wcn->current_vif->sta_index = params->sta_index;
-		wcn->current_vif->dpu_desc_index = params->dpu_index;
+	if (wcn->sta) {
+		wcn->sta->sta_index = params->sta_index;
+		wcn->sta->dpu_desc_index = params->dpu_index;
+		wcn->sta = NULL;
 	}
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d",
@@ -940,8 +938,11 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len
 		    params->tx_mgmt_power, params->ucast_dpu_signature);
 
 	wcn->current_vif->bss_index = params->bss_index;
-	wcn->current_vif->sta_index =  params->bss_sta_index;
-	wcn->current_vif->dpu_desc_index = params->dpu_desc_index;
+	if (wcn->sta) {
+		wcn->sta->bss_sta_index =  params->bss_sta_index;
+		wcn->sta->bss_dpu_desc_index = params->dpu_desc_index;
+		wcn->sta = NULL;
+	}
 	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;
 	return 0;
 }
@@ -1026,13 +1027,14 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
 			   u8 keyidx,
 			   u8 keylen,
-			   u8 *key)
+			   u8 *key,
+			   u8 sta_index)
 {
 	struct wcn36xx_hal_set_sta_key_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_STAKEY_REQ);
 
-	msg_body.set_sta_key_params.sta_index = wcn->current_vif->sta_index;
+	msg_body.set_sta_key_params.sta_index = sta_index;
 	msg_body.set_sta_key_params.enc_type = enc_type;
 
 	msg_body.set_sta_key_params.key[0].id = keyidx;
@@ -1074,12 +1076,14 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
 
 int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
 			      enum ani_ed_type enc_type,
-			      u8 keyidx)
+			      u8 keyidx,
+			      u8 sta_index)
 {
 	struct wcn36xx_hal_remove_sta_key_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_STAKEY_REQ);
-	msg_body.sta_idx = wcn->current_vif->sta_index;
+
+	msg_body.sta_idx = sta_index;
 	msg_body.enc_type = enc_type;
 	msg_body.key_id = keyidx;
 
@@ -1245,13 +1249,14 @@ int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
 		struct ieee80211_sta *sta,
 		u16 tid,
 		u16 *ssn,
-		u8 direction)
+		u8 direction,
+		u8 sta_index)
 {
 	struct wcn36xx_hal_add_ba_session_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BA_SESSION_REQ);
 
-	msg_body.sta_index = wcn->current_vif->sta_index;
+	msg_body.sta_index = sta_index;
 	memcpy(&msg_body.mac_addr, sta->addr, ETH_ALEN);
 	msg_body.dialog_token = 0x10;
 	msg_body.tid = tid;
@@ -1282,13 +1287,13 @@ int wcn36xx_smd_add_ba(struct wcn36xx *wcn)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid)
+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index)
 {
 	struct wcn36xx_hal_del_ba_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DEL_BA_REQ);
 
-	msg_body.sta_index = wcn->current_vif->sta_index;
+	msg_body.sta_index = sta_index;
 	msg_body.tid = tid;
 	msg_body.direction = 0;
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
@@ -1296,7 +1301,7 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn)
+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
 {
 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
 	struct wcn36xx_hal_trigget_ba_req_candidate *candidate;
@@ -1310,7 +1315,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn)
 
 	candidate = (struct wcn36xx_hal_trigget_ba_req_candidate *)
 		(wcn->smd_buf + sizeof(msg_body));
-	candidate->sta_index = wcn->current_vif->sta_index;
+	candidate->sta_index = sta_index;
 	candidate->tid_bitmap = 1;
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
