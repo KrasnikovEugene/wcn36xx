@@ -312,7 +312,8 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 
 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
 		int ch = WCN36XX_HW_CHANNEL(wcn);
-		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d", ch);
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d",
+			    ch);
 		wcn36xx_smd_switch_channel(wcn, ch);
 	}
 
@@ -353,8 +354,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac80211 set key");
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "Key: cmd=0x%x algo:0x%x, "
-		    "id:%d, len:%d flags 0x%x",
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "Key: cmd=0x%x algo:0x%x, id:%d, len:%d flags 0x%x",
 		    cmd, key_conf->cipher, key_conf->keyidx,
 		    key_conf->keylen, key_conf->flags);
 	wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "KEY: ",
@@ -576,8 +576,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_update_allowed_rates(wcn, sta);
 
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
-						vif->addr,
-						WCN36XX_HAL_LINK_POSTASSOC_STATE);
+				vif->addr,
+				WCN36XX_HAL_LINK_POSTASSOC_STATE);
 			wcn->sta = sta_priv;
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
