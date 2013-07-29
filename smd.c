@@ -214,7 +214,8 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		wcn36xx_error("Failed to load nv file %s: %d", WLAN_NV_FILE, ret);
+		wcn36xx_error("Failed to load nv file %s: %d",
+			      WLAN_NV_FILE, ret);
 		goto out_free_nv;
 	}
 
@@ -413,8 +414,8 @@ static void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
 	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg *)buf;
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d", rsp->channel_number,
-		     rsp->status);
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d",
+		    rsp->channel_number, rsp->status);
 }
 
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
@@ -492,8 +493,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 		return -EIO;
 	}
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal add sta self status %d "
-		    "self_sta_index %d dpu_index %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal add sta self status %d self_sta_index %d dpu_index %d",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
 	wcn->current_vif->self_sta_index = rsp->self_sta_index;
 	wcn->current_vif->self_dpu_desc_index = rsp->dpu_index;
@@ -585,8 +585,8 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 }
 
 static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
-					  const struct wcn36xx_hal_config_sta_params *orig,
-					  struct wcn36xx_hal_config_sta_params_v1 *v1)
+			const struct wcn36xx_hal_config_sta_params *orig,
+			struct wcn36xx_hal_config_sta_params_v1 *v1)
 {
 	/* convert orig to v1 format */
 	memcpy(&v1->bssid, orig->bssid, ETH_ALEN);
@@ -607,7 +607,7 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
 }
 
 static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
-				     const struct wcn36xx_hal_config_sta_req_msg *orig)
+		     const struct wcn36xx_hal_config_sta_req_msg *orig)
 {
 	struct wcn36xx_hal_config_sta_req_msg_v1 msg_body;
 	struct wcn36xx_hal_config_sta_params_v1 *sta = &msg_body.sta_params;
@@ -704,7 +704,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 }
 
 static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
-				     const struct wcn36xx_hal_config_bss_req_msg *orig)
+			const struct wcn36xx_hal_config_bss_req_msg *orig)
 {
 	struct wcn36xx_hal_config_bss_req_msg_v1 msg_body;
 	struct wcn36xx_hal_config_bss_params_v1 *bss = &msg_body.bss_params;
@@ -728,13 +728,16 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	msg_body.bss_params.llb_coexist = orig->bss_params.llb_coexist;
 	msg_body.bss_params.llg_coexist = orig->bss_params.llg_coexist;
 	msg_body.bss_params.ht20_coexist = orig->bss_params.ht20_coexist;
-	msg_body.bss_params.lln_non_gf_coexist = orig->bss_params.lln_non_gf_coexist;
+	msg_body.bss_params.lln_non_gf_coexist =
+		orig->bss_params.lln_non_gf_coexist;
 
-	msg_body.bss_params.lsig_tx_op_protection_full_support = orig->bss_params.lsig_tx_op_protection_full_support;
+	msg_body.bss_params.lsig_tx_op_protection_full_support =
+		orig->bss_params.lsig_tx_op_protection_full_support;
 	msg_body.bss_params.rifs_mode = orig->bss_params.rifs_mode;
 	msg_body.bss_params.beacon_interval = orig->bss_params.beacon_interval;
 	msg_body.bss_params.dtim_period = orig->bss_params.dtim_period;
-	msg_body.bss_params.tx_channel_width_set = orig->bss_params.tx_channel_width_set;
+	msg_body.bss_params.tx_channel_width_set =
+		orig->bss_params.tx_channel_width_set;
 	msg_body.bss_params.oper_channel = orig->bss_params.oper_channel;
 	msg_body.bss_params.ext_channel = orig->bss_params.ext_channel;
 
@@ -747,15 +750,20 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	msg_body.bss_params.action = orig->bss_params.action;
 	msg_body.bss_params.rateset = orig->bss_params.rateset;
 	msg_body.bss_params.ht = orig->bss_params.ht;
-	msg_body.bss_params.obss_prot_enabled = orig->bss_params.obss_prot_enabled;
+	msg_body.bss_params.obss_prot_enabled =
+		orig->bss_params.obss_prot_enabled;
 	msg_body.bss_params.rmf = orig->bss_params.rmf;
 	msg_body.bss_params.ht_oper_mode = orig->bss_params.ht_oper_mode;
-	msg_body.bss_params.dual_cts_protection = orig->bss_params.dual_cts_protection;
+	msg_body.bss_params.dual_cts_protection =
+		orig->bss_params.dual_cts_protection;
 
-	msg_body.bss_params.max_probe_resp_retry_limit = orig->bss_params.max_probe_resp_retry_limit;
+	msg_body.bss_params.max_probe_resp_retry_limit =
+		orig->bss_params.max_probe_resp_retry_limit;
 	msg_body.bss_params.hidden_ssid = orig->bss_params.hidden_ssid;
-	msg_body.bss_params.proxy_probe_resp = orig->bss_params.proxy_probe_resp;
-	msg_body.bss_params.edca_params_valid = orig->bss_params.edca_params_valid;
+	msg_body.bss_params.proxy_probe_resp =
+		orig->bss_params.proxy_probe_resp;
+	msg_body.bss_params.edca_params_valid =
+		orig->bss_params.edca_params_valid;
 
 	memcpy(&msg_body.bss_params.acbe,
 	       &orig->bss_params.acbe,
@@ -777,8 +785,10 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	       &orig->bss_params.ext_set_sta_key_param,
 	       sizeof(orig->bss_params.acvo));
 
-	msg_body.bss_params.wcn36xx_hal_persona = orig->bss_params.wcn36xx_hal_persona;
-	msg_body.bss_params.spectrum_mgt_enable = orig->bss_params.spectrum_mgt_enable;
+	msg_body.bss_params.wcn36xx_hal_persona =
+		orig->bss_params.wcn36xx_hal_persona;
+	msg_body.bss_params.spectrum_mgt_enable =
+		orig->bss_params.spectrum_mgt_enable;
 	msg_body.bss_params.tx_mgmt_power = orig->bss_params.tx_mgmt_power;
 	msg_body.bss_params.max_tx_power = orig->bss_params.max_tx_power;
 
@@ -911,7 +921,9 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
 }
 
-static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn, void *buf, size_t len)
+static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+				      void *buf,
+				      size_t len)
 {
 	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
 	struct wcn36xx_hal_config_bss_rsp_params *params;
@@ -1152,7 +1164,7 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
 		/* TODO: it also support ARP response type */
 	} else {
 		wcn36xx_warn("unknow keep alive packet type %d", packet_type);
-		return -1;
+		return -EINVAL;
 	}
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
@@ -1199,7 +1211,7 @@ static inline int get_feat_caps(u32 *bitmap,
 
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
-		return -1;
+		return -EINVAL;
 	} else {
 		arr_idx = cap / 32;
 		bit_idx = cap % 32;
@@ -1239,9 +1251,8 @@ int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
 int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
 {
 	/* TODO: print the caps of rsp for comapre */
-	if (wcn36xx_smd_rsp_status_check(buf, len)) {
+	if (wcn36xx_smd_rsp_status_check(buf, len))
 		wcn36xx_warn("error response for caps exchange");
-	}
 	return 0;
 }
 
@@ -1475,7 +1486,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		wcn36xx_smd_delete_sta_context_ind(wcn, buf, len);
 		break;
 	default:
-		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);
+		wcn36xx_error("SMD_EVENT (%d) not supported",
+			      msg_header->msg_type);
 	}
 }
 
@@ -1533,7 +1545,7 @@ int wcn36xx_smd_open(struct wcn36xx *wcn)
 	}
 
 	left = wait_for_completion_interruptible_timeout(&wcn->smd_compl,
-							 msecs_to_jiffies(SMD_MSG_TIMEOUT));
+		msecs_to_jiffies(SMD_MSG_TIMEOUT));
 	if (left <= 0) {
 		wcn36xx_error("timeout waiting for smd open: %d", ret);
 		return left;
