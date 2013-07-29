@@ -615,6 +615,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			wcn->beacon_enable = true;
+			wcn->current_vif->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       wcn->addresses[0].addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
