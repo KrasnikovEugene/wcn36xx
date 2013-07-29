@@ -106,17 +106,40 @@ struct nv_data {
  */
 struct wcn36xx_vif {
 	u8 bss_index;
-	u8 sta_index;
-	u8 dpu_desc_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
 	u8 self_sta_index;
 	u8 self_dpu_desc_index;
 };
 
-struct wcn_sta {
+/**
+ * struct wcn36xx_sta - holds STA related fields
+ *
+ * @tid: traffic ID that is used during AMPDU and in TX BD.
+ * @sta_index: STA index is returned from HW after config_sta call and is
+ * used in both SMD channel and TX BD.
+ * @dpu_desc_index: DPU descriptor index is returned from HW after config_sta
+ * call and is used in TX BD.
+ * @bss_sta_index: STA index is returned from HW after config_bss call and is
+ * used in both SMD channel and TX BD. See table bellow when it is used.
+ * @bss_dpu_desc_index: DPU descriptor index is returned from HW after
+ * config_bss call and is used in TX BD.
+ * ______________________________________________
+ * |		  |	STA	|	AP	|
+ * |______________|_____________|_______________|
+ * |    TX BD     |bss_sta_index|   sta_index   |
+ * |______________|_____________|_______________|
+ * |all SMD calls |bss_sta_index|   sta_index	|
+ * |______________|_____________|_______________|
+ * |smd_delete_sta|  sta_index  |   sta_index	|
+ * |______________|_____________|_______________|
+ */
+struct wcn36xx_sta {
 	u16 tid;
-	u8 sta_id;
+	u8 sta_index;
+	u8 dpu_desc_index;
+	u8 bss_sta_index;
+	u8 bss_dpu_desc_index;
 	bool is_data_encrypted;
 };
 struct wcn36xx_dxe_ch;
@@ -128,6 +151,7 @@ struct wcn36xx {
 	struct wcn36xx_hal_mac_ssid ssid;
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
+	struct wcn36xx_sta	*sta;
 	u8			dtim_period;
 	enum ani_ed_type	encrypt_type;
 
