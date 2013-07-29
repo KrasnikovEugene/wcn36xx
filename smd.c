@@ -1382,6 +1382,30 @@ static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
 	return 0;
 }
 
+static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
+					 void *buf,
+					 size_t len)
+{
+	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
+	struct ieee80211_sta *sta;
+	if (len != sizeof(*rsp)) {
+		wcn36xx_warn("Bad delete sta indication");
+		return -EIO;
+	}
+
+	rcu_read_lock();
+	sta = ieee80211_find_sta(vif, rsp->addr2);
+	if (sta) {
+		wcn36xx_dbg(WCN36XX_DBG_HAL,
+		    "delete station indication %pM", rsp->addr2);
+		ieee80211_report_low_ack(sta, 0);
+	}
+	rcu_read_unlock();
+	return 0;
+}
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header *msg_header = buf;
@@ -1446,6 +1470,9 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		break;
 	case WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_RSP:
 		wcn36xx_smd_feature_caps_exchange_rsp(buf, len);
+		break;
+	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+		wcn36xx_smd_delete_sta_context_ind(wcn, buf, len);
 		break;
 	default:
 		wcn36xx_error("SMD_EVENT (%d) not supported", msg_header->msg_type);

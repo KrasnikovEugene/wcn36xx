@@ -2854,7 +2854,7 @@ struct send_unknown_frame_rx_ind_msg {
 	u32 status;
 };
 
-struct delete_sta_context_ind_msg {
+struct wcn36xx_hal_delete_sta_context_ind_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	u16 aid;
@@ -2868,7 +2868,7 @@ struct delete_sta_context_ind_msg {
 
 	/* To unify the keepalive / unknown A2 / tim-based disa */
 	u16 reason_code;
-};
+} __packed;
 
 struct indicate_del_sta {
 	struct wcn36xx_hal_msg_header header;
