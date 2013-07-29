@@ -92,14 +92,33 @@ static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
 
 static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 				struct wcn36xx *wcn,
-				struct wcn_sta *sta_priv,
+				struct wcn36xx_sta *sta_priv,
 				struct ieee80211_hdr *hdr,
 				bool bcast)
 {
+	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+						 struct ieee80211_vif,
+						 drv_priv);
 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
 	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
-	bd->sta_index = wcn->current_vif->sta_index;
-	bd->dpu_desc_idx = wcn->current_vif->dpu_desc_index;
+	/*
+	 * For not unicast frames mac80211 will not set sta pointer so use
+	 * self_sta_index instead.
+	 */
+	if (sta_priv) {
+		if (vif->type == NL80211_IFTYPE_STATION) {
+			bd->sta_index = sta_priv->bss_sta_index;
+			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
+		} else if (vif->type == NL80211_IFTYPE_AP ||
+			   vif->type == NL80211_IFTYPE_ADHOC ||
+			   vif->type == NL80211_IFTYPE_MESH_POINT) {
+			bd->sta_index = sta_priv->sta_index;
+			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
+		}
+	} else {
+		bd->sta_index = wcn->current_vif->self_sta_index;
+		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
+	}
 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
 	   (sta_priv && !sta_priv->is_data_encrypted))
 		bd->dpu_ne = 1;
@@ -147,7 +166,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 }
 
 int wcn36xx_start_tx(struct wcn36xx *wcn,
-		     struct wcn_sta *sta_priv,
+		     struct wcn36xx_sta *sta_priv,
 		     struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
