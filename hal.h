@@ -357,7 +357,8 @@ enum wcn36xx_hal_host_msg_type {
 enum wcn36xx_hal_host_msg_version {
 	WCN36XX_HAL_MSG_VERSION0 = 0,
 	WCN36XX_HAL_MSG_VERSION1 = 1,
-	WCN36XX_HAL_MSG_WCNSS_CTRL_VERSION = 0x7FFF,	/*define as 2 bytes data */
+	/* define as 2 bytes data */
+	WCN36XX_HAL_MSG_WCNSS_CTRL_VERSION = 0x7FFF,
 	WCN36XX_HAL_MSG_VERSION_MAX_FIELD = WCN36XX_HAL_MSG_WCNSS_CTRL_VERSION
 };
 
@@ -396,7 +397,7 @@ enum phy_chan_bond_state {
 	/* 40MHz IF bandwidth centered on IF carrier */
 	PHY_DOUBLE_CHANNEL_CENTERED = 2,
 
-	/* 40MHz IF bandwidth with higher 20MHz supporting the primary channel */
+	/* 40MHz IF bandwidth with higher 20MHz supporting the primary ch */
 	PHY_DOUBLE_CHANNEL_HIGH_PRIMARY = 3,
 
 	/* 20/40MHZ offset LOW 40/80MHZ offset CENTERED */
@@ -672,7 +673,7 @@ struct wcn36xx_hal_cfg {
 	 * in shared header file between UMAC and HAL.*/
 	u16 id;
 
-	/* Length of the Cfg. This parameter is used to go to next cfg 
+	/* Length of the Cfg. This parameter is used to go to next cfg
 	 * in the TLV format.*/
 	u16 len;
 
@@ -693,7 +694,7 @@ struct wcn36xx_hal_mac_start_parameters {
 	/* Length of the config buffer */
 	u32 len;
 
-	/* Following this there is a TLV formatted buffer of length 
+	/* Following this there is a TLV formatted buffer of length
 	 * "len" bytes containing all config values.
 	 * The TLV is expected to be formatted like this:
 	 * 0           15            31           31+CFG_LEN-1        length-1
@@ -1085,7 +1086,7 @@ struct wcn36xx_hal_config_sta_params {
 	/* RIFS mode 0 - NA, 1 - Allowed */
 	u8 rifs_mode;
 
-	/* L-SIG TXOP Protection mechanism 
+	/* L-SIG TXOP Protection mechanism
 	   0 - No Support, 1 - Supported
 	   SG - there is global field */
 	u8 lsig_txop_protection;
@@ -1106,7 +1107,7 @@ struct wcn36xx_hal_config_sta_params {
 	/* Short GI support for 20Mhz packets */
 	u8 sgi_20Mhz;
 
-	// TODO move this parameter to the end for 3680
+	/* TODO move this parameter to the end for 3680 */
 	/* These rates are the intersection of peer and self capabilities. */
 	struct wcn36xx_hal_supported_rates supported_rates;
 
@@ -1117,8 +1118,8 @@ struct wcn36xx_hal_config_sta_params {
 	u32 encrypt_type;
 
 	/* HAL should update the existing STA entry, if this flag is set. UMAC
-	   will set this flag in case of RE-ASSOC, where we want to reuse the old
-	   STA ID. 0 = Add, 1 = Update */
+	   will set this flag in case of RE-ASSOC, where we want to reuse the
+	   old STA ID. 0 = Add, 1 = Update */
 	u8 action;
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
@@ -1159,9 +1160,9 @@ struct wcn36xx_hal_config_sta_params {
 
 	u8 p2p;
 
-	// TODO add this parameter for 3680.
+	/* TODO add this parameter for 3680. */
 	/* Reserved to align next field on a dword boundary */
-	//u8 reserved;
+	/* u8 reserved; */
 } __packed;
 
 struct wcn36xx_hal_config_sta_req_msg {
@@ -1200,7 +1201,7 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	/* RIFS mode 0 - NA, 1 - Allowed */
 	u8 rifs_mode;
 
-	/* L-SIG TXOP Protection mechanism 
+	/* L-SIG TXOP Protection mechanism
 	   0 - No Support, 1 - Supported
 	   SG - there is global field */
 	u8 lsig_txop_protection;
@@ -1228,8 +1229,8 @@ struct wcn36xx_hal_config_sta_params_v1 {
 	u32 encrypt_type;
 
 	/* HAL should update the existing STA entry, if this flag is set. UMAC
-	   will set this flag in case of RE-ASSOC, where we want to reuse the old
-	   STA ID. 0 = Add, 1 = Update */
+	   will set this flag in case of RE-ASSOC, where we want to reuse the
+	   old STA ID. 0 = Add, 1 = Update */
 	u8 action;
 
 	/* U-APSD Flags: 1b per AC.  Encoded as follows:
@@ -1389,7 +1390,8 @@ struct wcn36xx_hal_mac_ssid {
 enum wcn36xx_hal_con_mode {
 	WCN36XX_HAL_STA_MODE = 0,
 
-	/* to support softAp mode . This is misleading. It means AP MODE only. */
+	/* to support softAp mode . This is misleading.
+	   It means AP MODE only. */
 	WCN36XX_HAL_STA_SAP_MODE = 1,
 
 	WCN36XX_HAL_P2P_CLIENT_MODE,
@@ -1472,7 +1474,7 @@ struct wcn36xx_hal_config_bss_params {
 	/* Reserved to align next field on a dword boundary */
 	u8 reserved;
 
-	//TODO move sta to the end for 3680
+	/* TODO move sta to the end for 3680 */
 	/* Context of the station being added in HW
 	 *  Add a STA entry for "itself" -
 	 *
@@ -2030,8 +2032,7 @@ struct update_edca_params_rsp_msg {
 	u32 status;
 };
 
-struct dpu_stats_params
-{
+struct dpu_stats_params {
 	/* Index of STA to which the statistics */
 	u16 sta_index;
 
@@ -2076,7 +2077,7 @@ struct ani_summary_stats_info {
 	/* Total number of packets(per AC) that were successfully
 	 * transmitted (with and without retries, including multi-cast,
 	 * broadcast) */
-     	u32 tx_frm_cnt[4];
+	u32 tx_frm_cnt[4];
 
 	/* Total number of packets that were successfully received (after
 	 * appropriate filter rules including multi-cast, broadcast) */
@@ -2534,7 +2535,7 @@ struct wcn36xx_hal_trigger_ba_req_msg {
 	/* Session Id */
 	u8 session_id;
 
-	/* baCandidateCnt is followed by trigger BA 
+	/* baCandidateCnt is followed by trigger BA
 	 * Candidate List(tTriggerBaCandidate)
 	 */
 	u16 candidate_cnt;
@@ -2550,7 +2551,7 @@ struct wcn36xx_hal_trigger_ba_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-	/* baCandidateCnt is followed by trigger BA 
+	/* baCandidateCnt is followed by trigger BA
 	 * Rsp Candidate List(tTriggerRspBaCandidate)
 	 */
 	u16 candidate_cnt;
@@ -2624,8 +2625,9 @@ struct set_key_done_msg {
 };
 
 struct wcn36xx_hal_nv_img_download_req_msg {
-	/* Note: The length specified in wcn36xx_hal_nv_img_download_req_msg messages
-	 * should be header.len = sizeof(wcn36xx_hal_nv_img_download_req_msg) +
+	/* Note: The length specified in wcn36xx_hal_nv_img_download_req_msg
+	 * messages should be
+	 * header.len = sizeof(wcn36xx_hal_nv_img_download_req_msg) +
 	 * nv_img_buffer_size */
 	struct wcn36xx_hal_msg_header header;
 
@@ -2642,8 +2644,8 @@ struct wcn36xx_hal_nv_img_download_req_msg {
 	/* Is this the last fragment? When set to 1 it indicates that no
 	 * more fragments will be sent by UMAC and HAL can concatenate all
 	 * the NV blobs rcvd & proceed with the parsing. HAL would generate
-	 * a WCN36XX_HAL_DOWNLOAD_NV_RSP to the WCN36XX_HAL_DOWNLOAD_NV_REQ after
-	 * it receives each fragment */
+	 * a WCN36XX_HAL_DOWNLOAD_NV_RSP to the WCN36XX_HAL_DOWNLOAD_NV_REQ
+	 * after it receives each fragment */
 	u16 last_fragment;
 
 	/* NV Image size (number of bytes) */
@@ -2854,7 +2856,7 @@ struct send_unknown_frame_rx_ind_msg {
 	u32 status;
 };
 
-struct delete_sta_context_ind_msg {
+struct wcn36xx_hal_delete_sta_context_ind_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	u16 aid;
@@ -2868,7 +2870,7 @@ struct delete_sta_context_ind_msg {
 
 	/* To unify the keepalive / unknown A2 / tim-based disa */
 	u16 reason_code;
-};
+} __packed;
 
 struct indicate_del_sta {
 	struct wcn36xx_hal_msg_header header;
@@ -2960,7 +2962,9 @@ struct wcn36xx_hal_missed_beacon_ind_msg {
 
 /* Beacon Filtering data structures */
 
-/* The above structure would be followed by multiple of below mentioned structure */
+/* The above structure would be followed by multiple of below mentioned
+ * structure
+ */
 struct beacon_filter_ie {
 	u8 element_id;
 	u8 check_ie_presence;
@@ -2995,7 +2999,8 @@ struct wcn36xx_hal_rem_bcn_filter_req {
 #define WCN36XX_HAL_OFFLOAD_DISABLE                         0
 #define WCN36XX_HAL_OFFLOAD_ENABLE                          1
 #define WCN36XX_HAL_OFFLOAD_BCAST_FILTER_ENABLE             0x2
-#define WCN36XX_HAL_OFFLOAD_ARP_AND_BCAST_FILTER_ENABLE     (HAL_OFFLOAD_ENABLE|HAL_OFFLOAD_BCAST_FILTER_ENABLE)
+#define WCN36XX_HAL_OFFLOAD_ARP_AND_BCAST_FILTER_ENABLE	\
+	(HAL_OFFLOAD_ENABLE|HAL_OFFLOAD_BCAST_FILTER_ENABLE)
 
 struct wcn36xx_hal_ns_offload_params {
 	u8 src_ipv6_addr[WCN36XX_HAL_IPV6_ADDR_LEN];
@@ -4165,7 +4170,8 @@ struct wcn36xx_hal_rcv_flt_pkt_match_cnt_rsp_msg {
 	u32 status;
 
 	u32 match_count;
-	struct wcn36xx_hal_rcv_flt_pkt_match_cnt matches[WCN36XX_HAL_MAX_NUM_FILTERS];
+	struct wcn36xx_hal_rcv_flt_pkt_match_cnt
+		matches[WCN36XX_HAL_MAX_NUM_FILTERS];
 	u8 bss_index;
 };
 
@@ -4448,8 +4454,8 @@ struct dhcp_ind_status {
  *
  *  WCN36XX_HAL_THERMAL_MITIGATION_MODE_0 - Based on AMPDU disabling aggregation
  *
- *  WCN36XX_HAL_THERMAL_MITIGATION_MODE_1 - Based on AMPDU disabling aggregation and
- *  reducing transmit power
+ *  WCN36XX_HAL_THERMAL_MITIGATION_MODE_1 - Based on AMPDU disabling aggregation
+ *  and reducing transmit power
  *
  *  WCN36XX_HAL_THERMAL_MITIGATION_MODE_2 - Not supported */
 enum wcn36xx_hal_thermal_mitigation_mode_type {
@@ -4463,11 +4469,12 @@ enum wcn36xx_hal_thermal_mitigation_mode_type {
 
 /*
  *   Thermal Mitigation level.
- *   Note the levels are incremental i.e WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_2 =
- * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_0 + WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_1
+ * Note the levels are incremental i.e WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_2 =
+ * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_0 +
+ * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_1
  *
- * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_0 - lowest level of thermal mitigation. This
- * level indicates normal mode of operation
+ * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_0 - lowest level of thermal mitigation.
+ * This level indicates normal mode of operation
  *
  * WCN36XX_HAL_THERMAL_MITIGATION_LEVEL_1 - 1st level of thermal mitigation
  *

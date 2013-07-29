@@ -33,18 +33,20 @@ void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low)
 }
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
+	wmb();
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
 		    addr, data);
-	writel(data, wcn->mmio + addr);
+	writel_relaxed(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 {
-	*data = readl(wcn->mmio + addr);
+	*data = readl_relaxed(wcn->mmio + addr);
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
 		    addr, *data);
+	rmb();
 }
 
 static void wcn36xx_dxe_free_ctl_block(struct wcn36xx_dxe_ch *ch)
