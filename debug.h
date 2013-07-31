@@ -26,6 +26,7 @@
 
 #define WCN36xx_MAX_DUMP_ARGS	5
 
+#ifdef CONFIG_WCN36XX_DEBUGFS
 struct wcn36xx_dfs_file {
 	struct dentry *dentry;
 	u32 value;
@@ -40,5 +41,15 @@ struct wcn36xx_dfs_entry {
 
 void wcn36xx_debugfs_init(struct wcn36xx *wcn);
 void wcn36xx_debugfs_exit(struct wcn36xx *wcn);
+
+#else
+static inline void wcn36xx_debugfs_init(struct wcn36xx *wcn)
+{
+}
+static inline void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
+{
+}
+
+#endif /* CONFIG_WCN36XX_DEBUGFS */
 
 #endif	/* _WCN36XX_DEBUG_H_ */

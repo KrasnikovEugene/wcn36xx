@@ -6,3 +6,11 @@ config WCN36XX
 	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
 
 	  If you choose to build a module, it'll be called wcn36xx.
+
+config WCN36XX_DEBUGFS
+	bool "WCN36XX debugfs support"
+	depends on WCN36XX
+	---help---
+	  Enabled debugfs support
+
+	  If unsure, say Y to make it easier to debug problems.
