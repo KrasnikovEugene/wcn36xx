@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
  * Contact: Eugene Krasnikov <k.eugene.e@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any

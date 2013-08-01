@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
  * Contact: Eugene Krasnikov <k.eugene.e@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
@@ -213,8 +214,11 @@ struct wcn36xx {
 	/* Power management */
 	enum wcn36xx_power_state     pw_state;
 
+#ifdef CONFIG_WCN36XX_DEBUGFS
 	/* Debug file system entry */
 	struct wcn36xx_dfs_entry    dfs;
+#endif /* CONFIG_WCN36XX_DEBUGFS */
+
 };
 
 #endif	/* _WCN36XX_H_ */
