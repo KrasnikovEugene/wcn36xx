@@ -1433,10 +1433,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_CONFIG_BSS_RSP:
 		wcn36xx_smd_config_bss_rsp(wcn, buf, len);
 		break;
-	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_ADD_STA_SELF_RSP:
 		wcn36xx_smd_add_sta_self_rsp(wcn, buf, len);
 		break;
+	case WCN36XX_HAL_STOP_RSP:
 	case WCN36XX_HAL_DEL_STA_SELF_RSP:
 	case WCN36XX_HAL_DELETE_STA_RSP:
 	case WCN36XX_HAL_INIT_SCAN_RSP:
