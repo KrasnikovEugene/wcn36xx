@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
  *
  * Licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -25,6 +26,7 @@
 #include "debug.h"
 #include "pmc.h"
 
+#ifdef CONFIG_WCN36XX_DEBUGFS
 static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
 {
 	file->private_data = inode->i_private;
@@ -194,3 +196,4 @@ void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
 	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
 	debugfs_remove_recursive(dfs->rootdir);
 }
+#endif /* CONFIG_WCN36XX_DEBUGFS */
