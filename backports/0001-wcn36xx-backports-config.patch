@@ -1,14 +1,14 @@
-From 5f8af8a8090439dcf34d1948a48dc192c3f4efaf Mon Sep 17 00:00:00 2001
+From e073425c9d5f06d0ee0ed7e744607f0202b92da1 Mon Sep 17 00:00:00 2001
 From: Coil <dev@skyshaper.net>
 Date: Thu, 4 Jul 2013 10:11:54 +0200
-Subject: [PATCH 1/1] wcn36xx backports config
+Subject: [PATCH] wcn36xx backports config
 
 ---
- backport/defconfigs/wcn36xx                        | 12 +++++++
+ backport/defconfigs/wcn36xx                        | 13 ++++++++
  copy-list.mac80211                                 | 38 ++++++++++++++++++++++
  copy-list.wcn36xx                                  | 11 +++++++
  .../0005-wcn36xx-make-kconfig/wcn36xx.patch        | 21 ++++++++++++
- 4 files changed, 82 insertions(+)
+ 4 files changed, 83 insertions(+)
  create mode 100644 backport/defconfigs/wcn36xx
  create mode 100644 copy-list.mac80211
  create mode 100644 copy-list.wcn36xx
@@ -16,10 +16,10 @@ Subject: [PATCH 1/1] wcn36xx backports config
 
 diff --git a/backport/defconfigs/wcn36xx b/backport/defconfigs/wcn36xx
 new file mode 100644
-index 0000000..d7105bf
+index 0000000..374eb11
 --- /dev/null
 +++ b/backport/defconfigs/wcn36xx
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,13 @@
 +CPTCFG_CFG80211=m
 +CPTCFG_CFG80211_DEFAULT_PS=y
 +CPTCFG_CFG80211_DEBUGFS=y
@@ -32,6 +32,7 @@ index 0000000..d7105bf
 +CPTCFG_WLAN=y
 +CPTCFG_ATH_CARDS=m
 +CPTCFG_WCN36XX=m
++CPTCFG_WCN36XX_DEBUGFS=y
 diff --git a/copy-list.mac80211 b/copy-list.mac80211
 new file mode 100644
 index 0000000..48e9ecf
@@ -121,5 +122,5 @@ index 0000000..4b14f65
 + obj-$(CONFIG_ATH_COMMON)	+= ath.o
 + 
 -- 
-1.8.3.1
+1.8.2.2
 
