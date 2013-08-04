@@ -25,6 +25,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	struct ieee80211_hdr *hdr;
 	struct wcn36xx_rx_bd *bd;
 	u16 fc, sn;
+
 	/*
 	 * All fields must be 0, otherwise it can lead to
 	 * unexpected consequences.
@@ -51,6 +52,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	status.flag |= RX_FLAG_IV_STRIPPED |
 		       RX_FLAG_MMIC_STRIPPED |
 		       RX_FLAG_DECRYPTED;
+
 	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x",
 		    status.flag,  status.vendor_radiotap_len);
 
@@ -78,9 +80,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 }
 
 static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
-			 u32 mpdu_header_len,
-			 u32 len,
-			 u16 tid)
+			       u32 mpdu_header_len,
+			       u32 len,
+			       u16 tid)
 {
 	bd->pdu.mpdu_header_len = mpdu_header_len;
 	bd->pdu.mpdu_header_off = sizeof(*bd);
@@ -101,6 +103,7 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 						 drv_priv);
 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
 	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
+
 	/*
 	 * For not unicast frames mac80211 will not set sta pointer so use
 	 * self_sta_index instead.
@@ -119,9 +122,11 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 		bd->sta_index = wcn->current_vif->self_sta_index;
 		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
 	}
+
 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
 	   (sta_priv && !sta_priv->is_data_encrypted))
 		bd->dpu_ne = 1;
+
 	if (bcast) {
 		bd->ub = 1;
 		bd->ack_policy = 1;
@@ -188,6 +193,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		wcn36xx_error("bd address may not be NULL for BD DXE");
 		return -EINVAL;
 	}
+
 	memset(bd, 0, sizeof(*bd));
 
 	wcn36xx_dbg(WCN36XX_DBG_TX,
