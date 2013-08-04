@@ -27,11 +27,14 @@
 #include "pmc.h"
 
 #ifdef CONFIG_WCN36XX_DEBUGFS
+
 static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
 {
 	file->private_data = inode->i_private;
+
 	return 0;
 }
+
 static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
 				   size_t count, loff_t *ppos)
 {
@@ -42,8 +45,10 @@ static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
 		buf[0] = '1';
 	else
 		buf[0] = '0';
+
 	buf[1] = '\n';
 	buf[2] = 0x00;
+
 	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
 }
 
@@ -103,6 +108,7 @@ static ssize_t write_file_dump(struct file *file,
 		return -EFAULT;
 
 	tmp = buf;
+
 	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
 		char *begin;
 		begin = strsep(&tmp, " ");
@@ -126,17 +132,19 @@ static const struct file_operations fops_wcn36xx_dump = {
 };
 
 static ssize_t read_file_debug_mask(struct file *file, char __user *user_buf,
-				   size_t count, loff_t *ppos)
+				    size_t count, loff_t *ppos)
 {
 	char buf[32];
 	unsigned int len;
+
 	len = snprintf(buf, 32, "0x%08x\n", debug_mask);
+
 	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
 }
 
 static ssize_t write_file_debug_mask(struct file *file,
-				    const char __user *user_buf,
-				    size_t count, loff_t *ppos)
+				     const char __user *user_buf,
+				     size_t count, loff_t *ppos)
 {
 	unsigned long mask;
 	char buf[32];
@@ -147,10 +155,12 @@ static ssize_t write_file_debug_mask(struct file *file,
 		return -EFAULT;
 
 	buf[len] = '\0';
+
 	if (kstrtoul(buf, 0, &mask))
 		return -EINVAL;
 
 	debug_mask = mask;
+
 	return count;
 }
 
@@ -184,11 +194,12 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
 		wcn36xx_warn("Create the debugfs failed");
 		dfs->rootdir = NULL;
 	}
+
 	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
-		      &fops_wcn36xx_bmps, wcn);
+		 &fops_wcn36xx_bmps, wcn);
 	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
 	ADD_FILE(debug_mask, S_IRUSR | S_IWUSR,
-		      &fops_wcn36xx_debug_mask, wcn);
+		 &fops_wcn36xx_debug_mask, wcn);
 }
 
 void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
@@ -196,4 +207,5 @@ void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
 	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
 	debugfs_remove_recursive(dfs->rootdir);
 }
+
 #endif /* CONFIG_WCN36XX_DEBUGFS */
