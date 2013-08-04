@@ -30,23 +30,29 @@ void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low)
 	struct wcn36xx_dxe_ch *ch = is_low ?
 		&wcn->dxe_tx_l_ch :
 		&wcn->dxe_tx_h_ch;
+
 	return ch->head_blk_ctl->bd_cpu_addr;
 }
+
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wmb();
+
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
 		    addr, data);
+
 	writel_relaxed(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 {
 	*data = readl_relaxed(wcn->mmio + addr);
+
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
 		    addr, *data);
+
 	rmb();
 }
 
@@ -67,6 +73,7 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 	struct wcn36xx_dxe_ctl *prev_ctl = NULL;
 	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
 	int i;
+
 	for (i = 0; i < ch->desc_num; i++) {
 		cur_ctl = kzalloc(sizeof(*cur_ctl), GFP_KERNEL);
 		if (!cur_ctl)
@@ -84,7 +91,9 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
 		}
 		prev_ctl = cur_ctl;
 	}
+
 	return 0;
+
 out_fail:
 	wcn36xx_dxe_free_ctl_block(ch);
 	return -ENOMEM;
@@ -212,6 +221,7 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx_dxe_ch *wcn_ch)
 		prev_dxe = cur_dxe;
 		cur_dxe++;
 	}
+
 	return 0;
 }
 
@@ -221,8 +231,8 @@ static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
 	int i, chunk_size = pool->chunk_size;
 	dma_addr_t bd_phy_addr = pool->phy_addr;
 	void *bd_cpu_addr = pool->virt_addr;
-
 	struct wcn36xx_dxe_ctl *cur = ch->head_blk_ctl;
+
 	for (i = 0; i < ch->desc_num; i++) {
 		/* Only every second dxe needs a bd pointer,
 		   the other will point to the skb data */
@@ -242,13 +252,16 @@ static void wcn36xx_dxe_init_tx_bd(struct wcn36xx_dxe_ch *ch,
 static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
 {
 	int reg_data = 0;
+
 	wcn36xx_dxe_read_register(wcn,
-		WCN36XX_DXE_INT_MASK_REG,
-		&reg_data);
+				  WCN36XX_DXE_INT_MASK_REG,
+				  &reg_data);
+
 	reg_data |= wcn_ch;
+
 	wcn36xx_dxe_write_register(wcn,
-		WCN36XX_DXE_INT_MASK_REG,
-		(int)reg_data);
+				   WCN36XX_DXE_INT_MASK_REG,
+				   (int)reg_data);
 	return 0;
 }
 
@@ -260,11 +273,13 @@ static int wcn36xx_dxe_fill_skb(struct wcn36xx_dxe_ctl *ctl)
 	skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_ATOMIC);
 	if (skb == NULL)
 		return -ENOMEM;
+
 	dxe->dst_addr_l = dma_map_single(NULL,
 					 skb_tail_pointer(skb),
 					 WCN36XX_PKT_SIZE,
 					 DMA_FROM_DEVICE);
 	ctl->skb = skb;
+
 	return 0;
 }
 
@@ -273,12 +288,14 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn,
 {
 	int i;
 	struct wcn36xx_dxe_ctl *cur_ctl = NULL;
+
 	cur_ctl = wcn_ch->head_blk_ctl;
 
 	for (i = 0; i < wcn_ch->desc_num; i++) {
 		wcn36xx_dxe_fill_skb(cur_ctl);
 		cur_ctl = cur_ctl->next;
 	}
+
 	return 0;
 }
 
@@ -311,9 +328,12 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
 	}
 
 	info = IEEE80211_SKB_CB(skb);
+
 	if (status == 1)
 		info->flags |= IEEE80211_TX_STAT_ACK;
+
 	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ack status: %d", status);
+
 	ieee80211_tx_status_irqsafe(wcn->hw, skb);
 	ieee80211_wake_queues(wcn->hw);
 }
@@ -323,6 +343,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 	struct wcn36xx_dxe_ctl *ctl = ch->tail_blk_ctl;
 	struct ieee80211_tx_info *info;
 	unsigned long flags;
+
 	/*
 	 * Make at least one loop of do-while because in case ring is
 	 * completely full head and tail are pointing to the same element
@@ -349,8 +370,10 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
 		ctl = ctl->next;
 	} while (ctl != ch->head_blk_ctl &&
 	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
+
 	ch->tail_blk_ctl = ctl;
 }
+
 static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
@@ -362,6 +385,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 		wcn36xx_dxe_read_register(wcn,
 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H,
 					  &int_reason);
+
 		/* TODO: Check int_reason */
 
 		wcn36xx_dxe_write_register(wcn,
@@ -373,6 +397,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high");
 		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
 	}
+
 	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
 		wcn36xx_dxe_read_register(wcn,
 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L,
@@ -395,10 +420,13 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 static irqreturn_t wcn36xx_irq_rx_ready(int irq, void *dev)
 {
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
+
 	disable_irq_nosync(wcn->rx_irq);
 	queue_work(wcn->wq, &wcn->rx_ready_work);
+
 	return IRQ_HANDLED;
 }
+
 static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 {
 	int ret;
@@ -416,7 +444,9 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 		wcn36xx_error("failed to alloc rx irq");
 		goto out_txirq;
 	}
+
 	enable_irq_wake(wcn->rx_irq);
+
 	return 0;
 
 out_txirq:
@@ -460,6 +490,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 		ctl = ctl->next;
 		dxe = ctl->desc;
 	}
+
 	ch->head_blk_ctl = ctl;
 
 	return 0;
@@ -528,6 +559,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 	wcn->data_mem_pool.virt_addr = cpu_addr;
 	memset(cpu_addr, 0, s);
+
 	return 0;
 
 out_err:
@@ -543,6 +575,7 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 				  WCN36XX_DXE_CH_DESC_NUMB_TX_H,
 				  wcn->mgmt_mem_pool.virt_addr,
 				  wcn->mgmt_mem_pool.phy_addr);
+
 	if (wcn->data_mem_pool.virt_addr) {
 		dma_free_coherent(NULL, wcn->data_mem_pool.chunk_size *
 				  WCN36XX_DXE_CH_DESC_NUMB_TX_L,
@@ -563,7 +596,9 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
 
 	ctl = ch->head_blk_ctl;
+
 	spin_lock_irqsave(&ctl->next->skb_lock, flags);
+
 	/*
 	 * If skb is not null that means that we reached the tail of the ring
 	 * hence ring is full. Stop queues to let mac80211 back off until ring
@@ -576,6 +611,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 		return -EBUSY;
 	}
 	spin_unlock_irqrestore(&ctl->next->skb_lock, flags);
+
 	ctl->skb = NULL;
 	desc = ctl->desc;
 
@@ -639,8 +675,10 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 		wcn36xx_dxe_write_register(wcn,
 			ch->reg_ctrl, ch->def_ctrl);
 	}
+
 	return 0;
 }
+
 int wcn36xx_dxe_init(struct wcn36xx *wcn)
 {
 	int reg_data = 0, ret;
@@ -686,6 +724,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 		WCN36XX_DXE_WQ_TX_H);
 
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_REG_CH_EN, &reg_data);
+
 	/* Enable channel interrupts */
 	wcn36xx_dxe_enable_ch_int(wcn, WCN36XX_INT_MASK_CHAN_TX_H);
 
@@ -710,7 +749,6 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	wcn36xx_dxe_write_register(wcn,
 		WCN36XX_DXE_CH_DEST_ADDR_RX_L,
 		wcn->dxe_rx_l_ch.head_blk_ctl->desc->phy_next_l);
-
 
 	/* Enable default control registers */
 	wcn36xx_dxe_write_register(wcn,
@@ -753,6 +791,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn)
 	ret = wcn36xx_dxe_request_irqs(wcn);
 	if (ret < 0)
 		goto out_err;
+
 	return 0;
 
 out_err:
