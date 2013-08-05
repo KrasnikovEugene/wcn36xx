@@ -1271,8 +1271,10 @@ int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
 int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
 {
 	/* TODO: print the caps of rsp for comapre */
-	if (wcn36xx_smd_rsp_status_check(buf, len))
+	if (wcn36xx_smd_rsp_status_check(buf, len)) {
 		wcn36xx_warn("error response for caps exchange");
+		return -EIO;
+	}
 
 	return 0;
 }
