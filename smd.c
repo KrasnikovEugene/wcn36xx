@@ -1218,11 +1218,12 @@ static inline void set_feat_caps(u32 *bitmap,
 
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		bitmap[arr_idx] |= (1 << bit_idx);
+		return;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	bitmap[arr_idx] |= (1 << bit_idx);
 }
 
 static inline int get_feat_caps(u32 *bitmap,
@@ -1234,12 +1235,12 @@ static inline int get_feat_caps(u32 *bitmap,
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
 		return -EINVAL;
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
-		return ret;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
+	return ret;
 }
 
 static inline void clear_feat_caps(u32 *bitmap,
@@ -1249,11 +1250,12 @@ static inline void clear_feat_caps(u32 *bitmap,
 
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		bitmap[arr_idx] &= ~(1 << bit_idx);
+		return;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	bitmap[arr_idx] &= ~(1 << bit_idx);
 }
 
 int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
