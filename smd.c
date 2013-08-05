@@ -434,7 +434,6 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
 
-	/* TODO read this from config */
 	msg_body.dot11d_enabled	= 0;
 	msg_body.dot11d_resolved = 0;
 	msg_body.channel_count = 26;
@@ -1024,16 +1023,13 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 		    msg_body.beacon_length);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-};
+}
 
 int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 {
 	struct wcn36xx_hal_send_probe_resp_req_msg msg;
 
 	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
-
-	/* // TODO need to find out why this is needed? */
-	/* msg_body.beacon_length = skb_beacon->len + 6; */
 
 	if (skb->len > BEACON_TEMPLATE_SIZE) {
 		wcn36xx_warn("probe response template is too big: %d",
@@ -1053,7 +1049,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 		    msg.probe_resp_template_len, msg.bssid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
-};
+}
 
 int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,

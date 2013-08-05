@@ -893,7 +893,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
 
 	wcn->hw->queues = 4;
