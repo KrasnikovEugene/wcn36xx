@@ -655,10 +655,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 
-	if (!(wcn->fw_major == 1 &&
-	      wcn->fw_minor == 2 &&
-	      wcn->fw_version == 2 &&
-	      wcn->fw_revision == 24))
+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24))
 		return wcn36xx_smd_config_sta_v1(wcn, &msg);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
@@ -920,10 +917,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	bss->action = update;
 
-	if (!(wcn->fw_major == 1 &&
-		wcn->fw_minor == 2 &&
-		wcn->fw_version == 2 &&
-		wcn->fw_revision == 24))
+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24))
 		return wcn36xx_smd_config_bss_v1(wcn, &msg);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
