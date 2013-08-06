@@ -434,7 +434,6 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
 
-	/* TODO read this from config */
 	msg_body.dot11d_enabled	= 0;
 	msg_body.dot11d_resolved = 0;
 	msg_body.channel_count = 26;
@@ -655,10 +654,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 
-	if (!(wcn->fw_major == 1 &&
-	      wcn->fw_minor == 2 &&
-	      wcn->fw_version == 2 &&
-	      wcn->fw_revision == 24))
+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24))
 		return wcn36xx_smd_config_sta_v1(wcn, &msg);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
@@ -920,10 +916,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	bss->action = update;
 
-	if (!(wcn->fw_major == 1 &&
-		wcn->fw_minor == 2 &&
-		wcn->fw_version == 2 &&
-		wcn->fw_revision == 24))
+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24))
 		return wcn36xx_smd_config_bss_v1(wcn, &msg);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
@@ -1030,16 +1023,13 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 		    msg_body.beacon_length);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
-};
+}
 
 int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 {
 	struct wcn36xx_hal_send_probe_resp_req_msg msg;
 
 	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
-
-	/* // TODO need to find out why this is needed? */
-	/* msg_body.beacon_length = skb_beacon->len + 6; */
 
 	if (skb->len > BEACON_TEMPLATE_SIZE) {
 		wcn36xx_warn("probe response template is too big: %d",
@@ -1059,7 +1049,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 		    msg.probe_resp_template_len, msg.bssid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
-};
+}
 
 int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
@@ -1224,11 +1214,12 @@ static inline void set_feat_caps(u32 *bitmap,
 
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		bitmap[arr_idx] |= (1 << bit_idx);
+		return;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	bitmap[arr_idx] |= (1 << bit_idx);
 }
 
 static inline int get_feat_caps(u32 *bitmap,
@@ -1240,12 +1231,12 @@ static inline int get_feat_caps(u32 *bitmap,
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
 		return -EINVAL;
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
-		return ret;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
+	return ret;
 }
 
 static inline void clear_feat_caps(u32 *bitmap,
@@ -1255,11 +1246,12 @@ static inline void clear_feat_caps(u32 *bitmap,
 
 	if (cap < 0 || cap > 127) {
 		wcn36xx_warn("error cap idx %d", cap);
-	} else {
-		arr_idx = cap / 32;
-		bit_idx = cap % 32;
-		bitmap[arr_idx] &= ~(1 << bit_idx);
+		return;
 	}
+
+	arr_idx = cap / 32;
+	bit_idx = cap % 32;
+	bitmap[arr_idx] &= ~(1 << bit_idx);
 }
 
 int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
@@ -1279,8 +1271,10 @@ int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
 int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
 {
 	/* TODO: print the caps of rsp for comapre */
-	if (wcn36xx_smd_rsp_status_check(buf, len))
+	if (wcn36xx_smd_rsp_status_check(buf, len)) {
 		wcn36xx_warn("error response for caps exchange");
+		return -EIO;
+	}
 
 	return 0;
 }

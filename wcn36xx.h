@@ -94,6 +94,7 @@ static inline void buff_to_be(u32 *buf, size_t len)
 	for (i = 0; i < len; i++)
 		buf[i] = cpu_to_be32(buf[i]);
 }
+
 struct nv_data {
 	int	is_valid;
 	void	*table;
@@ -220,5 +221,17 @@ struct wcn36xx {
 #endif /* CONFIG_WCN36XX_DEBUGFS */
 
 };
+
+static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
+					 u8 major,
+					 u8 minor,
+					 u8 version,
+					 u8 revision)
+{
+	return (wcn->fw_major == major &&
+		wcn->fw_minor == minor &&
+		wcn->fw_version == version &&
+		wcn->fw_revision == revision);
+}
 
 #endif	/* _WCN36XX_H_ */

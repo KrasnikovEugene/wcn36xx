@@ -260,10 +260,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	wcn36xx_pmc_init(wcn);
 	wcn36xx_debugfs_init(wcn);
 
-	if (!(wcn->fw_major == 1 &&
-		wcn->fw_minor == 2 &&
-		wcn->fw_version == 2 &&
-		wcn->fw_revision == 24)) {
+	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
 		ret = wcn36xx_smd_feature_caps_exchange(wcn);
 		if (ret)
 			wcn36xx_warn("Exchange feature caps failed");
@@ -896,7 +893,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	/* TODO make a conf file where to read this information from */
 	wcn->hw->max_listen_interval = 200;
 
 	wcn->hw->queues = 4;
