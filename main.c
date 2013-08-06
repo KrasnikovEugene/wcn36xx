@@ -16,7 +16,6 @@
  */
 
 #include <linux/module.h>
-#include <linux/wcnss_wlan.h>
 #include <linux/firmware.h>
 #include <linux/platform_device.h>
 #include "wcn36xx.h"
@@ -24,13 +23,6 @@
 unsigned int debug_mask;
 module_param(debug_mask, uint, 0644);
 MODULE_PARM_DESC(debug_mask, "Debugging mask");
-
-/*
- * provide hw to module exit function
- *
- * FIXME: implement this properly, maybe with platform device?
- */
-static struct ieee80211_hw *private_hw;
 
 #define CHAN2G(_freq, _idx) { \
 	.band = IEEE80211_BAND_2GHZ, \
@@ -891,6 +883,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
+	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
+	wcn->hw->wiphy->addresses = wcn->addresses;
+
 	wcn->hw->max_listen_interval = 200;
 
 	wcn->hw->queues = 4;
@@ -954,14 +949,125 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 
 	return 0;
 }
+static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+					  struct platform_device *pdev)
+{
+	struct resource *res;
+	/* Set TX IRQ */
+	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
+					   "wcnss_wlantx_irq");
+	if (!res) {
+		wcn36xx_error("failed to get tx_irq");
+		return -ENOENT;
+	}
+	wcn->tx_irq = res->start;
+
+	/* Set RX IRQ */
+	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
+					   "wcnss_wlanrx_irq");
+	if (!res) {
+		wcn36xx_error("failed to get rx_irq");
+		return -ENOENT;
+	}
+	wcn->rx_irq = res->start;
+
+	/* Map the memory */
+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+						 "wcnss_mmio");
+	if (!res) {
+		wcn36xx_error("failed to get mmio");
+		return -ENOENT;
+	}
+	wcn->mmio = ioremap(res->start, resource_size(res));
+	if (!wcn->mmio) {
+		wcn36xx_error("failed to map io memory");
+		return -ENOMEM;
+	}
+	return 0;
+}
+
 static int __devinit wcn36xx_probe(struct platform_device *pdev)
 {
+	struct ieee80211_hw *hw;
+	struct wcn36xx *wcn;
+	int ret;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe");
+
+	hw = wcn36xx_alloc_hw();
+	if (!hw) {
+		wcn36xx_error("failed to alloc hw");
+		ret = -ENOMEM;
+		goto out_err;
+	}
+	platform_set_drvdata(pdev, hw);
+	wcn = hw->priv;
+	wcn->hw = hw;
+	wcn->dev = &pdev->dev;
+
+	mutex_init(&wcn->pm_mutex);
+	mutex_init(&wcn->smd_mutex);
+
+	/* Configuring supported rates */
+	wcn->supported_rates.op_rate_mode = STA_11n;
+	wcn->supported_rates.dsss_rates[0] = 0x82;
+	wcn->supported_rates.dsss_rates[1] = 0x84;
+	wcn->supported_rates.dsss_rates[2] = 0x8b;
+	wcn->supported_rates.dsss_rates[3] = 0x96;
+
+	wcn->supported_rates.ofdm_rates[0] = 0x0C;
+	wcn->supported_rates.ofdm_rates[1] = 0x12;
+	wcn->supported_rates.ofdm_rates[2] = 0x18;
+	wcn->supported_rates.ofdm_rates[3] = 0x24;
+	wcn->supported_rates.ofdm_rates[4] = 0x30;
+	wcn->supported_rates.ofdm_rates[5] = 0x48;
+	wcn->supported_rates.ofdm_rates[6] = 0x60;
+	wcn->supported_rates.ofdm_rates[7] = 0x6C;
+
+	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
+
+	wcn36xx_read_mac_addresses(wcn);
+	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
+
+	wcn->wq = create_workqueue("wcn36xx_wq");
+	if (!wcn->wq) {
+		wcn36xx_error("failed to allocate wq");
+		ret = -ENOMEM;
+		goto out_hw;
+	}
+	ret = wcn36xx_platform_get_resources(wcn, pdev);
+	if (ret)
+		goto out_wq;
+
+	wcn36xx_init_ieee80211(wcn);
+	ret = ieee80211_register_hw(wcn->hw);
+	if (ret)
+		goto out_unmap;
+
 	return 0;
+
+out_unmap:
+	iounmap(wcn->mmio);
+out_wq:
+	destroy_workqueue(wcn->wq);
+out_hw:
+	ieee80211_free_hw(hw);
+out_err:
+	return ret;
 }
 static int __devexit wcn36xx_remove(struct platform_device *pdev)
 {
+	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
+	struct wcn36xx *wcn = hw->priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform remove");
+
+	mutex_destroy(&wcn->pm_mutex);
+	mutex_destroy(&wcn->smd_mutex);
+
+	ieee80211_unregister_hw(hw);
+	destroy_workqueue(wcn->wq);
+	iounmap(wcn->mmio);
+	ieee80211_free_hw(hw);
+
 	return 0;
 }
 static const struct platform_device_id wcn36xx_platform_id_table[] = {
@@ -985,116 +1091,14 @@ static struct platform_driver wcn36xx_driver = {
 
 static int __init wcn36xx_init(void)
 {
-	struct ieee80211_hw *hw;
-	struct wcn36xx *wcn;
-	struct resource *wcnss_memory;
-	int ret;
-
-	hw = wcn36xx_alloc_hw();
-	if (!hw) {
-		wcn36xx_error("failed to alloc hw");
-		ret = -ENOMEM;
-		goto out_err;
-	}
-
-	wcn = hw->priv;
-	wcn->hw = hw;
-
-	wcn->dev = wcnss_wlan_get_device();
-	if (wcn->dev == NULL) {
-		wcn36xx_error("failed to get wcnss wlan device");
-		ret = -ENOENT;
-		goto out_err;
-	}
-
-	wcn->wq = create_workqueue("wcn36xx_wq");
-	if (!wcn->wq) {
-		wcn36xx_error("failed to allocate wq");
-		ret = -ENOMEM;
-		goto out_err;
-	}
-
-	wcn36xx_init_ieee80211(wcn);
-
-	/* Configuring supported rates */
-	wcn->supported_rates.op_rate_mode = STA_11n;
-	wcn->supported_rates.dsss_rates[0] = 0x82;
-	wcn->supported_rates.dsss_rates[1] = 0x84;
-	wcn->supported_rates.dsss_rates[2] = 0x8b;
-	wcn->supported_rates.dsss_rates[3] = 0x96;
-
-	wcn->supported_rates.ofdm_rates[0] = 0x0C;
-	wcn->supported_rates.ofdm_rates[1] = 0x12;
-	wcn->supported_rates.ofdm_rates[2] = 0x18;
-	wcn->supported_rates.ofdm_rates[3] = 0x24;
-	wcn->supported_rates.ofdm_rates[4] = 0x30;
-	wcn->supported_rates.ofdm_rates[5] = 0x48;
-	wcn->supported_rates.ofdm_rates[6] = 0x60;
-	wcn->supported_rates.ofdm_rates[7] = 0x6C;
-
-	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
-
-	wcn->aid = 0;
-	wcn->current_vif = NULL;
-	wcn->is_joining = false;
-
-	mutex_init(&wcn->pm_mutex);
-	mutex_init(&wcn->smd_mutex);
-	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
-	wcn->hw->wiphy->addresses = wcn->addresses;
-
-	wcnss_memory = wcnss_wlan_get_memory_map(wcn->dev);
-	if (wcnss_memory == NULL) {
-		wcn36xx_error("failed to get wcnss wlan memory map");
-		ret = -ENOMEM;
-		goto out_wq;
-	}
-
-	wcn->tx_irq = wcnss_wlan_get_dxe_tx_irq(wcn->dev);
-	wcn->rx_irq = wcnss_wlan_get_dxe_rx_irq(wcn->dev);
-
-	wcn->mmio = ioremap(wcnss_memory->start, resource_size(wcnss_memory));
-	if (NULL == wcn->mmio) {
-		wcn36xx_error("failed to map io memory");
-		ret = -ENOMEM;
-		goto out_wq;
-	}
-
-	private_hw = hw;
-	wcn->beacon_enable = false;
-
-	wcn36xx_read_mac_addresses(wcn);
-	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
-
-	ret = ieee80211_register_hw(wcn->hw);
-	if (ret)
-		goto out_unmap;
-
 	platform_driver_register(&wcn36xx_driver);
 	return 0;
-
-out_unmap:
-	iounmap(wcn->mmio);
-out_wq:
-	destroy_workqueue(wcn->wq);
-out_err:
-	return ret;
 }
 module_init(wcn36xx_init);
 
 static void __exit wcn36xx_exit(void)
 {
-	struct ieee80211_hw *hw = private_hw;
-	struct wcn36xx *wcn = hw->priv;
-
 	platform_driver_unregister(&wcn36xx_driver);
-	mutex_destroy(&wcn->pm_mutex);
-	mutex_destroy(&wcn->smd_mutex);
-
-	ieee80211_unregister_hw(hw);
-	destroy_workqueue(wcn->wq);
-	iounmap(wcn->mmio);
-	ieee80211_free_hw(hw);
 }
 module_exit(wcn36xx_exit);
 
