@@ -18,6 +18,7 @@
 #include <linux/module.h>
 #include <linux/wcnss_wlan.h>
 #include <linux/firmware.h>
+#include <linux/platform_device.h>
 #include "wcn36xx.h"
 
 unsigned int debug_mask;
@@ -956,6 +957,34 @@ static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
 
 	return 0;
 }
+static int __devinit wcn36xx_probe(struct platform_device *pdev)
+{
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_probe");
+	return 0;
+}
+static int __devexit wcn36xx_remove(struct platform_device *pdev)
+{
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_remove");
+	return 0;
+}
+static const struct platform_device_id wcn36xx_platform_id_table[] = {
+	{
+		.name = "wcn36xx",
+		.driver_data = 0
+	},
+	{}
+};
+MODULE_DEVICE_TABLE(platform, wcn36xx_platform_id_table);
+
+static struct platform_driver wcn36xx_driver = {
+	.probe      = wcn36xx_probe,
+	.remove     = wcn36xx_remove,
+	.driver         = {
+		.name   = "wcn36xx",
+		.owner  = THIS_MODULE,
+	},
+	.id_table    = wcn36xx_platform_id_table,
+};
 
 static int __init wcn36xx_init(void)
 {
@@ -1044,6 +1073,7 @@ static int __init wcn36xx_init(void)
 	if (ret)
 		goto out_unmap;
 
+	platform_driver_register(&wcn36xx_driver);
 	return 0;
 
 out_unmap:
@@ -1060,6 +1090,7 @@ static void __exit wcn36xx_exit(void)
 	struct ieee80211_hw *hw = private_hw;
 	struct wcn36xx *wcn = hw->priv;
 
+	platform_driver_unregister(&wcn36xx_driver);
 	mutex_destroy(&wcn->pm_mutex);
 	mutex_destroy(&wcn->smd_mutex);
 
