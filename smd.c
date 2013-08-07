@@ -143,34 +143,10 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
-	int avail;
-	int ret = 0;
-
-	init_completion(&wcn->smd_compl);
-	avail = smd_write_avail(wcn->smd_ch);
-
+	int ret;
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD >>> ", wcn->smd_buf, len);
 
-	if (avail >= len) {
-		avail = smd_write(wcn->smd_ch, wcn->smd_buf, len);
-		if (avail != len) {
-			wcn36xx_error("Cannot write to SMD channel");
-			ret = -EAGAIN;
-			goto out;
-		}
-	} else {
-		wcn36xx_error("SMD channel can accept only %d bytes", avail);
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	if (wait_for_completion_timeout(&wcn->smd_compl,
-		msecs_to_jiffies(SMD_MSG_TIMEOUT)) <= 0) {
-		wcn36xx_error("Timeout while waiting SMD response");
-		ret = -ETIME;
-		goto out;
-	}
-out:
+	ret = wcn->ctrl_ops->tx(wcn->smd_buf, len);
 	mutex_unlock(&wcn->smd_mutex);
 	return ret;
 }
@@ -1356,29 +1332,6 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
 
-static void wcn36xx_smd_notify(void *data, unsigned event)
-{
-	struct wcn36xx *wcn = (struct wcn36xx *)data;
-
-	switch (event) {
-	case SMD_EVENT_OPEN:
-		complete(&wcn->smd_compl);
-		break;
-	case SMD_EVENT_DATA:
-		queue_work(wcn->wq, &wcn->smd_work);
-		break;
-	case SMD_EVENT_CLOSE:
-		break;
-	case SMD_EVENT_STATUS:
-		break;
-	case SMD_EVENT_REOPEN_READY:
-		break;
-	default:
-		wcn36xx_error("SMD_EVENT (%d) not supported", event);
-		break;
-	}
-}
-
 static int wcn36xx_smd_tx_compl_ind(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_tx_compl_ind_msg *rsp = buf;
@@ -1527,70 +1480,12 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	}
 }
 
-static void wcn36xx_smd_work(struct work_struct *work)
-{
-	int msg_len;
-	int avail;
-	void *msg;
-	int ret;
-	struct wcn36xx *wcn =
-		container_of(work, struct wcn36xx, smd_work);
-
-	if (!wcn)
-		return;
-
-	while (1) {
-		msg_len = smd_cur_packet_size(wcn->smd_ch);
-		if (0 == msg_len) {
-			complete(&wcn->smd_compl);
-			return;
-		}
-
-		avail = smd_read_avail(wcn->smd_ch);
-		if (avail < msg_len) {
-			complete(&wcn->smd_compl);
-			return;
-		}
-		msg = kmalloc(msg_len, GFP_KERNEL);
-		if (NULL == msg) {
-			complete(&wcn->smd_compl);
-			return;
-		}
-		ret = smd_read(wcn->smd_ch, msg, msg_len);
-		if (ret != msg_len) {
-			complete(&wcn->smd_compl);
-			return;
-		}
-		wcn36xx_smd_rsp_process(wcn, msg, msg_len);
-		kfree(msg);
-	}
-}
-
 int wcn36xx_smd_open(struct wcn36xx *wcn)
 {
-	int ret, left;
-
-	INIT_WORK(&wcn->smd_work, wcn36xx_smd_work);
-	init_completion(&wcn->smd_compl);
-
-	ret = smd_named_open_on_edge("WLAN_CTRL", SMD_APPS_WCNSS,
-				     &wcn->smd_ch, wcn, wcn36xx_smd_notify);
-	if (ret) {
-		wcn36xx_error("smd_named_open_on_edge failed: %d", ret);
-		return ret;
-	}
-
-	left = wait_for_completion_interruptible_timeout(&wcn->smd_compl,
-		msecs_to_jiffies(SMD_MSG_TIMEOUT));
-	if (left <= 0) {
-		wcn36xx_error("timeout waiting for smd open: %d", ret);
-		return left;
-	}
-
-	return 0;
+	return wcn->ctrl_ops->open(wcn, wcn36xx_smd_rsp_process);
 }
 
 void wcn36xx_smd_close(struct wcn36xx *wcn)
 {
-	smd_close(wcn->smd_ch);
+	wcn->ctrl_ops->close();
 }

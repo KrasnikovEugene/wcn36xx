@@ -204,9 +204,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_err;
 	}
 
-	/* Not to receive INT until the whole buf from SMD is read */
-	smd_disable_read_intr(wcn->smd_ch);
-
 	/* Allocate memory pools for Mgmt BD headers and Data BD headers */
 	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
 	if (ret) {
@@ -737,8 +734,6 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
 	wcn->is_suspended = true;
 	wcn->is_con_lost_pending = false;
 
-	flush_work(&wcn->smd_work);
-
 	mutex_unlock(&wcn->pm_mutex);
 
 	return 0;
@@ -1029,12 +1024,6 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 	wcn36xx_read_mac_addresses(wcn);
 	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
 
-	wcn->wq = create_workqueue("wcn36xx_wq");
-	if (!wcn->wq) {
-		wcn36xx_error("failed to allocate wq");
-		ret = -ENOMEM;
-		goto out_hw;
-	}
 	ret = wcn36xx_platform_get_resources(wcn, pdev);
 	if (ret)
 		goto out_wq;
@@ -1049,8 +1038,6 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 out_unmap:
 	iounmap(wcn->mmio);
 out_wq:
-	destroy_workqueue(wcn->wq);
-out_hw:
 	ieee80211_free_hw(hw);
 out_err:
 	return ret;
@@ -1065,7 +1052,6 @@ static int __devexit wcn36xx_remove(struct platform_device *pdev)
 	mutex_destroy(&wcn->smd_mutex);
 
 	ieee80211_unregister_hw(hw);
-	destroy_workqueue(wcn->wq);
 	iounmap(wcn->mmio);
 	ieee80211_free_hw(hw);
 

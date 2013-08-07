@@ -21,7 +21,6 @@
 #include <linux/completion.h>
 #include <linux/printk.h>
 #include <linux/spinlock.h>
-#include <linux/workqueue.h>
 #include <mach/msm_smd.h>
 #include <net/mac80211.h>
 
@@ -159,7 +158,6 @@ struct wcn36xx_sta {
 struct wcn36xx_dxe_ch;
 struct wcn36xx {
 	struct ieee80211_hw	*hw;
-	struct workqueue_struct	*wq;
 	struct device		*dev;
 	struct mac_address	addresses[2];
 	struct wcn36xx_hal_mac_ssid ssid;
@@ -193,18 +191,12 @@ struct wcn36xx {
 	struct wcn36xx_hal_supported_rates supported_rates;
 
 	struct wcn36xx_platform_ctrl_ops *ctrl_ops;
-	/* SMD related */
-	smd_channel_t		*smd_ch;
 	/*
 	 * smd_buf must be protected with smd_mutex to garantee
 	 * that all messages are sent one after another
 	 */
 	u8			*smd_buf;
 	struct mutex		smd_mutex;
-
-	struct work_struct	smd_work;
-	struct work_struct	start_work;
-	struct completion	smd_compl;
 
 	bool			is_joining;
 

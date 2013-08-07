@@ -14,15 +14,163 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <linux/completion.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
+#include <linux/workqueue.h>
+#include <mach/msm_smd.h>
 #include "../wcn36xx.h"
 
 struct wcn36xx_msm {
 	struct wcn36xx_platform_ctrl_ops ctrl_ops;
 	struct platform_device *core;
+	void *drv_priv;
+	void (*rsp_cb)(void *drv_priv, void *buf, size_t len);
+	/* SMD related */
+	struct workqueue_struct	*wq;
+	struct work_struct	smd_work;
+	struct completion	smd_compl;
+	smd_channel_t		*smd_ch;
 } wmsm;
+
+static int wcn36xx_msm_smd_send_and_wait(char *buf, size_t len)
+{
+	int avail;
+	int ret = 0;
+
+	init_completion(&wmsm.smd_compl);
+	avail = smd_write_avail(wmsm.smd_ch);
+
+	if (avail >= len) {
+		avail = smd_write(wmsm.smd_ch, buf, len);
+		if (avail != len) {
+			dev_err(&wmsm.core->dev,
+				"Cannot write to SMD channel\n");
+			ret = -EAGAIN;
+			goto out;
+		}
+	} else {
+		dev_err(&wmsm.core->dev,
+			"SMD channel can accept only %d bytes\n", avail);
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	if (wait_for_completion_timeout(&wmsm.smd_compl,
+		msecs_to_jiffies(SMD_MSG_TIMEOUT)) <= 0) {
+		dev_err(&wmsm.core->dev,
+			"Timeout while waiting SMD response\n");
+		ret = -ETIME;
+		goto out;
+	}
+out:
+	return ret;
+}
+
+static void wcn36xx_msm_smd_notify(void *data, unsigned event)
+{
+	struct wcn36xx_msm *wmsm_priv = (struct wcn36xx_msm *)data;
+
+	switch (event) {
+	case SMD_EVENT_OPEN:
+		complete(&wmsm_priv->smd_compl);
+		break;
+	case SMD_EVENT_DATA:
+		queue_work(wmsm_priv->wq, &wmsm_priv->smd_work);
+		break;
+	case SMD_EVENT_CLOSE:
+		break;
+	case SMD_EVENT_STATUS:
+		break;
+	case SMD_EVENT_REOPEN_READY:
+		break;
+	default:
+		dev_err(&wmsm_priv->core->dev,
+			"SMD_EVENT (%d) not supported\n", event);
+		break;
+	}
+}
+
+static void wcn36xx_msm_smd_work(struct work_struct *work)
+{
+	int avail;
+	int msg_len;
+	void *msg;
+	int ret;
+	struct wcn36xx_msm *wmsm_priv =
+		container_of(work, struct wcn36xx_msm, smd_work);
+
+	while (1) {
+		msg_len = smd_cur_packet_size(wmsm_priv->smd_ch);
+		if (0 == msg_len) {
+			complete(&wmsm_priv->smd_compl);
+			return;
+		}
+		avail = smd_read_avail(wmsm_priv->smd_ch);
+		if (avail < msg_len) {
+			complete(&wmsm_priv->smd_compl);
+			return;
+		}
+		msg = kmalloc(msg_len, GFP_KERNEL);
+		if (NULL == msg) {
+			complete(&wmsm_priv->smd_compl);
+			return;
+		}
+
+		ret = smd_read(wmsm_priv->smd_ch, msg, msg_len);
+		if (ret != msg_len) {
+			complete(&wmsm_priv->smd_compl);
+			return;
+		}
+		wmsm_priv->rsp_cb(wmsm_priv->drv_priv, msg, msg_len);
+		kfree(msg);
+	}
+}
+
+int wcn36xx_msm_smd_open(void *drv_priv, void *rsp_cb)
+{
+	int ret, left;
+	wmsm.drv_priv = drv_priv;
+	wmsm.rsp_cb = rsp_cb;
+	INIT_WORK(&wmsm.smd_work, wcn36xx_msm_smd_work);
+	init_completion(&wmsm.smd_compl);
+
+	wmsm.wq = create_workqueue("wcn36xx_msm_smd_wq");
+	if (!wmsm.wq) {
+		dev_err(&wmsm.core->dev, "failed to allocate wq");
+		ret = -ENOMEM;
+		return ret;
+	}
+
+	ret = smd_named_open_on_edge("WLAN_CTRL", SMD_APPS_WCNSS,
+		&wmsm.smd_ch, &wmsm, wcn36xx_msm_smd_notify);
+	if (ret) {
+		dev_err(&wmsm.core->dev,
+			"smd_named_open_on_edge failed: %d\n", ret);
+		return ret;
+	}
+
+	left = wait_for_completion_interruptible_timeout(&wmsm.smd_compl,
+		msecs_to_jiffies(SMD_MSG_TIMEOUT));
+	if (left <= 0) {
+		dev_err(&wmsm.core->dev,
+			"timeout waiting for smd open: %d\n", ret);
+		return left;
+	}
+
+	/* Not to receive INT until the whole buf from SMD is read */
+	smd_disable_read_intr(wmsm.smd_ch);
+
+	return 0;
+}
+
+void wcn36xx_msm_smd_close(void)
+{
+	smd_close(wmsm.smd_ch);
+	destroy_workqueue(wmsm.wq);
+	flush_workqueue(wmsm.wq);
+}
 
 static int __init wcn36xx_msm_init(void)
 {
@@ -34,6 +182,9 @@ static int __init wcn36xx_msm_init(void)
 	wmsm.core = platform_device_alloc("wcn36xx", -1);
 
 	memset(res, 0x00, sizeof(res));
+	wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
+	wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
+	wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
 
 	wcnss_memory =
 		platform_get_resource_byname(wcnss_get_platform_device(),
