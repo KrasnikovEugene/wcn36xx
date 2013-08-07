@@ -227,8 +227,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_free_dxe_pool;
 	}
 
-	INIT_WORK(&wcn->rx_ready_work, wcn36xx_rx_ready_work);
-
 	/* Maximum SMD message size is 4k */
 	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
 	if (!wcn->smd_buf) {
@@ -746,7 +744,6 @@ static int wcn36xx_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wow)
 	wcn->is_suspended = true;
 	wcn->is_con_lost_pending = false;
 
-	flush_work(&wcn->rx_ready_work);
 	flush_work(&wcn->smd_work);
 
 	mutex_unlock(&wcn->pm_mutex);
