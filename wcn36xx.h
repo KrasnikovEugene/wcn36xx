@@ -99,6 +99,18 @@ struct nv_data {
 	int	is_valid;
 	void	*table;
 };
+
+/* Interface for platform control path
+ *
+ * @open: hook must be called when wcn36xx wants to open control channel.
+ * @tx: sends a buffer.
+ */
+struct wcn36xx_platform_ctrl_ops {
+	int (*open)(void *drv_priv, void *rsp_cb);
+	void (*close)(void);
+	int (*tx)(char *buf, size_t len);
+};
+
 /**
  * struct wcn36xx_vif - holds VIF related fields
  *
@@ -180,6 +192,7 @@ struct wcn36xx {
 	/* Rates */
 	struct wcn36xx_hal_supported_rates supported_rates;
 
+	struct wcn36xx_platform_ctrl_ops *ctrl_ops;
 	/* SMD related */
 	smd_channel_t		*smd_ch;
 	/*
