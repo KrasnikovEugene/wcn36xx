@@ -77,7 +77,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 				 (char *)skb->data, skb->len);
 	}
 
-	ieee80211_rx_ni(wcn->hw, skb);
+	ieee80211_rx_irqsafe(wcn->hw, skb);
 
 	return 0;
 }

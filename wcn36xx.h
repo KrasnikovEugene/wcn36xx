@@ -191,7 +191,6 @@ struct wcn36xx {
 
 	struct work_struct	smd_work;
 	struct work_struct	start_work;
-	struct work_struct	rx_ready_work;
 	struct completion	smd_compl;
 
 	bool			is_joining;
