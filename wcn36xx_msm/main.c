@@ -68,6 +68,15 @@ static int __init wcn36xx_msm_init(void)
 	memcpy(&res[2], rx_irq, sizeof(*rx_irq));
 
 	platform_device_add_resources(wmsm.core, res, ARRAY_SIZE(res));
+
+	ret = platform_device_add_data(wmsm.core, &wmsm.ctrl_ops,
+				       sizeof(wmsm.ctrl_ops));
+	if (ret) {
+		dev_err(&wmsm.core->dev, "Can't add platform data\n");
+		ret = -ENOMEM;
+		return ret;
+	}
+
 	platform_device_add(wmsm.core);
 	return 0;
 }

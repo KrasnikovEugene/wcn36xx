@@ -1003,6 +1003,7 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 	wcn = hw->priv;
 	wcn->hw = hw;
 	wcn->dev = &pdev->dev;
+	wcn->ctrl_ops = pdev->dev.platform_data;
 
 	mutex_init(&wcn->pm_mutex);
 	mutex_init(&wcn->smd_mutex);
