@@ -286,16 +286,6 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	kfree(wcn->smd_buf);
 }
 
-static int wcn36xx_change_interface(struct ieee80211_hw *hw,
-				    struct ieee80211_vif *vif,
-				    enum nl80211_iftype new_type, bool p2p)
-{
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change interface vif %p new_type %d p2p %d",
-		    vif, new_type, p2p);
-
-	return 0;
-}
-
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
@@ -820,7 +810,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.suspend		= wcn36xx_suspend,
 	.resume			= wcn36xx_resume,
 #endif
-	.change_interface	= wcn36xx_change_interface,
 	.config			= wcn36xx_config,
 	.configure_filter	= wcn36xx_configure_filter,
 	.tx			= wcn36xx_tx,
