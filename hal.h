@@ -881,7 +881,7 @@ struct wcn36xx_hal_update_cfg_req_msg {
 	 * |   CFG_ID   |   CFG_LEN   |   CFG_BODY    |  CFG_ID  |......|
 	 */
 
-};
+} __packed;
 
 struct wcn36xx_hal_update_cfg_rsp_msg {
 	struct wcn36xx_hal_msg_header header;
@@ -889,7 +889,7 @@ struct wcn36xx_hal_update_cfg_rsp_msg {
 	/* success or failure */
 	u32 status;
 
-};
+} __packed;
 
 /* Frame control field format (2 bytes) */
 struct wcn36xx_hal_mac_frame_ctl {

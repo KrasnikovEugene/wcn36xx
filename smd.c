@@ -20,6 +20,30 @@
 #include <linux/bitops.h>
 #include "smd.h"
 
+static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
+{
+	struct wcn36xx_hal_cfg *entry;
+	u32 *val;
+
+	if (*len + sizeof(*entry) + sizeof(u32) >= WCN36XX_SMD_BUF_SIZE) {
+		wcn36xx_error("Not enough room for TLV entry");
+		return -ENOMEM;
+	}
+
+	entry = (struct wcn36xx_hal_cfg *) (wcn->smd_buf + *len);
+	entry->id = id;
+	entry->len = sizeof(u32);
+	entry->pad_bytes = 0;
+	entry->reserve = 0;
+
+	val = (u32 *) (entry + 1);
+	*val = value;
+
+	*len += sizeof(*entry) + sizeof(u32);
+
+	return 0;
+}
+
 static void wcn36xx_smd_set_bss_nw_type(struct wcn36xx *wcn,
 		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_bss_params *bss_params)
@@ -1405,6 +1429,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
 	return 0;
 }
 
+int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value)
+{
+	struct wcn36xx_hal_update_cfg_req_msg msg_body, *body;
+	size_t len;
+
+	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_CFG_REQ);
+
+	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
+
+	body = (struct wcn36xx_hal_update_cfg_req_msg *) wcn->smd_buf;
+	len = msg_body.header.len;
+
+	put_cfg_tlv_u32(wcn, &len, cfg_id, value);
+	body->header.len = len;
+	body->len = len - sizeof(*body);
+
+	return wcn36xx_smd_send_and_wait(wcn, len);
+}
 static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 {
 	struct wcn36xx_hal_msg_header *msg_header = buf;
@@ -1448,6 +1490,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_ADD_BA_RSP:
 	case WCN36XX_HAL_DEL_BA_RSP:
 	case WCN36XX_HAL_TRIGGER_BA_RSP:
+	case WCN36XX_HAL_UPDATE_CFG_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
 			wcn36xx_warn("error response from hal request %d",
 				     msg_header->msg_type);

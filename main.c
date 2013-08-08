@@ -640,6 +640,10 @@ out:
 /* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac set RTS threshold %d", value);
+
+	wcn36xx_smd_update_cfg(wcn, WCN36XX_HAL_CFG_RTS_THRESHOLD, value);
 	return 0;
 }
 
