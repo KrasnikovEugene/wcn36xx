@@ -91,29 +91,29 @@ static struct ieee80211_channel wcn_5ghz_channels[] = {
 }
 
 static struct ieee80211_rate wcn_2ghz_rates[] = {
-	RATE(10, 0x02, 0),
-	RATE(20, 0x04, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(55, 0x0B, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(110, 0x16, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(60, 0x0C, 0),
-	RATE(90, 0x12, 0),
-	RATE(120, 0x18, 0),
-	RATE(180, 0x24, 0),
-	RATE(240, 0x30, 0),
-	RATE(360, 0x48, 0),
-	RATE(480, 0x60, 0),
-	RATE(540, 0x6C, 0)
+	RATE(10, HW_RATE_INDEX_1MBPS, 0),
+	RATE(20, HW_RATE_INDEX_2MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(55, HW_RATE_INDEX_5_5MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(110, HW_RATE_INDEX_11MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(60, HW_RATE_INDEX_6MBPS, 0),
+	RATE(90, HW_RATE_INDEX_9MBPS, 0),
+	RATE(120, HW_RATE_INDEX_12MBPS, 0),
+	RATE(180, HW_RATE_INDEX_18MBPS, 0),
+	RATE(240, HW_RATE_INDEX_24MBPS, 0),
+	RATE(360, HW_RATE_INDEX_36MBPS, 0),
+	RATE(480, HW_RATE_INDEX_48MBPS, 0),
+	RATE(540, HW_RATE_INDEX_54MBPS, 0)
 };
 
 static struct ieee80211_rate wcn_5ghz_rates[] = {
-	RATE(60, 0x0C, 0),
-	RATE(90, 0x12, 0),
-	RATE(120, 0x18, 0),
-	RATE(180, 0x24, 0),
-	RATE(240, 0x30, 0),
-	RATE(360, 0x48, 0),
-	RATE(480, 0x60, 0),
-	RATE(540, 0x6C, 0)
+	RATE(60, HW_RATE_INDEX_6MBPS, 0),
+	RATE(90, HW_RATE_INDEX_9MBPS, 0),
+	RATE(120, HW_RATE_INDEX_12MBPS, 0),
+	RATE(180, HW_RATE_INDEX_18MBPS, 0),
+	RATE(240, HW_RATE_INDEX_24MBPS, 0),
+	RATE(360, HW_RATE_INDEX_36MBPS, 0),
+	RATE(480, HW_RATE_INDEX_48MBPS, 0),
+	RATE(540, HW_RATE_INDEX_54MBPS, 0)
 };
 
 static struct ieee80211_supported_band wcn_band_2ghz = {
@@ -925,6 +925,22 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 	struct ieee80211_hw *hw;
 	struct wcn36xx *wcn;
 	int ret;
+	u16 ofdm_rates[WCN36XX_HAL_NUM_OFDM_RATES] = {
+		HW_RATE_INDEX_6MBPS,
+		HW_RATE_INDEX_9MBPS,
+		HW_RATE_INDEX_12MBPS,
+		HW_RATE_INDEX_18MBPS,
+		HW_RATE_INDEX_24MBPS,
+		HW_RATE_INDEX_36MBPS,
+		HW_RATE_INDEX_48MBPS,
+		HW_RATE_INDEX_54MBPS
+	};
+	u16 dsss_rates[WCN36XX_HAL_NUM_DSSS_RATES] = {
+		HW_RATE_INDEX_1MBPS,
+		HW_RATE_INDEX_2MBPS,
+		HW_RATE_INDEX_5_5MBPS,
+		HW_RATE_INDEX_11MBPS
+	};
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe");
 
 	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
@@ -944,20 +960,10 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 
 	/* Configuring supported rates */
 	wcn->supported_rates.op_rate_mode = STA_11n;
-	wcn->supported_rates.dsss_rates[0] = 0x82;
-	wcn->supported_rates.dsss_rates[1] = 0x84;
-	wcn->supported_rates.dsss_rates[2] = 0x8b;
-	wcn->supported_rates.dsss_rates[3] = 0x96;
-
-	wcn->supported_rates.ofdm_rates[0] = 0x0C;
-	wcn->supported_rates.ofdm_rates[1] = 0x12;
-	wcn->supported_rates.ofdm_rates[2] = 0x18;
-	wcn->supported_rates.ofdm_rates[3] = 0x24;
-	wcn->supported_rates.ofdm_rates[4] = 0x30;
-	wcn->supported_rates.ofdm_rates[5] = 0x48;
-	wcn->supported_rates.ofdm_rates[6] = 0x60;
-	wcn->supported_rates.ofdm_rates[7] = 0x6C;
-
+	memcpy(wcn->supported_rates.dsss_rates, dsss_rates,
+		sizeof(*dsss_rates) * WCN36XX_HAL_NUM_DSSS_RATES);
+	memcpy(wcn->supported_rates.ofdm_rates, ofdm_rates,
+		sizeof(*ofdm_rates) * WCN36XX_HAL_NUM_OFDM_RATES);
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
 	if (!wcn->ctrl_ops->get_hw_mac(wcn->addresses.addr)) {
