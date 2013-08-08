@@ -16,7 +16,6 @@
  */
 
 #include <linux/module.h>
-#include <linux/firmware.h>
 #include <linux/platform_device.h>
 #include "wcn36xx.h"
 
@@ -612,7 +611,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->beacon_enable = true;
 			wcn->current_vif->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       wcn->addresses[0].addr, false);
+					       wcn->addresses.addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
@@ -878,8 +877,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
-	wcn->hw->wiphy->addresses = wcn->addresses;
+	wcn->hw->wiphy->n_addresses = 1;
+	wcn->hw->wiphy->addresses = &wcn->addresses;
 
 	wcn->hw->max_listen_interval = 200;
 
@@ -893,57 +892,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	return ret;
 }
 
-static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
-{
-	const struct firmware *addr_file = NULL;
-	int status;
-	u8 tmp[18];
-	static const u8 qcom_oui[3] = {0x00, 0x0A, 0xF5};
-	static const char *files[1] = {MAC_ADDR_0};
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
-		if (i > ARRAY_SIZE(files) - 1)
-			status = -1;
-		else
-			status = request_firmware(&addr_file, files[i],
-						  wcn->dev);
-
-		if (status) {
-			if (i == 0) {
-				/* Assign a random mac with Qualcomm oui */
-				wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
-					     files[i]);
-				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
-				get_random_bytes(wcn->addresses[i].addr + 3, 3);
-			} else {
-				wcn36xx_warn("Failed to read macaddress file, using a random address instead");
-				/* Assign locally administered mac addresses to
-				 * all but the first mac */
-				memcpy(wcn->addresses[i].addr,
-				       wcn->addresses[0].addr, ETH_ALEN);
-				wcn->addresses[i].addr[0] |= BIT(1);
-				get_random_bytes(wcn->addresses[i].addr + 3, 3);
-			}
-
-		} else {
-			memset(tmp, 0, sizeof(tmp));
-			memcpy(tmp, addr_file->data, sizeof(tmp) - 1);
-			sscanf(tmp, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-			       &wcn->addresses[i].addr[0],
-			       &wcn->addresses[i].addr[1],
-			       &wcn->addresses[i].addr[2],
-			       &wcn->addresses[i].addr[3],
-			       &wcn->addresses[i].addr[4],
-			       &wcn->addresses[i].addr[5]);
-
-			release_firmware(addr_file);
-		}
-		wcn36xx_info("mac%d: %pM", i, wcn->addresses[i].addr);
-	}
-
-	return 0;
-}
 static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 					  struct platform_device *pdev)
 {
@@ -1021,8 +969,10 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
-	wcn36xx_read_mac_addresses(wcn);
-	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
+	if (!wcn->ctrl_ops->get_hw_mac(wcn->addresses.addr)) {
+		wcn36xx_info("mac address: %pM", wcn->addresses.addr);
+		SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses.addr);
+	}
 
 	ret = wcn36xx_platform_get_resources(wcn, pdev);
 	if (ret)
@@ -1092,4 +1042,3 @@ module_exit(wcn36xx_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
 MODULE_FIRMWARE(WLAN_NV_FILE);
-MODULE_FIRMWARE(MAC_ADDR_0);

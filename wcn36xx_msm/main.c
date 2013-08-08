@@ -15,12 +15,15 @@
  */
 
 #include <linux/completion.h>
+#include <linux/firmware.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/wcnss_wlan.h>
 #include <linux/workqueue.h>
 #include <mach/msm_smd.h>
 #include "../wcn36xx.h"
+
+#define MAC_ADDR_0 "wlan/macaddr0"
 
 struct wcn36xx_msm {
 	struct wcn36xx_platform_ctrl_ops ctrl_ops;
@@ -33,6 +36,39 @@ struct wcn36xx_msm {
 	struct completion	smd_compl;
 	smd_channel_t		*smd_ch;
 } wmsm;
+
+static int wcn36xx_msm_get_hw_mac(u8 *addr)
+{
+	const struct firmware *addr_file = NULL;
+	int status;
+	u8 tmp[18];
+	static const u8 qcom_oui[3] = {0x00, 0x0A, 0xF5};
+	static const char *files = {MAC_ADDR_0};
+
+	status = request_firmware(&addr_file, files, &wmsm.core->dev);
+
+	if (status) {
+		/* Assign a random mac with Qualcomm oui */
+		dev_err(&wmsm.core->dev, "Failed to read macaddress file %s, using a random address instead",
+			     files);
+		memcpy(addr, qcom_oui, 3);
+		get_random_bytes(addr + 3, 3);
+	} else {
+		memset(tmp, 0, sizeof(tmp));
+		memcpy(tmp, addr_file->data, sizeof(tmp) - 1);
+		sscanf(tmp, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+		       &addr[0],
+		       &addr[1],
+		       &addr[2],
+		       &addr[3],
+		       &addr[4],
+		       &addr[5]);
+
+		release_firmware(addr_file);
+	}
+
+	return 0;
+}
 
 static int wcn36xx_msm_smd_send_and_wait(char *buf, size_t len)
 {
@@ -185,6 +221,7 @@ static int __init wcn36xx_msm_init(void)
 	wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
 	wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
 	wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
+	wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
 
 	wcnss_memory =
 		platform_get_resource_byname(wcnss_get_platform_device(),
@@ -240,3 +277,4 @@ module_init(wcn36xx_msm_init);
 module_exit(wcn36xx_msm_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
+MODULE_FIRMWARE(MAC_ADDR_0);
