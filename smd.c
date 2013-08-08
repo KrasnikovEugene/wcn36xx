@@ -389,7 +389,7 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch)
 	msg_body.channel_number = (u8)ch;
 	msg_body.tx_mgmt_power = 0xbf;
 	msg_body.max_tx_power = 0xbf;
-	memcpy(msg_body.self_sta_mac_addr, wcn->addresses[0].addr, ETH_ALEN);
+	memcpy(msg_body.self_sta_mac_addr, wcn->addresses.addr, ETH_ALEN);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
@@ -816,7 +816,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	memcpy(&bss->bssid, bssid, ETH_ALEN);
 
-	memcpy(&bss->self_mac_addr, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&bss->self_mac_addr, &wcn->addresses, ETH_ALEN);
 
 	if (vif->type == NL80211_IFTYPE_STATION) {
 		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
@@ -987,7 +987,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 			      msg_body.beacon_length);
 		return -ENOMEM;
 	}
-	memcpy(&msg_body.bssid, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&msg_body.bssid, &wcn->addresses, ETH_ALEN);
 
 	/* TODO need to find out why this is needed? */
 	msg_body.tim_ie_offset = tim_off+4;
@@ -1016,7 +1016,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	msg.probe_resp_template_len = skb->len;
 	memcpy(&msg.probe_resp_template, skb->data, skb->len);
 
-	memcpy(&msg.bssid, &wcn->addresses[0], ETH_ALEN);
+	memcpy(&msg.bssid, &wcn->addresses, ETH_ALEN);
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
