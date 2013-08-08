@@ -420,8 +420,8 @@ static irqreturn_t wcn36xx_irq_rx_ready(int irq, void *dev)
 	struct wcn36xx *wcn = (struct wcn36xx *)dev;
 
 	disable_irq_nosync(wcn->rx_irq);
-	queue_work(wcn->wq, &wcn->rx_ready_work);
-
+	wcn36xx_dxe_rx_frame(wcn);
+	enable_irq(wcn->rx_irq);
 	return IRQ_HANDLED;
 }
 
@@ -494,10 +494,8 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 	return 0;
 }
 
-void wcn36xx_rx_ready_work(struct work_struct *work)
+void wcn36xx_dxe_rx_frame(struct wcn36xx *wcn)
 {
-	struct wcn36xx *wcn =
-		container_of(work, struct wcn36xx, rx_ready_work);
 	int int_src;
 
 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
@@ -519,8 +517,6 @@ void wcn36xx_rx_ready_work(struct work_struct *work)
 
 	if (!int_src)
 		wcn36xx_warn("No DXE interrupt pending");
-
-	enable_irq(wcn->rx_irq);
 }
 
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
@@ -800,9 +796,6 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn)
 {
 	free_irq(wcn->tx_irq, wcn);
 	free_irq(wcn->rx_irq, wcn);
-
-	/* Flush any pending rx work */
-	flush_workqueue(wcn->wq);
 
 	if (wcn->tx_ack_skb) {
 		ieee80211_tx_status_irqsafe(wcn->hw, wcn->tx_ack_skb);
