@@ -830,15 +830,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.ampdu_action		= wcn36xx_ampdu_action,
 };
 
-static struct ieee80211_hw *wcn36xx_alloc_hw(void)
-{
-	struct ieee80211_hw *hw;
-
-	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
-
-	return hw;
-}
-
 static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
@@ -936,7 +927,7 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 	int ret;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe");
 
-	hw = wcn36xx_alloc_hw();
+	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
 	if (!hw) {
 		wcn36xx_error("failed to alloc hw");
 		ret = -ENOMEM;
