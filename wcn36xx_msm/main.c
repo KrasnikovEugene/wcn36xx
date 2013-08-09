@@ -168,8 +168,8 @@ int wcn36xx_msm_smd_open(void *drv_priv, void *rsp_cb)
 void wcn36xx_msm_smd_close(void)
 {
 	smd_close(wmsm.smd_ch);
-	destroy_workqueue(wmsm.wq);
 	flush_workqueue(wmsm.wq);
+	destroy_workqueue(wmsm.wq);
 }
 
 static int __init wcn36xx_msm_init(void)
