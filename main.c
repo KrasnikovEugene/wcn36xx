@@ -210,7 +210,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_smd_close;
 	}
 
-	wcn36xx_dxe_alloc_ctl_blks(wcn);
+	ret = wcn36xx_dxe_alloc_ctl_blks(wcn);
 	if (ret) {
 		wcn36xx_error("Failed to alloc DXE ctl blocks: %d", ret);
 		goto out_free_dxe_pool;
@@ -357,7 +357,6 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			      key_conf->cipher);
 		ret = -EOPNOTSUPP;
 		goto out;
-		break;
 	}
 
 	switch (cmd) {
@@ -756,7 +755,7 @@ static int wcn36xx_resume(struct ieee80211_hw *hw)
 
 #endif
 
-int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
+static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 		    struct ieee80211_vif *vif,
 		    enum ieee80211_ampdu_mlme_action action,
 		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
@@ -796,6 +795,8 @@ int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
 		break;
+	default:
+		wcn36xx_error("Unknown AMPDU action");
 	}
 
 	return 0;
