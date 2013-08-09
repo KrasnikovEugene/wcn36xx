@@ -33,8 +33,21 @@
 
 #define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
-#define MAC_ADDR_0 "wlan/macaddr0"
 #define WCN36XX_AGGR_BUFFER_SIZE 64
+enum {
+	HW_RATE_INDEX_1MBPS	= 0x82,
+	HW_RATE_INDEX_2MBPS	= 0x84,
+	HW_RATE_INDEX_5_5MBPS	= 0x8B,
+	HW_RATE_INDEX_6MBPS	= 0x0C,
+	HW_RATE_INDEX_9MBPS	= 0x12,
+	HW_RATE_INDEX_11MBPS	= 0x96,
+	HW_RATE_INDEX_12MBPS	= 0x18,
+	HW_RATE_INDEX_18MBPS	= 0x24,
+	HW_RATE_INDEX_24MBPS	= 0x30,
+	HW_RATE_INDEX_36MBPS	= 0x48,
+	HW_RATE_INDEX_48MBPS	= 0x60,
+	HW_RATE_INDEX_54MBPS	= 0x6C
+};
 
 extern unsigned int debug_mask;
 
@@ -108,6 +121,7 @@ struct wcn36xx_platform_ctrl_ops {
 	int (*open)(void *drv_priv, void *rsp_cb);
 	void (*close)(void);
 	int (*tx)(char *buf, size_t len);
+	int (*get_hw_mac)(u8 *addr);
 };
 
 /**
@@ -159,7 +173,7 @@ struct wcn36xx_dxe_ch;
 struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct device		*dev;
-	struct mac_address	addresses[2];
+	struct mac_address	addresses;
 	struct wcn36xx_hal_mac_ssid ssid;
 	u16			aid;
 	struct wcn36xx_vif	*current_vif;
