@@ -1114,6 +1114,21 @@ struct wcn36xx_hal_finish_scan_rsp_msg {
 
 } __packed;
 
+enum wcn36xx_hal_rate_index {
+	HW_RATE_INDEX_1MBPS	= 0x82,
+	HW_RATE_INDEX_2MBPS	= 0x84,
+	HW_RATE_INDEX_5_5MBPS	= 0x8B,
+	HW_RATE_INDEX_6MBPS	= 0x0C,
+	HW_RATE_INDEX_9MBPS	= 0x12,
+	HW_RATE_INDEX_11MBPS	= 0x96,
+	HW_RATE_INDEX_12MBPS	= 0x18,
+	HW_RATE_INDEX_18MBPS	= 0x24,
+	HW_RATE_INDEX_24MBPS	= 0x30,
+	HW_RATE_INDEX_36MBPS	= 0x48,
+	HW_RATE_INDEX_48MBPS	= 0x60,
+	HW_RATE_INDEX_54MBPS	= 0x6C
+};
+
 struct wcn36xx_hal_supported_rates {
 	/*
 	 * For Self STA Entry: this represents Self Mode.
