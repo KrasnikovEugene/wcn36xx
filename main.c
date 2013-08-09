@@ -16,7 +16,6 @@
  */
 
 #include <linux/module.h>
-#include <linux/firmware.h>
 #include <linux/platform_device.h>
 #include "wcn36xx.h"
 
@@ -92,29 +91,29 @@ static struct ieee80211_channel wcn_5ghz_channels[] = {
 }
 
 static struct ieee80211_rate wcn_2ghz_rates[] = {
-	RATE(10, 0x02, 0),
-	RATE(20, 0x04, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(55, 0x0B, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(110, 0x16, IEEE80211_RATE_SHORT_PREAMBLE),
-	RATE(60, 0x0C, 0),
-	RATE(90, 0x12, 0),
-	RATE(120, 0x18, 0),
-	RATE(180, 0x24, 0),
-	RATE(240, 0x30, 0),
-	RATE(360, 0x48, 0),
-	RATE(480, 0x60, 0),
-	RATE(540, 0x6C, 0)
+	RATE(10, HW_RATE_INDEX_1MBPS, 0),
+	RATE(20, HW_RATE_INDEX_2MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(55, HW_RATE_INDEX_5_5MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(110, HW_RATE_INDEX_11MBPS, IEEE80211_RATE_SHORT_PREAMBLE),
+	RATE(60, HW_RATE_INDEX_6MBPS, 0),
+	RATE(90, HW_RATE_INDEX_9MBPS, 0),
+	RATE(120, HW_RATE_INDEX_12MBPS, 0),
+	RATE(180, HW_RATE_INDEX_18MBPS, 0),
+	RATE(240, HW_RATE_INDEX_24MBPS, 0),
+	RATE(360, HW_RATE_INDEX_36MBPS, 0),
+	RATE(480, HW_RATE_INDEX_48MBPS, 0),
+	RATE(540, HW_RATE_INDEX_54MBPS, 0)
 };
 
 static struct ieee80211_rate wcn_5ghz_rates[] = {
-	RATE(60, 0x0C, 0),
-	RATE(90, 0x12, 0),
-	RATE(120, 0x18, 0),
-	RATE(180, 0x24, 0),
-	RATE(240, 0x30, 0),
-	RATE(360, 0x48, 0),
-	RATE(480, 0x60, 0),
-	RATE(540, 0x6C, 0)
+	RATE(60, HW_RATE_INDEX_6MBPS, 0),
+	RATE(90, HW_RATE_INDEX_9MBPS, 0),
+	RATE(120, HW_RATE_INDEX_12MBPS, 0),
+	RATE(180, HW_RATE_INDEX_18MBPS, 0),
+	RATE(240, HW_RATE_INDEX_24MBPS, 0),
+	RATE(360, HW_RATE_INDEX_36MBPS, 0),
+	RATE(480, HW_RATE_INDEX_48MBPS, 0),
+	RATE(540, HW_RATE_INDEX_54MBPS, 0)
 };
 
 static struct ieee80211_supported_band wcn_band_2ghz = {
@@ -218,7 +217,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	}
 
 	/* Maximum SMD message size is 4k */
-	wcn->smd_buf = kmalloc(4096, GFP_KERNEL);
+	wcn->smd_buf = kmalloc(WCN36XX_SMD_BUF_SIZE, GFP_KERNEL);
 	if (!wcn->smd_buf) {
 		wcn36xx_error("Failed to allocate smd buf");
 		ret = -ENOMEM;
@@ -285,16 +284,6 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_dxe_free_ctl_blks(wcn);
 
 	kfree(wcn->smd_buf);
-}
-
-static int wcn36xx_change_interface(struct ieee80211_hw *hw,
-				    struct ieee80211_vif *vif,
-				    enum nl80211_iftype new_type, bool p2p)
-{
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac change interface vif %p new_type %d p2p %d",
-		    vif, new_type, p2p);
-
-	return 0;
 }
 
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
@@ -612,7 +601,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn->beacon_enable = true;
 			wcn->current_vif->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       wcn->addresses[0].addr, false);
+					       wcn->addresses.addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
@@ -641,6 +630,10 @@ out:
 /* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac set RTS threshold %d", value);
+
+	wcn36xx_smd_update_cfg(wcn, WCN36XX_HAL_CFG_RTS_THRESHOLD, value);
 	return 0;
 }
 
@@ -817,7 +810,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.suspend		= wcn36xx_suspend,
 	.resume			= wcn36xx_resume,
 #endif
-	.change_interface	= wcn36xx_change_interface,
 	.config			= wcn36xx_config,
 	.configure_filter	= wcn36xx_configure_filter,
 	.tx			= wcn36xx_tx,
@@ -830,15 +822,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.sta_remove		= wcn36xx_sta_remove,
 	.ampdu_action		= wcn36xx_ampdu_action,
 };
-
-static struct ieee80211_hw *wcn36xx_alloc_hw(void)
-{
-	struct ieee80211_hw *hw;
-
-	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
-
-	return hw;
-}
 
 static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
@@ -878,8 +861,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	wcn->hw->wiphy->n_addresses = ARRAY_SIZE(wcn->addresses);
-	wcn->hw->wiphy->addresses = wcn->addresses;
+	wcn->hw->wiphy->n_addresses = 1;
+	wcn->hw->wiphy->addresses = &wcn->addresses;
 
 	wcn->hw->max_listen_interval = 200;
 
@@ -893,57 +876,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	return ret;
 }
 
-static int wcn36xx_read_mac_addresses(struct wcn36xx *wcn)
-{
-	const struct firmware *addr_file = NULL;
-	int status;
-	u8 tmp[18];
-	static const u8 qcom_oui[3] = {0x00, 0x0A, 0xF5};
-	static const char *files[1] = {MAC_ADDR_0};
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(wcn->addresses); i++) {
-		if (i > ARRAY_SIZE(files) - 1)
-			status = -1;
-		else
-			status = request_firmware(&addr_file, files[i],
-						  wcn->dev);
-
-		if (status) {
-			if (i == 0) {
-				/* Assign a random mac with Qualcomm oui */
-				wcn36xx_warn("Failed to read macaddress file %s, using a random address instead",
-					     files[i]);
-				memcpy(wcn->addresses[i].addr, qcom_oui, 3);
-				get_random_bytes(wcn->addresses[i].addr + 3, 3);
-			} else {
-				wcn36xx_warn("Failed to read macaddress file, using a random address instead");
-				/* Assign locally administered mac addresses to
-				 * all but the first mac */
-				memcpy(wcn->addresses[i].addr,
-				       wcn->addresses[0].addr, ETH_ALEN);
-				wcn->addresses[i].addr[0] |= BIT(1);
-				get_random_bytes(wcn->addresses[i].addr + 3, 3);
-			}
-
-		} else {
-			memset(tmp, 0, sizeof(tmp));
-			memcpy(tmp, addr_file->data, sizeof(tmp) - 1);
-			sscanf(tmp, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-			       &wcn->addresses[i].addr[0],
-			       &wcn->addresses[i].addr[1],
-			       &wcn->addresses[i].addr[2],
-			       &wcn->addresses[i].addr[3],
-			       &wcn->addresses[i].addr[4],
-			       &wcn->addresses[i].addr[5]);
-
-			release_firmware(addr_file);
-		}
-		wcn36xx_info("mac%d: %pM", i, wcn->addresses[i].addr);
-	}
-
-	return 0;
-}
 static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 					  struct platform_device *pdev)
 {
@@ -986,9 +918,25 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 	struct ieee80211_hw *hw;
 	struct wcn36xx *wcn;
 	int ret;
+	u16 ofdm_rates[WCN36XX_HAL_NUM_OFDM_RATES] = {
+		HW_RATE_INDEX_6MBPS,
+		HW_RATE_INDEX_9MBPS,
+		HW_RATE_INDEX_12MBPS,
+		HW_RATE_INDEX_18MBPS,
+		HW_RATE_INDEX_24MBPS,
+		HW_RATE_INDEX_36MBPS,
+		HW_RATE_INDEX_48MBPS,
+		HW_RATE_INDEX_54MBPS
+	};
+	u16 dsss_rates[WCN36XX_HAL_NUM_DSSS_RATES] = {
+		HW_RATE_INDEX_1MBPS,
+		HW_RATE_INDEX_2MBPS,
+		HW_RATE_INDEX_5_5MBPS,
+		HW_RATE_INDEX_11MBPS
+	};
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe");
 
-	hw = wcn36xx_alloc_hw();
+	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
 	if (!hw) {
 		wcn36xx_error("failed to alloc hw");
 		ret = -ENOMEM;
@@ -1005,24 +953,16 @@ static int __devinit wcn36xx_probe(struct platform_device *pdev)
 
 	/* Configuring supported rates */
 	wcn->supported_rates.op_rate_mode = STA_11n;
-	wcn->supported_rates.dsss_rates[0] = 0x82;
-	wcn->supported_rates.dsss_rates[1] = 0x84;
-	wcn->supported_rates.dsss_rates[2] = 0x8b;
-	wcn->supported_rates.dsss_rates[3] = 0x96;
-
-	wcn->supported_rates.ofdm_rates[0] = 0x0C;
-	wcn->supported_rates.ofdm_rates[1] = 0x12;
-	wcn->supported_rates.ofdm_rates[2] = 0x18;
-	wcn->supported_rates.ofdm_rates[3] = 0x24;
-	wcn->supported_rates.ofdm_rates[4] = 0x30;
-	wcn->supported_rates.ofdm_rates[5] = 0x48;
-	wcn->supported_rates.ofdm_rates[6] = 0x60;
-	wcn->supported_rates.ofdm_rates[7] = 0x6C;
-
+	memcpy(wcn->supported_rates.dsss_rates, dsss_rates,
+		sizeof(*dsss_rates) * WCN36XX_HAL_NUM_DSSS_RATES);
+	memcpy(wcn->supported_rates.ofdm_rates, ofdm_rates,
+		sizeof(*ofdm_rates) * WCN36XX_HAL_NUM_OFDM_RATES);
 	wcn->supported_rates.supported_mcs_set[0] = 0xFF;
 
-	wcn36xx_read_mac_addresses(wcn);
-	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses[0].addr);
+	if (!wcn->ctrl_ops->get_hw_mac(wcn->addresses.addr)) {
+		wcn36xx_info("mac address: %pM", wcn->addresses.addr);
+		SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses.addr);
+	}
 
 	ret = wcn36xx_platform_get_resources(wcn, pdev);
 	if (ret)
@@ -1092,4 +1032,3 @@ module_exit(wcn36xx_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
 MODULE_FIRMWARE(WLAN_NV_FILE);
-MODULE_FIRMWARE(MAC_ADDR_0);
