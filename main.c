@@ -488,6 +488,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct sk_buff *skb = NULL;
+	int i;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
 
@@ -620,6 +621,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 						link_state);
 		} else {
 			/* FIXME: disable beaconing */
+		}
+	}
+	if (changed & BSS_CHANGED_ARP_FILTER) {
+		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ARP filter enabled %pM", bss_conf->bssid);
+		for (i = 0; i < bss_conf->arp_addr_cnt; i++) {
+			wcn36xx_smd_keep_alive(wcn, WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP, bss_conf->arp_addr_list[i], -1, bss_conf->bssid);
 		}
 	}
 out:

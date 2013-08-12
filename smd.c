@@ -1167,18 +1167,21 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
 /* Notice: This function should be called after associated, or else it
  * will be invalid
  */
-int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
+int wcn36xx_smd_keep_alive(struct wcn36xx *wcn, int packet_type, u32 host_ipv4_addr, u32 dest_ipv4_addr, const u8 *dest_addr)
 {
 	struct wcn36xx_hal_keep_alive_req_msg msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_KEEP_ALIVE_REQ);
 
+	msg_body.packet_type = packet_type;
+	msg_body.bss_index = wcn->current_vif->bss_index;
+	msg_body.time_period = WCN36XX_KEEP_ALIVE_TIME_PERIOD;
 	if (packet_type == WCN36XX_HAL_KEEP_ALIVE_NULL_PKT) {
-		msg_body.bss_index = wcn->current_vif->bss_index;
-		msg_body.packet_type = WCN36XX_HAL_KEEP_ALIVE_NULL_PKT;
-		msg_body.time_period = WCN36XX_KEEP_ALIVE_TIME_PERIOD;
+
 	} else if (packet_type == WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP) {
-		/* TODO: it also support ARP response type */
+		memcpy(msg_body.host_ipv4_addr, &host_ipv4_addr, WCN36XX_HAL_IPV4_ADDR_LEN);
+		memcpy(msg_body.dest_ipv4_addr, &dest_ipv4_addr, WCN36XX_HAL_IPV4_ADDR_LEN);
+		memcpy(msg_body.dest_addr, dest_addr, ETH_ALEN);
 	} else {
 		wcn36xx_warn("unknow keep alive packet type %d", packet_type);
 		return -EINVAL;
