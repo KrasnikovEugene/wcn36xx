@@ -181,7 +181,6 @@ struct wcn36xx {
 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
 	u8			wlan_version[WCN36XX_HAL_VERSION_LENGTH + 1];
 
-	bool			beacon_enable;
 	/* IRQs */
 	int			tx_irq;
 	int			rx_irq;
