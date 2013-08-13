@@ -597,7 +597,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			    bss_conf->enable_beacon);
 
 		if (bss_conf->enable_beacon) {
-			wcn->beacon_enable = true;
 			wcn->current_vif->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       wcn->addresses.addr, false);
@@ -619,7 +618,9 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						link_state);
 		} else {
-			/* FIXME: disable beaconing */
+			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
+						WCN36XX_HAL_LINK_IDLE_STATE);
+			wcn36xx_smd_delete_bss(wcn);
 		}
 	}
 out:
