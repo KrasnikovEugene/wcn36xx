@@ -895,8 +895,6 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->ssid.length = wcn->ssid.length;
 	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
 
-	/* FIXME: set rateset */
-
 	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
 	bss->max_probe_resp_retry_limit = 0;
@@ -1001,7 +999,6 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 	/* TODO need to find out why this is needed? */
 	msg_body.beacon_length = skb_beacon->len + 6;
 
-	/* TODO make this as a const */
 	if (BEACON_TEMPLATE_SIZE > msg_body.beacon_length) {
 		memcpy(&msg_body.beacon, &skb_beacon->len, sizeof(u32));
 		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
