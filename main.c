@@ -224,7 +224,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_free_dxe_ctl;
 	}
 
-	/* TODO pass configuration to FW */
 	ret = wcn36xx_smd_load_nv(wcn);
 	if (ret) {
 		wcn36xx_error("Failed to push NV to chip");

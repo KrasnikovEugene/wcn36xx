@@ -140,7 +140,6 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	if (ret)
 		goto out_err;
 
-	/* TODO most probably do not need this */
 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
 	ret = smsm_change_state(SMSM_APPS_STATE,
 		WCN36XX_SMSM_WLAN_TX_ENABLE,
@@ -629,7 +628,6 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	ctl->skb = skb;
 	desc = ctl->desc;
 	if (ctl->bd_cpu_addr) {
-		/* TODO: Recover from this situation */
 		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE");
 		return -EINVAL;
 	}
