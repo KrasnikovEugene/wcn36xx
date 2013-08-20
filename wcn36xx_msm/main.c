@@ -37,6 +37,11 @@ struct wcn36xx_msm {
 	smd_channel_t		*smd_ch;
 } wmsm;
 
+static int wcn36xx_msm_smsm_change_state(u32 clear_mask, u32 set_mask)
+{
+	 return smsm_change_state(SMSM_APPS_STATE, clear_mask, set_mask);
+}
+
 static int wcn36xx_msm_get_hw_mac(u8 *addr)
 {
 	const struct firmware *addr_file = NULL;
@@ -222,7 +227,7 @@ static int __init wcn36xx_msm_init(void)
 	wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
 	wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
 	wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
-
+	wmsm.ctrl_ops.smsm_change_state = wcn36xx_msm_smsm_change_state;
 	wcnss_memory =
 		platform_get_resource_byname(wcnss_get_platform_device(),
 					      IORESOURCE_MEM,
