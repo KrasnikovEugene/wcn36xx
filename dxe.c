@@ -40,14 +40,12 @@ static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
 		    addr, data);
 
-	wmb();
-	writel_relaxed(data, wcn->mmio + addr);
+	writel(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 {
-	*data = readl_relaxed(wcn->mmio + addr);
-	rmb();
+	*data = readl(wcn->mmio + addr);
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
