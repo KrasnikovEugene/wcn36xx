@@ -21,7 +21,6 @@
 #include <linux/completion.h>
 #include <linux/printk.h>
 #include <linux/spinlock.h>
-#include <mach/msm_smd.h>
 #include <net/mac80211.h>
 
 #include "hal.h"
@@ -108,6 +107,7 @@ struct wcn36xx_platform_ctrl_ops {
 	void (*close)(void);
 	int (*tx)(char *buf, size_t len);
 	int (*get_hw_mac)(u8 *addr);
+	int (*smsm_change_state)(u32 clear_mask, u32 set_mask);
 };
 
 /**
