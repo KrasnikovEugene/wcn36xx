@@ -914,7 +914,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 	return 0;
 }
 
-static int __devinit wcn36xx_probe(struct platform_device *pdev)
+static int wcn36xx_probe(struct platform_device *pdev)
 {
 	struct ieee80211_hw *hw;
 	struct wcn36xx *wcn;
@@ -983,7 +983,7 @@ out_wq:
 out_err:
 	return ret;
 }
-static int __devexit wcn36xx_remove(struct platform_device *pdev)
+static int wcn36xx_remove(struct platform_device *pdev)
 {
 	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
 	struct wcn36xx *wcn = hw->priv;
