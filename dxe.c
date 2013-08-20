@@ -40,14 +40,12 @@ static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
 		    addr, data);
 
-	wmb();
-	writel_relaxed(data, wcn->mmio + addr);
+	writel(data, wcn->mmio + addr);
 }
 
 static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 {
-	*data = readl_relaxed(wcn->mmio + addr);
-	rmb();
+	*data = readl(wcn->mmio + addr);
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
 		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
@@ -141,7 +139,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 		goto out_err;
 
 	/* Initialize SMSM state  Clear TX Enable RING EMPTY STATE */
-	ret = smsm_change_state(SMSM_APPS_STATE,
+	ret = wcn->ctrl_ops->smsm_change_state(
 		WCN36XX_SMSM_WLAN_TX_ENABLE,
 		WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY);
 
@@ -657,7 +655,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	 * notify chip about new frame through SMSM bus.
 	 */
 	if (wcn->pw_state == WCN36XX_BMPS) {
-		smsm_change_state(SMSM_APPS_STATE,
+		wcn->ctrl_ops->smsm_change_state(
 				  0,
 				  WCN36XX_SMSM_WLAN_TX_ENABLE);
 	} else {
