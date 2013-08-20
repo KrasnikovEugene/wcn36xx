@@ -1030,6 +1030,6 @@ static void __exit wcn36xx_exit(void)
 }
 module_exit(wcn36xx_exit);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR("Eugene Krasnikov k.eugene.e@gmail.com");
 MODULE_FIRMWARE(WLAN_NV_FILE);
