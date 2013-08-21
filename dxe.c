@@ -38,7 +38,7 @@ void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low)
 static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
 {
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
-		    "wcn36xx_dxe_write_register: addr=%x, data=%x",
+		    "wcn36xx_dxe_write_register: addr=%x, data=%x\n",
 		    addr, data);
 
 	writel(data, wcn->mmio + addr);
@@ -49,7 +49,7 @@ static void wcn36xx_dxe_read_register(struct wcn36xx *wcn, int addr, int *data)
 	*data = readl(wcn->mmio + addr);
 
 	wcn36xx_dbg(WCN36XX_DBG_DXE,
-		    "wcn36xx_dxe_read_register: addr=%x, data=%x",
+		    "wcn36xx_dxe_read_register: addr=%x, data=%x\n",
 		    addr, *data);
 }
 
@@ -147,7 +147,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	return 0;
 
 out_err:
-	wcn36xx_error("Failed to allocate DXE control blocks");
+	wcn36xx_error("Failed to allocate DXE control blocks\n");
 	wcn36xx_dxe_free_ctl_blks(wcn);
 	return -ENOMEM;
 }
@@ -319,7 +319,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
 	spin_unlock_irqrestore(&wcn->dxe_lock, flags);
 
 	if (!skb) {
-		wcn36xx_warn("Spurious TX complete indication");
+		wcn36xx_warn("Spurious TX complete indication\n");
 		return;
 	}
 
@@ -328,7 +328,7 @@ void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status)
 	if (status == 1)
 		info->flags |= IEEE80211_TX_STAT_ACK;
 
-	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ack status: %d", status);
+	wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ack status: %d\n", status);
 
 	ieee80211_tx_status_irqsafe(wcn->hw, skb);
 	ieee80211_wake_queues(wcn->hw);
@@ -390,7 +390,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
 					   WCN36XX_INT_MASK_CHAN_TX_H);
-		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high");
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high\n");
 		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
 	}
 
@@ -406,7 +406,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
 
 		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
 					   WCN36XX_INT_MASK_CHAN_TX_L);
-		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low");
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low\n");
 		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
 	}
 
@@ -430,14 +430,14 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 	ret = request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete,
 			  IRQF_TRIGGER_HIGH, "wcn36xx_tx", wcn);
 	if (ret) {
-		wcn36xx_error("failed to alloc tx irq");
+		wcn36xx_error("failed to alloc tx irq\n");
 		goto out_err;
 	}
 
 	ret = request_irq(wcn->rx_irq, wcn36xx_irq_rx_ready, IRQF_TRIGGER_HIGH,
 			  "wcn36xx_rx", wcn);
 	if (ret) {
-		wcn36xx_error("failed to alloc rx irq");
+		wcn36xx_error("failed to alloc rx irq\n");
 		goto out_txirq;
 	}
 
@@ -477,7 +477,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
 						   WCN36XX_DXE_INT_CH3_MASK);
 			break;
 		default:
-			wcn36xx_warn("Unknown channel");
+			wcn36xx_warn("Unknown channel\n");
 		}
 
 		dma_unmap_single(NULL, dma_addr, WCN36XX_PKT_SIZE,
@@ -514,7 +514,7 @@ void wcn36xx_dxe_rx_frame(struct wcn36xx *wcn)
 	}
 
 	if (!int_src)
-		wcn36xx_warn("No DXE interrupt pending");
+		wcn36xx_warn("No DXE interrupt pending\n");
 }
 
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
@@ -556,7 +556,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 out_err:
 	wcn36xx_dxe_free_mem_pools(wcn);
-	wcn36xx_error("Failed to allocate BD mempool");
+	wcn36xx_error("Failed to allocate BD mempool\n");
 	return -ENOMEM;
 }
 
@@ -614,7 +614,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
 	desc->ctrl = ch->ctrl_bd;
 
-	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX");
+	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX\n");
 
 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
 			 (char *)desc, sizeof(*desc));
@@ -627,7 +627,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	ctl->skb = skb;
 	desc = ctl->desc;
 	if (ctl->bd_cpu_addr) {
-		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE");
+		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE\n");
 		return -EINVAL;
 	}
 
