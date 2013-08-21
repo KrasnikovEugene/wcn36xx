@@ -29,7 +29,6 @@
 #include "pmc.h"
 #include "debug.h"
 
-#define DRIVER_PREFIX "wcn36xx: "
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
 #define WCN36XX_AGGR_BUFFER_SIZE 64
 
@@ -54,25 +53,23 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
-#define wcn36xx_error(fmt, arg...) do {			\
-	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg);	\
-	__WARN();					\
-} while (0)
+#define wcn36xx_error(fmt, arg...)				\
+	printk(KERN_ERR pr_fmt("ERROR " fmt "\n"), ##arg);
 
 #define wcn36xx_warn(fmt, arg...)				\
-	pr_warn(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
+	printk(KERN_WARNING pr_fmt("WARNING " fmt "\n"), ##arg)
 
 #define wcn36xx_info(fmt, arg...)		\
-	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
+	printk(KERN_INFO pr_fmt(fmt "\n"), ##arg)
 
 #define wcn36xx_dbg(mask, fmt, arg...) do {			\
 	if (debug_mask & mask)					\
-		pr_debug(DRIVER_PREFIX fmt "\n", ##arg);	\
+		printk(KERN_DEBUG pr_fmt(fmt "\n"), ##arg);	\
 } while (0)
 
 #define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
 	if (debug_mask & mask)					\
-		print_hex_dump(KERN_DEBUG, prefix_str,		\
+		print_hex_dump(KERN_DEBUG, pr_fmt(prefix_str),	\
 			       DUMP_PREFIX_OFFSET, 32, 1,	\
 			       buf, len, false);		\
 } while (0)
