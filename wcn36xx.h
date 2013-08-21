@@ -53,7 +53,7 @@ enum wcn36xx_debug_mask {
 	WCN36XX_DBG_ANY		= 0xffffffff,
 };
 
-#define wcn36xx_error(fmt, arg...)				\
+#define wcn36xx_err(fmt, arg...)				\
 	printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
 
 #define wcn36xx_warn(fmt, arg...)				\

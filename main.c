@@ -200,47 +200,47 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 	/* SMD initialization */
 	ret = wcn36xx_smd_open(wcn);
 	if (ret) {
-		wcn36xx_error("Failed to open smd channel: %d\n", ret);
+		wcn36xx_err("Failed to open smd channel: %d\n", ret);
 		goto out_err;
 	}
 
 	/* Allocate memory pools for Mgmt BD headers and Data BD headers */
 	ret = wcn36xx_dxe_allocate_mem_pools(wcn);
 	if (ret) {
-		wcn36xx_error("Failed to alloc DXE mempool: %d\n", ret);
+		wcn36xx_err("Failed to alloc DXE mempool: %d\n", ret);
 		goto out_smd_close;
 	}
 
 	ret = wcn36xx_dxe_alloc_ctl_blks(wcn);
 	if (ret) {
-		wcn36xx_error("Failed to alloc DXE ctl blocks: %d\n", ret);
+		wcn36xx_err("Failed to alloc DXE ctl blocks: %d\n", ret);
 		goto out_free_dxe_pool;
 	}
 
 	/* Maximum SMD message size is 4k */
 	wcn->smd_buf = kmalloc(WCN36XX_SMD_BUF_SIZE, GFP_KERNEL);
 	if (!wcn->smd_buf) {
-		wcn36xx_error("Failed to allocate smd buf\n");
+		wcn36xx_err("Failed to allocate smd buf\n");
 		ret = -ENOMEM;
 		goto out_free_dxe_ctl;
 	}
 
 	ret = wcn36xx_smd_load_nv(wcn);
 	if (ret) {
-		wcn36xx_error("Failed to push NV to chip\n");
+		wcn36xx_err("Failed to push NV to chip\n");
 		goto out_free_smd_buf;
 	}
 
 	ret = wcn36xx_smd_start(wcn);
 	if (ret) {
-		wcn36xx_error("Failed to start chip\n");
+		wcn36xx_err("Failed to start chip\n");
 		goto out_free_smd_buf;
 	}
 
 	/* DMA channel initialization */
 	ret = wcn36xx_dxe_init(wcn);
 	if (ret) {
-		wcn36xx_error("DXE init failed\n");
+		wcn36xx_err("DXE init failed\n");
 		goto out_smd_stop;
 	}
 
@@ -353,7 +353,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		wcn->encrypt_type = WCN36XX_HAL_ED_TKIP;
 		break;
 	default:
-		wcn36xx_error("Unsupported key type 0x%x\n",
+		wcn36xx_err("Unsupported key type 0x%x\n",
 			      key_conf->cipher);
 		ret = -EOPNOTSUPP;
 		goto out;
@@ -416,7 +416,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		}
 		break;
 	default:
-		wcn36xx_error("Unsupported key cmd 0x%x\n", cmd);
+		wcn36xx_err("Unsupported key cmd 0x%x\n", cmd);
 		ret = -EOPNOTSUPP;
 		goto out;
 		break;
@@ -548,7 +548,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			rcu_read_lock();
 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
 			if (!sta) {
-				wcn36xx_error("sta %pM is not found\n",
+				wcn36xx_err("sta %pM is not found\n",
 					      bss_conf->bssid);
 				rcu_read_unlock();
 				goto out;
@@ -583,7 +583,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp\n");
 		skb = ieee80211_proberesp_get(hw, vif);
 		if (!skb) {
-			wcn36xx_error("failed to alloc probereq skb\n");
+			wcn36xx_err("failed to alloc probereq skb\n");
 			goto out;
 		}
 
@@ -603,7 +603,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
-				wcn36xx_error("failed to alloc beacon skb\n");
+				wcn36xx_err("failed to alloc beacon skb\n");
 				goto out;
 			}
 			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
@@ -797,7 +797,7 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
 		break;
 	default:
-		wcn36xx_error("Unknown AMPDU action\n");
+		wcn36xx_err("Unknown AMPDU action\n");
 	}
 
 	return 0;
@@ -886,7 +886,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
 					   "wcnss_wlantx_irq");
 	if (!res) {
-		wcn36xx_error("failed to get tx_irq\n");
+		wcn36xx_err("failed to get tx_irq\n");
 		return -ENOENT;
 	}
 	wcn->tx_irq = res->start;
@@ -895,7 +895,7 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 	res = platform_get_resource_byname(pdev, IORESOURCE_IRQ,
 					   "wcnss_wlanrx_irq");
 	if (!res) {
-		wcn36xx_error("failed to get rx_irq\n");
+		wcn36xx_err("failed to get rx_irq\n");
 		return -ENOENT;
 	}
 	wcn->rx_irq = res->start;
@@ -904,12 +904,12 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
 						 "wcnss_mmio");
 	if (!res) {
-		wcn36xx_error("failed to get mmio\n");
+		wcn36xx_err("failed to get mmio\n");
 		return -ENOENT;
 	}
 	wcn->mmio = ioremap(res->start, resource_size(res));
 	if (!wcn->mmio) {
-		wcn36xx_error("failed to map io memory\n");
+		wcn36xx_err("failed to map io memory\n");
 		return -ENOMEM;
 	}
 	return 0;
@@ -940,7 +940,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
 
 	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
 	if (!hw) {
-		wcn36xx_error("failed to alloc hw\n");
+		wcn36xx_err("failed to alloc hw\n");
 		ret = -ENOMEM;
 		goto out_err;
 	}

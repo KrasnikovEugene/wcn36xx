@@ -194,7 +194,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		 * wierd. TODO: Recover from this situation
 		 */
 
-		wcn36xx_error("bd address may not be NULL for BD DXE\n");
+		wcn36xx_err("bd address may not be NULL for BD DXE\n");
 		return -EINVAL;
 	}
 
