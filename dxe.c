@@ -20,6 +20,8 @@
  * through high channels managment packets are transfered
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/interrupt.h>
 #include "wcn36xx.h"
 #include "txrx.h"
