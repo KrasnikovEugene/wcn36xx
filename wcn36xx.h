@@ -90,7 +90,7 @@ static inline void buff_to_be(u32 *buf, size_t len)
 
 struct nv_data {
 	int	is_valid;
-	void	*table;
+	u8	table;
 };
 
 /* Interface for platform control path

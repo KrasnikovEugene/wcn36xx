@@ -254,9 +254,8 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 		memcpy(wcn->smd_buf, &msg_body,	sizeof(msg_body));
 
 		/* Add NV body itself */
-		/* Rework me */
 		memcpy(wcn->smd_buf + sizeof(msg_body),
-		       (void *)(&nv_d->table) + fm_offset,
+		       &nv_d->table + fm_offset,
 		       msg_body.nv_img_buffer_size);
 
 		ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
