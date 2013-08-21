@@ -54,17 +54,17 @@ enum wcn36xx_debug_mask {
 };
 
 #define wcn36xx_error(fmt, arg...)				\
-	printk(KERN_ERR pr_fmt("ERROR " fmt "\n"), ##arg);
+	printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
 
 #define wcn36xx_warn(fmt, arg...)				\
-	printk(KERN_WARNING pr_fmt("WARNING " fmt "\n"), ##arg)
+	printk(KERN_WARNING pr_fmt("WARNING " fmt), ##arg)
 
 #define wcn36xx_info(fmt, arg...)		\
-	printk(KERN_INFO pr_fmt(fmt "\n"), ##arg)
+	printk(KERN_INFO pr_fmt(fmt), ##arg)
 
 #define wcn36xx_dbg(mask, fmt, arg...) do {			\
 	if (debug_mask & mask)					\
-		printk(KERN_DEBUG pr_fmt(fmt "\n"), ##arg);	\
+		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
 } while (0)
 
 #define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
