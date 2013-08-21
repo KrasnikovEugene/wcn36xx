@@ -217,7 +217,6 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		if (wcn->tx_ack_skb) {
 			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
 			wcn36xx_warn("tx_ack_skb already set\n");
-			ieee80211_free_txskb(wcn->hw, skb);
 			return -EINVAL;
 		}
 

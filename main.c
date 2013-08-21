@@ -305,8 +305,8 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 #define WCN36XX_SUPPORTED_FILTERS (0)
 
 static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
-				       unsigned int changed,
-				       unsigned int *total, u64 multicast)
+				     unsigned int changed,
+				     unsigned int *total, u64 multicast)
 {
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter\n");
 
@@ -324,7 +324,8 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	if (control->sta)
 		sta_priv = (struct wcn36xx_sta *)control->sta->drv_priv;
 
-	wcn36xx_start_tx(wcn, sta_priv, skb);
+	if (wcn36xx_start_tx(wcn, sta_priv, skb))
+		ieee80211_free_txskb(wcn->hw, skb);
 }
 
 static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
@@ -813,7 +814,7 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.resume			= wcn36xx_resume,
 #endif
 	.config			= wcn36xx_config,
-	.configure_filter	= wcn36xx_configure_filter,
+	.configure_filter       = wcn36xx_configure_filter,
 	.tx			= wcn36xx_tx,
 	.set_key		= wcn36xx_set_key,
 	.sw_scan_start		= wcn36xx_sw_scan_start,
