@@ -234,12 +234,6 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 
 	/* Data frames served first*/
 	if (is_low) {
-		/*
-		 * Sometimes in AP mode mac80211 is trying to send data
-		 * frame to nobody. Why?
-		 */
-		if (!sta_priv)
-			wcn36xx_warn("Sending data packet to nobody\n");
 		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
 		wcn36xx_set_tx_pdu(bd,
 			   ieee80211_is_data_qos(hdr->frame_control) ?
