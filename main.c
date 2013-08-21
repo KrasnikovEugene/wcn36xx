@@ -176,8 +176,7 @@ static const struct ieee80211_iface_combination if_comb = {
 #ifdef CONFIG_PM
 
 static const struct wiphy_wowlan_support wowlan_support = {
-	.flags = WIPHY_WOWLAN_ANY,
-	.n_patterns = 0,
+	.flags = WIPHY_WOWLAN_ANY
 };
 
 #endif
@@ -852,8 +851,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
-
-	wcn->hw->wiphy->max_scan_ssids = 1;
 
 	wcn->hw->wiphy->cipher_suites = cipher_suites;
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
