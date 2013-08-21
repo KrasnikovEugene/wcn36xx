@@ -147,7 +147,7 @@ int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn)
 	return 0;
 
 out_err:
-	wcn36xx_error("Failed to allocate DXE control blocks\n");
+	wcn36xx_err("Failed to allocate DXE control blocks\n");
 	wcn36xx_dxe_free_ctl_blks(wcn);
 	return -ENOMEM;
 }
@@ -430,14 +430,14 @@ static int wcn36xx_dxe_request_irqs(struct wcn36xx *wcn)
 	ret = request_irq(wcn->tx_irq, wcn36xx_irq_tx_complete,
 			  IRQF_TRIGGER_HIGH, "wcn36xx_tx", wcn);
 	if (ret) {
-		wcn36xx_error("failed to alloc tx irq\n");
+		wcn36xx_err("failed to alloc tx irq\n");
 		goto out_err;
 	}
 
 	ret = request_irq(wcn->rx_irq, wcn36xx_irq_rx_ready, IRQF_TRIGGER_HIGH,
 			  "wcn36xx_rx", wcn);
 	if (ret) {
-		wcn36xx_error("failed to alloc rx irq\n");
+		wcn36xx_err("failed to alloc rx irq\n");
 		goto out_txirq;
 	}
 
@@ -556,7 +556,7 @@ int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn)
 
 out_err:
 	wcn36xx_dxe_free_mem_pools(wcn);
-	wcn36xx_error("Failed to allocate BD mempool\n");
+	wcn36xx_err("Failed to allocate BD mempool\n");
 	return -ENOMEM;
 }
 
@@ -627,7 +627,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	ctl->skb = skb;
 	desc = ctl->desc;
 	if (ctl->bd_cpu_addr) {
-		wcn36xx_error("bd_cpu_addr cannot be NULL for skb DXE\n");
+		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
 		return -EINVAL;
 	}
 

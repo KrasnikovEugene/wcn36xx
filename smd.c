@@ -27,7 +27,7 @@ static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
 	u32 *val;
 
 	if (*len + sizeof(*entry) + sizeof(u32) >= WCN36XX_SMD_BUF_SIZE) {
-		wcn36xx_error("Not enough room for TLV entry\n");
+		wcn36xx_err("Not enough room for TLV entry\n");
 		return -ENOMEM;
 	}
 
@@ -222,7 +222,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		wcn36xx_error("Failed to load nv file %s: %d\n",
+		wcn36xx_err("Failed to load nv file %s: %d\n",
 			      WLAN_NV_FILE, ret);
 		goto out_free_nv;
 	}
@@ -1005,7 +1005,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
 		       skb_beacon->len);
 	} else {
-		wcn36xx_error("Beacon is to big: beacon size=%d\n",
+		wcn36xx_err("Beacon is to big: beacon size=%d\n",
 			      msg_body.beacon_length);
 		return -ENOMEM;
 	}
@@ -1516,7 +1516,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		wcn36xx_smd_delete_sta_context_ind(wcn, buf, len);
 		break;
 	default:
-		wcn36xx_error("SMD_EVENT (%d) not supported\n",
+		wcn36xx_err("SMD_EVENT (%d) not supported\n",
 			      msg_header->msg_type);
 	}
 }
