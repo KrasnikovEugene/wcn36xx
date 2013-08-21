@@ -967,7 +967,6 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 	if (wcn->sta) {
 		wcn->sta->bss_sta_index =  params->bss_sta_index;
 		wcn->sta->bss_dpu_desc_index = params->dpu_desc_index;
-		wcn->sta = NULL;
 	}
 
 	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;

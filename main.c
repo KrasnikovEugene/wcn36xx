@@ -333,7 +333,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			   struct ieee80211_key_conf *key_conf)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = NULL;
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 
@@ -344,8 +344,15 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "KEY: ",
 			 key_conf->key,
 			 key_conf->keylen);
+	sta_priv = sta ? (struct wcn36xx_sta *)sta->drv_priv : wcn->sta;
 
 	switch (key_conf->cipher) {
+	case WLAN_CIPHER_SUITE_WEP40:
+		wcn->encrypt_type = WCN36XX_HAL_ED_WEP40;
+		break;
+	case WLAN_CIPHER_SUITE_WEP104:
+		wcn->encrypt_type = WCN36XX_HAL_ED_WEP40;
+		break;
 	case WLAN_CIPHER_SUITE_CCMP:
 		wcn->encrypt_type = WCN36XX_HAL_ED_CCMP;
 		break;
@@ -398,6 +405,16 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key);
+			if ((WLAN_CIPHER_SUITE_WEP40 == key_conf->cipher) ||
+			    (WLAN_CIPHER_SUITE_WEP104 == key_conf->cipher)) {
+				sta_priv->is_data_encrypted = true;
+				wcn36xx_smd_set_stakey(wcn,
+					wcn->encrypt_type,
+					key_conf->keyidx,
+					key_conf->keylen,
+					key,
+					get_sta_index(vif, sta_priv));
+			}
 		}
 		break;
 	case DISABLE_KEY:
@@ -830,6 +847,8 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	int ret = 0;
 
 	static const u32 cipher_suites[] = {
+		WLAN_CIPHER_SUITE_WEP40,
+		WLAN_CIPHER_SUITE_WEP104,
 		WLAN_CIPHER_SUITE_TKIP,
 		WLAN_CIPHER_SUITE_CCMP,
 	};
