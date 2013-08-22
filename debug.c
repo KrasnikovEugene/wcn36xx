@@ -14,6 +14,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/debugfs.h>
 #include <linux/uaccess.h>
 #include "wcn36xx.h"
@@ -146,7 +148,7 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
 	dfs->rootdir = debugfs_create_dir(KBUILD_MODNAME,
 					  wcn->hw->wiphy->debugfsdir);
 	if (IS_ERR(dfs->rootdir)) {
-		wcn36xx_warn("Create the debugfs failed");
+		wcn36xx_warn("Create the debugfs failed\n");
 		dfs->rootdir = NULL;
 	}
 

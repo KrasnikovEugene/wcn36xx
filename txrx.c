@@ -14,6 +14,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include "txrx.h"
 
 static inline int get_rssi0(struct wcn36xx_rx_bd *bd)
@@ -55,7 +57,7 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 		       RX_FLAG_MMIC_STRIPPED |
 		       RX_FLAG_DECRYPTED;
 
-	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x",
+	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x\n",
 		    status.flag,  status.vendor_radiotap_len);
 
 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
@@ -65,12 +67,12 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
 	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
 
 	if (ieee80211_is_beacon(hdr->frame_control)) {
-		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d",
+		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d\n",
 			    skb, skb->len, fc, sn);
 		wcn36xx_dbg_dump(WCN36XX_DBG_BEACON_DUMP, "SKB <<< ",
 				 (char *)skb->data, skb->len);
 	} else {
-		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d",
+		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d\n",
 			    skb, skb->len, fc, sn);
 		wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
 				 (char *)skb->data, skb->len);
@@ -152,7 +154,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 	else if (ieee80211_is_ctl(hdr->frame_control))
 		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
 	else
-		wcn36xx_warn("frame control type unknown");
+		wcn36xx_warn("frame control type unknown\n");
 
 	/*
 	 * In joining state trick hardware that probe is sent as
@@ -192,14 +194,14 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		 * wierd. TODO: Recover from this situation
 		 */
 
-		wcn36xx_error("bd address may not be NULL for BD DXE");
+		wcn36xx_err("bd address may not be NULL for BD DXE\n");
 		return -EINVAL;
 	}
 
 	memset(bd, 0, sizeof(*bd));
 
 	wcn36xx_dbg(WCN36XX_DBG_TX,
-		    "tx skb %p len %d fc %04x sn %d %s %s",
+		    "tx skb %p len %d fc %04x sn %d %s %s\n",
 		    skb, skb->len, __le16_to_cpu(hdr->frame_control),
 		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl)),
 		    is_low ? "low" : "high", bcast ? "bcast" : "ucast");
@@ -210,12 +212,11 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 
 	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
 	if (bd->tx_comp) {
-		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested");
+		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
 		spin_lock_irqsave(&wcn->dxe_lock, flags);
 		if (wcn->tx_ack_skb) {
 			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
-			wcn36xx_warn("tx_ack_skb already set");
-			ieee80211_free_txskb(wcn->hw, skb);
+			wcn36xx_warn("tx_ack_skb already set\n");
 			return -EINVAL;
 		}
 
@@ -232,12 +233,6 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 
 	/* Data frames served first*/
 	if (is_low) {
-		/*
-		 * Sometimes in AP mode mac80211 is trying to send data
-		 * frame to nobody. Why?
-		 */
-		if (!sta_priv)
-			wcn36xx_warn("Sending data packet to nobody");
 		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
 		wcn36xx_set_tx_pdu(bd,
 			   ieee80211_is_data_qos(hdr->frame_control) ?

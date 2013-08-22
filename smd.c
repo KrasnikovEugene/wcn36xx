@@ -14,6 +14,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include <linux/etherdevice.h>
 #include <linux/firmware.h>
 #include <linux/bitops.h>
@@ -25,7 +27,7 @@ static int put_cfg_tlv_u32(struct wcn36xx *wcn, size_t *len, u32 id, u32 value)
 	u32 *val;
 
 	if (*len + sizeof(*entry) + sizeof(u32) >= WCN36XX_SMD_BUF_SIZE) {
-		wcn36xx_error("Not enough room for TLV entry");
+		wcn36xx_err("Not enough room for TLV entry\n");
 		return -ENOMEM;
 	}
 
@@ -220,7 +222,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
 	if (ret) {
-		wcn36xx_error("Failed to load nv file %s: %d",
+		wcn36xx_err("Failed to load nv file %s: %d\n",
 			      WLAN_NV_FILE, ret);
 		goto out_free_nv;
 	}
@@ -252,9 +254,8 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 		memcpy(wcn->smd_buf, &msg_body,	sizeof(msg_body));
 
 		/* Add NV body itself */
-		/* Rework me */
 		memcpy(wcn->smd_buf + sizeof(msg_body),
-		       (void *)(&nv_d->table) + fm_offset,
+		       &nv_d->table + fm_offset,
 		       msg_body.nv_img_buffer_size);
 
 		ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -283,7 +284,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start type %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start type %d\n",
 		    msg_body.params.type);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -315,10 +316,10 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
 	wcn->fw_minor = rsp->start_rsp_params.version.minor;
 	wcn->fw_major = rsp->start_rsp_params.version.major;
 
-	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'",
+	wcn36xx_info("firmware WLAN version '%s' and CRM version '%s'\n",
 		     wcn->wlan_version, wcn->crm_version);
 
-	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids",
+	wcn36xx_info("firmware API %u.%u.%u.%u, %u stations, %u bssids\n",
 		     wcn->fw_major, wcn->fw_minor,
 		     wcn->fw_version, wcn->fw_revision,
 		     rsp->start_rsp_params.stations,
@@ -350,7 +351,7 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal init scan mode %d", msg_body.mode);
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal init scan mode %d\n", msg_body.mode);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -365,7 +366,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start scan channel %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal start scan channel %d\n",
 		    msg_body.scan_channel);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -381,7 +382,7 @@ int wcn36xx_smd_end_scan(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal end scan channel %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal end scan channel %d\n",
 		    msg_body.scan_channel);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -397,7 +398,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal finish scan mode %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal finish scan mode %d\n",
 		    msg_body.mode);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -423,7 +424,7 @@ static void wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 {
 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
 	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg *)buf;
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d",
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d\n",
 		    rsp->channel_number, rsp->status);
 }
 
@@ -445,7 +446,7 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal update scan params channel_count %d",
+		    "hal update scan params channel_count %d\n",
 		    msg_body.channel_count);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -461,7 +462,7 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 	rsp->status &= (~(WCN36XX_FW_MSG_PNO_VERSION_MASK));
 
 	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
-		wcn36xx_warn("error response from update scan");
+		wcn36xx_warn("error response from update scan\n");
 		return -EIO;
 	}
 
@@ -480,7 +481,7 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal add sta self self_addr %pM status %d",
+		    "hal add sta self self_addr %pM status %d\n",
 		    msg_body.self_addr, msg_body.status);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -498,13 +499,13 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 	rsp = (struct wcn36xx_hal_add_sta_self_rsp_msg *)buf;
 
 	if (rsp->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
-		wcn36xx_warn("hal add sta self failure: %d",
+		wcn36xx_warn("hal add sta self failure: %d\n",
 			     rsp->status);
 		return -EIO;
 	}
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal add sta self status %d self_sta_index %d dpu_index %d",
+		    "hal add sta self status %d self_sta_index %d dpu_index %d\n",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
 
 	wcn->current_vif->self_sta_index = rsp->self_sta_index;
@@ -537,7 +538,7 @@ int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal delete sta sta_index %d",
+		    "hal delete sta sta_index %d\n",
 		    msg_body.sta_index);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -570,7 +571,7 @@ int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal join req bssid %pM self_sta_mac_addr %pM channel %d link_state %d",
+		    "hal join req bssid %pM self_sta_mac_addr %pM channel %d link_state %d\n",
 		    msg_body.bssid, msg_body.self_sta_mac_addr,
 		    msg_body.channel, msg_body.link_state);
 
@@ -592,7 +593,7 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal set link state bssid %pM self_mac_addr %pM state %d",
+		    "hal set link state bssid %pM self_mac_addr %pM state %d\n",
 		    msg_body.bssid, msg_body.self_mac_addr, msg_body.state);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -634,7 +635,7 @@ static int wcn36xx_smd_config_sta_v1(struct wcn36xx *wcn,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta v1 action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    "hal config sta v1 action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d\n",
 		    sta->action, sta->sta_index, sta->bssid_index,
 		    sta->bssid, sta->type, sta->mac, sta->aid);
 
@@ -659,7 +660,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d",
+		    "hal config sta action %d sta_index %d bssid_index %d bssid %pM type %d mac %pM aid %d\n",
 		    sta_params->action, sta_params->sta_index,
 		    sta_params->bssid_index, sta_params->bssid,
 		    sta_params->type, sta_params->mac, sta_params->aid);
@@ -680,7 +681,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 	params = &rsp->params;
 
 	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
-		wcn36xx_warn("hal config sta response failure: %d",
+		wcn36xx_warn("hal config sta response failure: %d\n",
 			     params->status);
 		return -EIO;
 	}
@@ -692,7 +693,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 	}
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d",
+		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d\n",
 		    params->status, params->sta_index, params->bssid_index,
 		    params->p2p);
 
@@ -709,7 +710,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
 	rsp = (struct wcn36xx_hal_join_rsp_msg *)buf;
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal rsp join status %d tx_mgmt_power %d",
+		    "hal rsp join status %d tx_mgmt_power %d\n",
 		    rsp->status, rsp->tx_mgmt_power);
 
 	return 0;
@@ -810,12 +811,12 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config bss v1 bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d",
+		    "hal config bss v1 bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
 		    bss->bssid, bss->self_mac_addr, bss->bss_type,
 		    bss->oper_mode, bss->nw_type);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM",
+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM\n",
 		    sta->bssid, sta->action, sta->sta_index,
 		    sta->bssid_index, sta->aid, sta->type, sta->mac);
 
@@ -860,7 +861,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		/* STA */
 		bss->oper_mode = 1;
 	} else {
-		wcn36xx_warn("Unknown type for bss config: %d", vif->type);
+		wcn36xx_warn("Unknown type for bss config: %d\n", vif->type);
 	}
 
 	if (vif->type == NL80211_IFTYPE_STATION)
@@ -919,12 +920,12 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d",
+		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
 		    bss->bssid, bss->self_mac_addr, bss->bss_type,
 		    bss->oper_mode, bss->nw_type);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM",
+		    "- sta bssid %pM action %d sta_index %d bssid_index %d aid %d type %d mac %pM\n",
 		    sta_params->bssid, sta_params->action,
 		    sta_params->sta_index, sta_params->bssid_index,
 		    sta_params->aid, sta_params->type,
@@ -947,7 +948,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 	params = &rsp->bss_rsp_params;
 
 	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
-		wcn36xx_warn("hal config bss response failure: %d",
+		wcn36xx_warn("hal config bss response failure: %d\n",
 			     params->status);
 		return -EIO;
 	}
@@ -955,7 +956,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config bss rsp status %d bss_idx %d dpu_desc_index %d"
 		    " sta_idx %d self_idx %d bcast_idx %d mac %pM"
-		    " power %d ucast_dpu_signature %d",
+		    " power %d ucast_dpu_signature %d\n",
 		    params->status, params->bss_index, params->dpu_desc_index,
 		    params->bss_sta_index, params->bss_self_sta_index,
 		    params->bss_bcast_sta_idx, params->mac,
@@ -966,7 +967,6 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 	if (wcn->sta) {
 		wcn->sta->bss_sta_index =  params->bss_sta_index;
 		wcn->sta->bss_dpu_desc_index = params->dpu_desc_index;
-		wcn->sta = NULL;
 	}
 
 	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;
@@ -984,7 +984,7 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
-	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal delete bss %d", msg_body.bss_index);
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "hal delete bss %d\n", msg_body.bss_index);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 }
@@ -1003,7 +1003,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
 		       skb_beacon->len);
 	} else {
-		wcn36xx_error("Beacon is to big: beacon size=%d",
+		wcn36xx_err("Beacon is to big: beacon size=%d\n",
 			      msg_body.beacon_length);
 		return -ENOMEM;
 	}
@@ -1015,7 +1015,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal send beacon beacon_length %d",
+		    "hal send beacon beacon_length %d\n",
 		    msg_body.beacon_length);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
@@ -1028,7 +1028,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
 
 	if (skb->len > BEACON_TEMPLATE_SIZE) {
-		wcn36xx_warn("probe response template is too big: %d",
+		wcn36xx_warn("probe response template is too big: %d\n",
 			     skb->len);
 		return -E2BIG;
 	}
@@ -1041,7 +1041,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	PREPARE_HAL_BUF(wcn->smd_buf, msg);
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "hal update probe rsp len %d bssid %pM",
+		    "hal update probe rsp len %d bssid %pM\n",
 		    msg.probe_resp_template_len, msg.bssid);
 
 	return wcn36xx_smd_send_and_wait(wcn, msg.header.len);
@@ -1176,7 +1176,7 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
 	} else if (packet_type == WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP) {
 		/* TODO: it also support ARP response type */
 	} else {
-		wcn36xx_warn("unknow keep alive packet type %d", packet_type);
+		wcn36xx_warn("unknow keep alive packet type %d\n", packet_type);
 		return -EINVAL;
 	}
 
@@ -1209,7 +1209,7 @@ static inline void set_feat_caps(u32 *bitmap,
 	int arr_idx, bit_idx;
 
 	if (cap < 0 || cap > 127) {
-		wcn36xx_warn("error cap idx %d", cap);
+		wcn36xx_warn("error cap idx %d\n", cap);
 		return;
 	}
 
@@ -1225,7 +1225,7 @@ static inline int get_feat_caps(u32 *bitmap,
 	int ret = 0;
 
 	if (cap < 0 || cap > 127) {
-		wcn36xx_warn("error cap idx %d", cap);
+		wcn36xx_warn("error cap idx %d\n", cap);
 		return -EINVAL;
 	}
 
@@ -1241,7 +1241,7 @@ static inline void clear_feat_caps(u32 *bitmap,
 	int arr_idx, bit_idx;
 
 	if (cap < 0 || cap > 127) {
-		wcn36xx_warn("error cap idx %d", cap);
+		wcn36xx_warn("error cap idx %d\n", cap);
 		return;
 	}
 
@@ -1268,7 +1268,7 @@ int wcn36xx_smd_feature_caps_exchange_rsp(void *buf, size_t len)
 {
 	/* TODO: print the caps of rsp for comapre */
 	if (wcn36xx_smd_rsp_status_check(buf, len)) {
-		wcn36xx_warn("error response for caps exchange");
+		wcn36xx_warn("error response for caps exchange\n");
 		return -EIO;
 	}
 
@@ -1357,7 +1357,7 @@ static int wcn36xx_smd_tx_compl_ind(struct wcn36xx *wcn, void *buf, size_t len)
 	struct wcn36xx_hal_tx_compl_ind_msg *rsp = buf;
 
 	if (len != sizeof(*rsp)) {
-		wcn36xx_warn("Bad TX complete indication");
+		wcn36xx_warn("Bad TX complete indication\n");
 		return -EIO;
 	}
 
@@ -1383,10 +1383,10 @@ static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
 	 */
 	if (wcn->is_suspended) {
 		wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "postpone connection lost notification");
+		    "postpone connection lost notification\n");
 		wcn->is_con_lost_pending = true;
 	} else {
-		wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed");
+		wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed\n");
 		ieee80211_connection_loss(vif);
 	}
 
@@ -1406,7 +1406,7 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
 	struct ieee80211_sta *sta;
 
 	if (len != sizeof(*rsp)) {
-		wcn36xx_warn("Bad delete sta indication");
+		wcn36xx_warn("Bad delete sta indication\n");
 		return -EIO;
 	}
 
@@ -1416,7 +1416,7 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
 	sta = ieee80211_find_sta(vif, rsp->addr2);
 	if (sta) {
 		wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "delete station indication %pM", rsp->addr2);
+		    "delete station indication %pM\n", rsp->addr2);
 		ieee80211_report_low_ack(sta, 0);
 	}
 
@@ -1488,7 +1488,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 	case WCN36XX_HAL_TRIGGER_BA_RSP:
 	case WCN36XX_HAL_UPDATE_CFG_RSP:
 		if (wcn36xx_smd_rsp_status_check(buf, len)) {
-			wcn36xx_warn("error response from hal request %d",
+			wcn36xx_warn("error response from hal request %d\n",
 				     msg_header->msg_type);
 		}
 		break;
@@ -1514,7 +1514,7 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
 		wcn36xx_smd_delete_sta_context_ind(wcn, buf, len);
 		break;
 	default:
-		wcn36xx_error("SMD_EVENT (%d) not supported",
+		wcn36xx_err("SMD_EVENT (%d) not supported\n",
 			      msg_header->msg_type);
 	}
 }

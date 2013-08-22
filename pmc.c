@@ -14,6 +14,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
 #include "wcn36xx.h"
 
 int wcn36xx_pmc_init(struct wcn36xx *wcn)
@@ -39,6 +41,6 @@ int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn)
 
 int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn)
 {
-	wcn36xx_dbg(WCN36XX_DBG_PMC, "%s", __func__);
+	wcn36xx_dbg(WCN36XX_DBG_PMC, "%s\n", __func__);
 	return wcn36xx_smd_keep_alive_req(wcn, WCN36XX_HAL_KEEP_ALIVE_NULL_PKT);
 }
