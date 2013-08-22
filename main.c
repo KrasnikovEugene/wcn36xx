@@ -309,7 +309,6 @@ static void wcn36xx_configure_filter(struct ieee80211_hw *hw,
 {
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac configure filter\n");
 
-	changed &= WCN36XX_SUPPORTED_FILTERS;
 	*total &= WCN36XX_SUPPORTED_FILTERS;
 }
 
