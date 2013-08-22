@@ -806,12 +806,10 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 1,
 			get_sta_index(vif, sta_priv));
 		break;
-	/* Not supported so far*/
-	case IEEE80211_AMPDU_TX_STOP_CONT:
-		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-		break;
 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+	case IEEE80211_AMPDU_TX_STOP_CONT:
+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
 		break;
 	default:
 		wcn36xx_err("Unknown AMPDU action\n");
