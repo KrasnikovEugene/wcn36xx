@@ -659,22 +659,16 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 
 	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
 
-	switch (vif->type) {
-	case NL80211_IFTYPE_STATION:
-		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
-		break;
-	case NL80211_IFTYPE_AP:
-		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
-		break;
-	case NL80211_IFTYPE_ADHOC:
-	case NL80211_IFTYPE_MESH_POINT:
-		wcn36xx_smd_add_sta_self(wcn, vif->addr, 0);
-		break;
-	default:
+	if (!(NL80211_IFTYPE_STATION == vif->type ||
+	      NL80211_IFTYPE_AP == vif->type ||
+	      NL80211_IFTYPE_ADHOC == vif->type ||
+	      NL80211_IFTYPE_MESH_POINT == vif->type)) {
 		wcn36xx_warn("Unsupported interface type requested: %d\n",
 			     vif->type);
 		return -EOPNOTSUPP;
 	}
+
+	wcn36xx_smd_add_sta_self(wcn, vif->addr);
 
 	return 0;
 }
