@@ -469,14 +469,13 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
 	return 0;
 }
 
-int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr, u32 status)
+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr)
 {
 	struct wcn36xx_hal_add_sta_self_req msg_body;
 
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ);
 
 	memcpy(&msg_body.self_addr, addr, ETH_ALEN);
-	msg_body.status = status;
 
 	PREPARE_HAL_BUF(wcn->smd_buf, msg_body);
 
