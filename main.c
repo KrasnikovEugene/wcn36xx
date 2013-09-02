@@ -520,7 +520,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 					       bss_conf->bssid, false);
 		} else {
 			wcn->is_joining = false;
-			wcn36xx_smd_delete_bss(wcn);
+			wcn36xx_smd_delete_bss(wcn, vif);
 		}
 	}
 
@@ -623,7 +623,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		} else {
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						WCN36XX_HAL_LINK_IDLE_STATE);
-			wcn36xx_smd_delete_bss(wcn);
+			wcn36xx_smd_delete_bss(wcn, vif);
 		}
 	}
 out:
