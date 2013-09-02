@@ -1222,15 +1222,16 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_delete_bss(struct wcn36xx *wcn)
+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 {
 	struct wcn36xx_hal_delete_bss_req_msg msg_body;
+	struct wcn36xx_vif *priv_vif = (struct wcn36xx_vif *)vif->drv_priv;
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
 
-	msg_body.bss_index = wcn->current_vif->bss_index;
+	msg_body.bss_index = priv_vif->bss_index;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
