@@ -114,6 +114,8 @@ struct wcn36xx_platform_ctrl_ops {
  * enter/exit_bmps.
  */
 struct wcn36xx_vif {
+	struct list_head list;
+	struct wcn36xx_sta *sta;
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -158,6 +160,7 @@ struct wcn36xx {
 	struct mac_address	addresses;
 	struct wcn36xx_hal_mac_ssid ssid;
 	u16			aid;
+	struct list_head	vif_list;
 	struct wcn36xx_vif	*current_vif;
 	struct wcn36xx_sta	*sta;
 	u8			dtim_period;
