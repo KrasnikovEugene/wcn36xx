@@ -22,9 +22,9 @@
 /* Max shared size is 4k but we take less.*/
 #define WCN36XX_NV_FRAGMENT_SIZE			3072
 
-#define WCN36XX_SMD_BUF_SIZE				4096
+#define WCN36XX_HAL_BUF_SIZE				4096
 
-#define SMD_MSG_TIMEOUT 200
+#define HAL_MSG_TIMEOUT 200
 #define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 /* The PNO version info be contained in the rsp msg */
@@ -43,6 +43,12 @@ enum wcn36xx_fw_msg_result {
 struct wcn36xx_fw_msg_status_rsp {
 	u32	status;
 } __packed;
+
+struct wcn36xx_hal_ind_msg {
+	struct list_head list;
+	u8 *msg;
+	size_t msg_len;
+};
 
 struct wcn36xx;
 
@@ -110,12 +116,4 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
 int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
 
 int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-/* WCN36XX configuration parameters */
-struct wcn36xx_fw_cfg {
-	u16		id;
-	u16		len;
-	u16		pad_bytes;
-	u16		reserved;
-	u8		*val;
-};
 #endif	/* _SMD_H_ */

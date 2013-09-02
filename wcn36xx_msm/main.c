@@ -80,7 +80,6 @@ static int wcn36xx_msm_smd_send_and_wait(char *buf, size_t len)
 	int avail;
 	int ret = 0;
 
-	init_completion(&wmsm.smd_compl);
 	avail = smd_write_avail(wmsm.smd_ch);
 
 	if (avail >= len) {
@@ -98,13 +97,6 @@ static int wcn36xx_msm_smd_send_and_wait(char *buf, size_t len)
 		goto out;
 	}
 
-	if (wait_for_completion_timeout(&wmsm.smd_compl,
-		msecs_to_jiffies(SMD_MSG_TIMEOUT)) <= 0) {
-		dev_err(&wmsm.core->dev,
-			"Timeout while waiting SMD response\n");
-		ret = -ETIME;
-		goto out;
-	}
 out:
 	return ret;
 }
@@ -145,23 +137,19 @@ static void wcn36xx_msm_smd_work(struct work_struct *work)
 	while (1) {
 		msg_len = smd_cur_packet_size(wmsm_priv->smd_ch);
 		if (0 == msg_len) {
-			complete(&wmsm_priv->smd_compl);
 			return;
 		}
 		avail = smd_read_avail(wmsm_priv->smd_ch);
 		if (avail < msg_len) {
-			complete(&wmsm_priv->smd_compl);
 			return;
 		}
 		msg = kmalloc(msg_len, GFP_KERNEL);
 		if (NULL == msg) {
-			complete(&wmsm_priv->smd_compl);
 			return;
 		}
 
 		ret = smd_read(wmsm_priv->smd_ch, msg, msg_len);
 		if (ret != msg_len) {
-			complete(&wmsm_priv->smd_compl);
 			return;
 		}
 		wmsm_priv->rsp_cb(wmsm_priv->drv_priv, msg, msg_len);
@@ -193,7 +181,7 @@ int wcn36xx_msm_smd_open(void *drv_priv, void *rsp_cb)
 	}
 
 	left = wait_for_completion_interruptible_timeout(&wmsm.smd_compl,
-		msecs_to_jiffies(SMD_MSG_TIMEOUT));
+		msecs_to_jiffies(HAL_MSG_TIMEOUT));
 	if (left <= 0) {
 		dev_err(&wmsm.core->dev,
 			"timeout waiting for smd open: %d\n", ret);
