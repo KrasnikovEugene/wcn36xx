@@ -115,6 +115,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
+	struct wcn36xx_vif *priv_vif = (struct wcn36xx_vif *)vif->drv_priv;
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
@@ -149,7 +150,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	sta_params->uapsd = 0;
 	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
 	sta_params->max_ampdu_duration = 0;
-	sta_params->bssid_index = wcn->current_vif->bss_index;
+	sta_params->bssid_index = priv_vif->bss_index;
 	sta_params->p2p = 0;
 
 	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
@@ -1051,11 +1052,13 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 
 
 static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+				      struct ieee80211_vif *vif,
 				      void *buf,
 				      size_t len)
 {
 	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
 	struct wcn36xx_hal_config_bss_rsp_params *params;
+	struct wcn36xx_vif *priv_vif = (struct wcn36xx_vif *)vif->drv_priv;
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -1078,14 +1081,14 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 		    params->bss_bcast_sta_idx, params->mac,
 		    params->tx_mgmt_power, params->ucast_dpu_signature);
 
-	wcn->current_vif->bss_index = params->bss_index;
+	priv_vif->bss_index = params->bss_index;
 
 	if (wcn->sta) {
 		wcn->sta->bss_sta_index =  params->bss_sta_index;
 		wcn->sta->bss_dpu_desc_index = params->dpu_desc_index;
 	}
 
-	wcn->current_vif->ucast_dpu_signature = params->ucast_dpu_signature;
+	priv_vif->ucast_dpu_signature = params->ucast_dpu_signature;
 
 	return 0;
 }
@@ -1206,7 +1209,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		wcn36xx_err("Sending hal_config_bss failed\n");
 		goto out;
 	}
-	ret = wcn36xx_smd_config_bss_rsp(wcn, wcn->hal_buf, wcn->hal_rsp_len);
+	ret = wcn36xx_smd_config_bss_rsp(wcn,
+					 vif,
+					 wcn->hal_buf,
+					 wcn->hal_rsp_len);
 	if (ret) {
 		wcn36xx_err("hal_config_bss response failed err=%d\n", ret);
 		goto out;
