@@ -204,9 +204,8 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_free_dxe_pool;
 	}
 
-	/* Maximum SMD message size is 4k */
-	wcn->smd_buf = kmalloc(WCN36XX_SMD_BUF_SIZE, GFP_KERNEL);
-	if (!wcn->smd_buf) {
+	wcn->hal_buf = kmalloc(WCN36XX_HAL_BUF_SIZE, GFP_KERNEL);
+	if (!wcn->hal_buf) {
 		wcn36xx_err("Failed to allocate smd buf\n");
 		ret = -ENOMEM;
 		goto out_free_dxe_ctl;
@@ -245,7 +244,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 out_smd_stop:
 	wcn36xx_smd_stop(wcn);
 out_free_smd_buf:
-	kfree(wcn->smd_buf);
+	kfree(wcn->hal_buf);
 out_free_dxe_pool:
 	wcn36xx_dxe_free_mem_pools(wcn);
 out_free_dxe_ctl:
@@ -270,7 +269,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_dxe_free_mem_pools(wcn);
 	wcn36xx_dxe_free_ctl_blks(wcn);
 
-	kfree(wcn->smd_buf);
+	kfree(wcn->hal_buf);
 }
 
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
@@ -944,7 +943,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
 	wcn->ctrl_ops = pdev->dev.platform_data;
 
 	mutex_init(&wcn->pm_mutex);
-	mutex_init(&wcn->smd_mutex);
+	mutex_init(&wcn->hal_mutex);
 
 	/* Configuring supported rates */
 	wcn->supported_rates.op_rate_mode = STA_11n;
@@ -984,7 +983,7 @@ static int wcn36xx_remove(struct platform_device *pdev)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform remove\n");
 
 	mutex_destroy(&wcn->pm_mutex);
-	mutex_destroy(&wcn->smd_mutex);
+	mutex_destroy(&wcn->hal_mutex);
 
 	ieee80211_unregister_hw(hw);
 	iounmap(wcn->mmio);

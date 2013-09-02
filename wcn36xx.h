@@ -190,8 +190,14 @@ struct wcn36xx {
 	 * smd_buf must be protected with smd_mutex to garantee
 	 * that all messages are sent one after another
 	 */
-	u8			*smd_buf;
-	struct mutex		smd_mutex;
+	u8			*hal_buf;
+	size_t			hal_rsp_len;
+	struct mutex		hal_mutex;
+	struct completion	hal_rsp_compl;
+	struct workqueue_struct	*hal_ind_wq;
+	struct work_struct	hal_ind_work;
+	struct mutex		hal_ind_mutex;
+	struct list_head	hal_ind_queue;
 
 	bool			is_joining;
 
