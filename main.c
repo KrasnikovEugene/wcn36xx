@@ -656,8 +656,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
 		    vif, vif->type);
 
-	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
-
 	if (!(NL80211_IFTYPE_STATION == vif->type ||
 	      NL80211_IFTYPE_AP == vif->type ||
 	      NL80211_IFTYPE_ADHOC == vif->type ||
@@ -667,7 +665,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		return -EOPNOTSUPP;
 	}
 
-	wcn36xx_smd_add_sta_self(wcn, vif->addr);
+	wcn36xx_smd_add_sta_self(wcn, vif);
 
 	return 0;
 }

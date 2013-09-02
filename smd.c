@@ -607,10 +607,12 @@ out:
 }
 
 static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
+					struct ieee80211_vif *vif,
 					void *buf,
 					size_t len)
 {
 	struct wcn36xx_hal_add_sta_self_rsp_msg *rsp;
+	struct wcn36xx_vif *priv_vif = (struct wcn36xx_vif *)vif->drv_priv;
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -627,13 +629,13 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 		    "hal add sta self status %d self_sta_index %d dpu_index %d\n",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
 
-	wcn->current_vif->self_sta_index = rsp->self_sta_index;
-	wcn->current_vif->self_dpu_desc_index = rsp->dpu_index;
+	priv_vif->self_sta_index = rsp->self_sta_index;
+	priv_vif->self_dpu_desc_index = rsp->dpu_index;
 
 	return 0;
 }
 
-int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr)
+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 {
 	struct wcn36xx_hal_add_sta_self_req msg_body;
 	int ret = 0;
@@ -641,7 +643,7 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr)
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ);
 
-	memcpy(&msg_body.self_addr, addr, ETH_ALEN);
+	memcpy(&msg_body.self_addr, vif->addr, ETH_ALEN);
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
@@ -654,7 +656,10 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr)
 		wcn36xx_err("Sending hal_add_sta_self failed\n");
 		goto out;
 	}
-	ret = wcn36xx_smd_add_sta_self_rsp(wcn, wcn->hal_buf, wcn->hal_rsp_len);
+	ret = wcn36xx_smd_add_sta_self_rsp(wcn,
+					   vif,
+					   wcn->hal_buf,
+					   wcn->hal_rsp_len);
 	if (ret) {
 		wcn36xx_err("hal_add_sta_self response failed err=%d\n", ret);
 		goto out;
