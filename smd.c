@@ -1834,29 +1834,42 @@ static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
 					 void *buf,
 					 size_t len)
 {
-	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
+	struct wcn36xx_hal_missed_beacon_ind_msg *rsp = buf;
+	struct ieee80211_vif *vif = NULL;
+	struct wcn36xx_vif *tmp;
+
+	/* Old FW does not have bss index */
+	if (wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
+		list_for_each_entry(tmp, &wcn->vif_list, list) {
+			wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed bss_index %d\n",
+				    tmp->bss_index);
+			vif = container_of((void *)tmp,
 						 struct ieee80211_vif,
 						 drv_priv);
-
-	mutex_lock(&wcn->pm_mutex);
-
-	/*
-	 * In suspended state mac80211 is still sleeping and that means we
-	 * cannot notify it about connection lost. Wait until resume and
-	 * then notify mac80211 about it.
-	 */
-	if (wcn->is_suspended) {
-		wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "postpone connection lost notification\n");
-		wcn->is_con_lost_pending = true;
-	} else {
-		wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed\n");
-		ieee80211_connection_loss(vif);
+			ieee80211_connection_loss(vif);
+			return 0;
+		}
 	}
 
-	mutex_unlock(&wcn->pm_mutex);
+	if (len != sizeof(*rsp)) {
+		wcn36xx_warn("Corrupted missed beacon indication\n");
+		return -EIO;
+	}
 
-	return 0;
+	list_for_each_entry(tmp, &wcn->vif_list, list) {
+		if (tmp->bss_index == rsp->bss_index) {
+			wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed bss_index %d\n",
+				    rsp->bss_index);
+			vif = container_of((void *)tmp,
+						 struct ieee80211_vif,
+						 drv_priv);
+			ieee80211_connection_loss(vif);
+			return 0;
+		}
+	}
+
+	wcn36xx_warn("BSS index %d not found\n", rsp->bss_index);
+	return -ENOENT;
 }
 
 static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
@@ -1864,29 +1877,32 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
 					      size_t len)
 {
 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
-	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
-						 struct ieee80211_vif,
-						 drv_priv);
-	struct ieee80211_sta *sta;
+	struct wcn36xx_vif *tmp;
+	struct ieee80211_sta *sta = NULL;
 
 	if (len != sizeof(*rsp)) {
-		wcn36xx_warn("Bad delete sta indication\n");
+		wcn36xx_warn("Corrupted delete sta indication\n");
 		return -EIO;
 	}
 
-
-	rcu_read_lock();
-
-	sta = ieee80211_find_sta(vif, rsp->addr2);
-	if (sta) {
-		wcn36xx_dbg(WCN36XX_DBG_HAL,
-		    "delete station indication %pM\n", rsp->addr2);
-		ieee80211_report_low_ack(sta, 0);
+	list_for_each_entry(tmp, &wcn->vif_list, list) {
+		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
+			sta = container_of((void *)tmp->sta,
+						 struct ieee80211_sta,
+						 drv_priv);
+			wcn36xx_dbg(WCN36XX_DBG_HAL,
+				    "delete station indication %pM index %d\n",
+				    rsp->addr2,
+				    rsp->sta_id);
+			ieee80211_report_low_ack(sta, 0);
+			return 0;
+		}
 	}
 
-	rcu_read_unlock();
-
-	return 0;
+	wcn36xx_warn("STA with addr %pM and index %d not found\n",
+		     rsp->addr2,
+		     rsp->sta_id);
+	return -ENOENT;
 }
 
 int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value)

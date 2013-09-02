@@ -238,7 +238,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		if (ret)
 			wcn36xx_warn("Exchange feature caps failed\n");
 	}
-
+	INIT_LIST_HEAD(&wcn->vif_list);
 	return 0;
 
 out_smd_stop:
@@ -493,8 +493,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	struct sk_buff *skb = NULL;
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
-
-	wcn->current_vif = (struct wcn36xx_vif *)vif->drv_priv;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+	wcn->current_vif = vif_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x\n",
 		    vif, changed);
@@ -513,7 +513,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (!is_zero_ether_addr(bss_conf->bssid)) {
 			wcn->is_joining = true;
-			wcn->current_vif->bss_index = 0xff;
+			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
@@ -600,7 +600,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			    bss_conf->enable_beacon);
 
 		if (bss_conf->enable_beacon) {
-			wcn->current_vif->bss_index = 0xff;
+			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       wcn->addresses.addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
@@ -644,7 +644,10 @@ static void wcn36xx_remove_interface(struct ieee80211_hw *hw,
 				     struct ieee80211_vif *vif)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac remove interface vif %p\n", vif);
+
+	list_del(&vif_priv->list);
 	wcn36xx_smd_delete_sta_self(wcn, vif->addr);
 }
 
@@ -652,7 +655,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 				 struct ieee80211_vif *vif)
 {
 	struct wcn36xx *wcn = hw->priv;
-
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
 		    vif, vif->type);
 
@@ -665,6 +668,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 		return -EOPNOTSUPP;
 	}
 
+	list_add(&vif_priv->list, &wcn->vif_list);
 	wcn36xx_smd_add_sta_self(wcn, vif);
 
 	return 0;
@@ -674,11 +678,12 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
-
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
 		    vif, sta->addr);
 
 	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
+	vif_priv->sta = (struct wcn36xx_sta *)sta->drv_priv;
 	wcn->aid = sta->aid;
 	wcn36xx_smd_config_sta(wcn, vif, sta);
 
@@ -690,13 +695,14 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 			      struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
 		    vif, sta->addr, sta_priv->sta_index);
 
 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
-
+	vif_priv->sta = NULL;
 	return 0;
 }
 
