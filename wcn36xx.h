@@ -166,11 +166,6 @@ struct wcn36xx {
 	u8			dtim_period;
 	enum ani_ed_type	encrypt_type;
 
-	/* WoW related*/
-	struct mutex		pm_mutex;
-	bool			is_suspended;
-	bool			is_con_lost_pending;
-
 	u8			fw_revision;
 	u8			fw_version;
 	u8			fw_minor;
