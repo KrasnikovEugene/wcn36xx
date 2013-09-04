@@ -98,9 +98,11 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
 int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
 			      enum ani_ed_type enc_type,
 			      u8 keyidx);
-int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
-int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
-int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
+			       struct ieee80211_vif *vif,
+			       int packet_type);
 int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
 			     u32 arg3, u32 arg4, u32 arg5);
 int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);

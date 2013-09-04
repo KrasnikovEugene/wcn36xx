@@ -1481,16 +1481,17 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt)
+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 {
 	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_BMPS_REQ);
 
-	msg_body.bss_index = wcn->current_vif->bss_index;
-	msg_body.tbtt = tbtt;
+	msg_body.bss_index = vif_priv->bss_index;
+	msg_body.tbtt = vif->bss_conf.sync_tsf;
 	msg_body.dtim_period = wcn->dtim_period;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
@@ -1510,15 +1511,16 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn)
+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 {
 	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_EXIT_BMPS_REQ);
 
-	msg_body.bss_index = wcn->current_vif->bss_index;
+	msg_body.bss_index = vif_priv->bss_index;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
@@ -1540,16 +1542,19 @@ out:
 /* Notice: This function should be called after associated, or else it
  * will be invalid
  */
-int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type)
+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
+			       struct ieee80211_vif *vif,
+			       int packet_type)
 {
 	struct wcn36xx_hal_keep_alive_req_msg msg_body;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_KEEP_ALIVE_REQ);
 
 	if (packet_type == WCN36XX_HAL_KEEP_ALIVE_NULL_PKT) {
-		msg_body.bss_index = wcn->current_vif->bss_index;
+		msg_body.bss_index = vif_priv->bss_index;
 		msg_body.packet_type = WCN36XX_HAL_KEEP_ALIVE_NULL_PKT;
 		msg_body.time_period = WCN36XX_KEEP_ALIVE_TIME_PERIOD;
 	} else if (packet_type == WCN36XX_HAL_KEEP_ALIVE_UNSOLICIT_ARP_RSP) {
