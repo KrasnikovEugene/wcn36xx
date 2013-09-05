@@ -4325,7 +4325,7 @@ struct wcn36xx_hal_rcv_flt_pkt_set_mc_list_rsp_msg {
 
 /* Packet Filtering Definitions End */
 
-struct set_power_params_req_msg {
+struct wcn36xx_hal_set_power_params_req_msg {
 	struct wcn36xx_hal_msg_header header;
 
 	/*  Ignore DTIM */
@@ -4345,15 +4345,15 @@ struct set_power_params_req_msg {
 
 	/* Beacon Early Termination Interval */
 	u32 bet_interval;
-};
+} __packed;
 
-struct set_power_params_resp {
+struct wcn36xx_hal_set_power_params_resp {
 
 	struct wcn36xx_hal_msg_header header;
 
 	/* status of the request */
 	u32 status;
-};
+} __packed;
 
 /* Capability bitmap exchange definitions and macros starts */
 
