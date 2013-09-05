@@ -1102,6 +1102,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	struct wcn36xx_hal_config_bss_req_msg msg;
 	struct wcn36xx_hal_config_bss_params *bss;
 	struct wcn36xx_hal_config_sta_params *sta_params;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
@@ -1149,7 +1150,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	bss->llg_coexist = 0;
 	bss->rifs_mode = 0;
 	bss->beacon_interval = vif->bss_conf.beacon_int;
-	bss->dtim_period = wcn->dtim_period;
+	bss->dtim_period = vif_priv->dtim_period;
 
 	wcn36xx_smd_set_bss_ht_params(vif, sta, bss);
 
@@ -1494,7 +1495,7 @@ int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 
 	msg_body.bss_index = vif_priv->bss_index;
 	msg_body.tbtt = vif->bss_conf.sync_tsf;
-	msg_body.dtim_period = wcn->dtim_period;
+	msg_body.dtim_period = vif_priv->dtim_period;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
