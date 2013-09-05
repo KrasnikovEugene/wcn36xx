@@ -411,7 +411,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 		} else {
 			sta_priv->is_data_encrypted = false;
 			/* do not remove key if disassociated */
-			if (wcn->aid)
+			if (sta_priv->aid)
 				wcn36xx_smd_remove_stakey(wcn,
 					wcn->encrypt_type,
 					key_conf->keyidx,
@@ -557,8 +557,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				     vif->addr,
 				     bss_conf->aid);
 
-			wcn->aid = bss_conf->aid;
-
 			rcu_read_lock();
 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
 			if (!sta) {
@@ -578,6 +576,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
 					       true);
+			sta_priv->aid = bss_conf->aid;
+			/*
+			 * config_sta must be called from  because this is the
+			 * place where AID is available.
+			 */
+			wcn36xx_smd_config_sta(wcn, vif, sta);
 			rcu_read_unlock();
 		} else {
 			wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -585,7 +589,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				    bss_conf->bssid,
 				    vif->addr,
 				    bss_conf->aid);
-			wcn->aid = 0;
 			wcn36xx_smd_set_link_st(wcn,
 						bss_conf->bssid,
 						vif->addr,
@@ -692,14 +695,20 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
 		    vif, sta->addr);
 
 	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
 	vif_priv->sta = (struct wcn36xx_sta *)sta->drv_priv;
-	wcn->aid = sta->aid;
-	wcn36xx_smd_config_sta(wcn, vif, sta);
-
+	/*
+	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
+	 * at this stage AID is not available yet.
+	 */
+	if (NL80211_IFTYPE_STATION != vif->type) {
+		sta_priv->aid = sta->aid;
+		wcn36xx_smd_config_sta(wcn, vif, sta);
+	}
 	return 0;
 }
 

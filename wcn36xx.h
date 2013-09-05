@@ -146,6 +146,7 @@ struct wcn36xx_vif {
  * |______________|_____________|_______________|
  */
 struct wcn36xx_sta {
+	u16 aid;
 	u16 tid;
 	u8 sta_index;
 	u8 dpu_desc_index;
@@ -159,7 +160,6 @@ struct wcn36xx {
 	struct device		*dev;
 	struct mac_address	addresses;
 	struct wcn36xx_hal_mac_ssid ssid;
-	u16			aid;
 	struct list_head	vif_list;
 	struct wcn36xx_vif	*current_vif;
 	struct wcn36xx_sta	*sta;
