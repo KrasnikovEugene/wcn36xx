@@ -116,6 +116,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
 	struct wcn36xx_vif *priv_vif = (struct wcn36xx_vif *)vif->drv_priv;
+	struct wcn36xx_sta *priv_sta = NULL;
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
@@ -126,7 +127,6 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		sta_params->sta_index = 1;
 	}
 
-	sta_params->aid = wcn->aid;
 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 
 	/*
@@ -157,12 +157,14 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		sizeof(wcn->supported_rates));
 
 	if (sta) {
+		priv_sta = (struct wcn36xx_sta *)sta->drv_priv;
 		if (NL80211_IFTYPE_STATION == vif->type)
 			memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
 		else
 			memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
 		sta_params->wmm_enabled = sta->wme;
 		sta_params->max_sp_len = sta->max_sp;
+		sta_params->aid = priv_sta->aid;
 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
 	}
 }
