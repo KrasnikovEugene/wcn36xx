@@ -504,7 +504,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			    "mac bss changed dtim period %d\n",
 			    bss_conf->dtim_period);
 
-		wcn->dtim_period = bss_conf->dtim_period;
+		vif_priv->dtim_period = bss_conf->dtim_period;
 	}
 
 	if (changed & BSS_CHANGED_PS) {
