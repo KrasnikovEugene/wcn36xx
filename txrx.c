@@ -160,7 +160,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 	 * In joining state trick hardware that probe is sent as
 	 * unicast even if address is broadcast.
 	 */
-	if (wcn->is_joining &&
+	if (wcn->current_vif->is_joining &&
 	    ieee80211_is_probe_req(hdr->frame_control))
 		bcast = false;
 
