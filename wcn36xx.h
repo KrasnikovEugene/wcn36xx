@@ -118,6 +118,7 @@ struct wcn36xx_vif {
 	struct wcn36xx_sta *sta;
 	u8 dtim_period;
 	enum ani_ed_type encrypt_type;
+	bool is_joining;
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -196,8 +197,6 @@ struct wcn36xx {
 	struct work_struct	hal_ind_work;
 	struct mutex		hal_ind_mutex;
 	struct list_head	hal_ind_queue;
-
-	bool			is_joining;
 
 	/* DXE channels */
 	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */

@@ -524,14 +524,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			    bss_conf->bssid);
 
 		if (!is_zero_ether_addr(bss_conf->bssid)) {
-			wcn->is_joining = true;
+			vif_priv->is_joining = true;
 			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       bss_conf->bssid, false);
 		} else {
-			wcn->is_joining = false;
+			vif_priv->is_joining = false;
 			wcn36xx_smd_delete_bss(wcn, vif);
 		}
 	}
@@ -547,7 +547,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
-		wcn->is_joining = false;
+		vif_priv->is_joining = false;
 		if (bss_conf->assoc) {
 			struct ieee80211_sta *sta;
 			struct wcn36xx_sta *sta_priv;
