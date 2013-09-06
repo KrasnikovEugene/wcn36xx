@@ -117,6 +117,7 @@ struct wcn36xx_vif {
 	struct list_head list;
 	struct wcn36xx_sta *sta;
 	u8 dtim_period;
+	enum ani_ed_type encrypt_type;
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -164,7 +165,6 @@ struct wcn36xx {
 	struct list_head	vif_list;
 	struct wcn36xx_vif	*current_vif;
 	struct wcn36xx_sta	*sta;
-	enum ani_ed_type	encrypt_type;
 
 	u8			fw_revision;
 	u8			fw_version;
