@@ -230,7 +230,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_smd_stop;
 	}
 
-	wcn36xx_pmc_init(wcn);
 	wcn36xx_debugfs_init(wcn);
 
 	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {

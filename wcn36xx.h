@@ -119,6 +119,10 @@ struct wcn36xx_vif {
 	u8 dtim_period;
 	enum ani_ed_type encrypt_type;
 	bool is_joining;
+
+	/* Power management */
+	enum wcn36xx_power_state pw_state;
+
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -213,9 +217,6 @@ struct wcn36xx {
 	struct wcn36xx_dxe_mem_pool data_mem_pool;
 
 	struct sk_buff		*tx_ack_skb;
-
-	/* Power management */
-	enum wcn36xx_power_state     pw_state;
 
 #ifdef CONFIG_WCN36XX_DEBUGFS
 	/* Debug file system entry */
