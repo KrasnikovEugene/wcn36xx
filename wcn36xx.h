@@ -114,6 +114,9 @@ struct wcn36xx_platform_ctrl_ops {
  * enter/exit_bmps.
  */
 struct wcn36xx_vif {
+	struct list_head list;
+	struct wcn36xx_sta *sta;
+	u8 dtim_period;
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -144,6 +147,7 @@ struct wcn36xx_vif {
  * |______________|_____________|_______________|
  */
 struct wcn36xx_sta {
+	u16 aid;
 	u16 tid;
 	u8 sta_index;
 	u8 dpu_desc_index;
@@ -157,16 +161,10 @@ struct wcn36xx {
 	struct device		*dev;
 	struct mac_address	addresses;
 	struct wcn36xx_hal_mac_ssid ssid;
-	u16			aid;
+	struct list_head	vif_list;
 	struct wcn36xx_vif	*current_vif;
 	struct wcn36xx_sta	*sta;
-	u8			dtim_period;
 	enum ani_ed_type	encrypt_type;
-
-	/* WoW related*/
-	struct mutex		pm_mutex;
-	bool			is_suspended;
-	bool			is_con_lost_pending;
 
 	u8			fw_revision;
 	u8			fw_version;
@@ -190,8 +188,14 @@ struct wcn36xx {
 	 * smd_buf must be protected with smd_mutex to garantee
 	 * that all messages are sent one after another
 	 */
-	u8			*smd_buf;
-	struct mutex		smd_mutex;
+	u8			*hal_buf;
+	size_t			hal_rsp_len;
+	struct mutex		hal_mutex;
+	struct completion	hal_rsp_compl;
+	struct workqueue_struct	*hal_ind_wq;
+	struct work_struct	hal_ind_work;
+	struct mutex		hal_ind_mutex;
+	struct list_head	hal_ind_queue;
 
 	bool			is_joining;
 

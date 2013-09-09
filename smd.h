@@ -22,9 +22,9 @@
 /* Max shared size is 4k but we take less.*/
 #define WCN36XX_NV_FRAGMENT_SIZE			3072
 
-#define WCN36XX_SMD_BUF_SIZE				4096
+#define WCN36XX_HAL_BUF_SIZE				4096
 
-#define SMD_MSG_TIMEOUT 200
+#define HAL_MSG_TIMEOUT 200
 #define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
 #define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
 /* The PNO version info be contained in the rsp msg */
@@ -44,6 +44,12 @@ struct wcn36xx_fw_msg_status_rsp {
 	u32	status;
 } __packed;
 
+struct wcn36xx_hal_ind_msg {
+	struct list_head list;
+	u8 *msg;
+	size_t msg_len;
+};
+
 struct wcn36xx;
 
 int wcn36xx_smd_open(struct wcn36xx *wcn);
@@ -57,7 +63,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_finish_scan(struct wcn36xx *wcn);
 int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, u8 *addr);
+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif);
 int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
 int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
 int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
@@ -67,7 +73,7 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
 int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta, const u8 *bssid,
 			   bool update);
-int wcn36xx_smd_delete_bss(struct wcn36xx *wcn);
+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta);
 int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
@@ -92,9 +98,12 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
 int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
 			      enum ani_ed_type enc_type,
 			      u8 keyidx);
-int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, u64 tbtt);
-int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn);
-int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn, int packet_type);
+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim);
+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
+			       struct ieee80211_vif *vif,
+			       int packet_type);
 int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
 			     u32 arg3, u32 arg4, u32 arg5);
 int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
@@ -110,12 +119,4 @@ int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
 int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
 
 int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-/* WCN36XX configuration parameters */
-struct wcn36xx_fw_cfg {
-	u16		id;
-	u16		len;
-	u16		pad_bytes;
-	u16		reserved;
-	u8		*val;
-};
 #endif	/* _SMD_H_ */
