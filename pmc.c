@@ -18,21 +18,16 @@
 
 #include "wcn36xx.h"
 
-int wcn36xx_pmc_init(struct wcn36xx *wcn)
-{
-	wcn->pw_state = WCN36XX_FULL_POWER;
-	return 0;
-}
-
 int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn,
 				 struct ieee80211_vif *vif)
 {
 	int ret = 0;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 	/* TODO: Make sure the TX chain clean */
 	ret = wcn36xx_smd_enter_bmps(wcn, vif);
 	if (!ret) {
 		wcn36xx_dbg(WCN36XX_DBG_PMC, "Entered BMPS\n");
-		wcn->pw_state = WCN36XX_BMPS;
+		vif_priv->pw_state = WCN36XX_BMPS;
 	} else {
 		/*
 		 * One of the reasons why HW will not enter BMPS is because
@@ -47,12 +42,14 @@ int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn,
 int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn,
 				struct ieee80211_vif *vif)
 {
-	if (WCN36XX_BMPS != wcn->pw_state) {
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+
+	if (WCN36XX_BMPS != vif_priv->pw_state) {
 		wcn36xx_err("Not in BMPS mode, no need to exit from BMPS mode!\n");
 		return -EINVAL;
 	}
 	wcn36xx_smd_exit_bmps(wcn, vif);
-	wcn->pw_state = WCN36XX_FULL_POWER;
+	vif_priv->pw_state = WCN36XX_FULL_POWER;
 	return 0;
 }
 

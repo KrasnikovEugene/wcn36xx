@@ -24,7 +24,6 @@ enum wcn36xx_power_state {
 	WCN36XX_BMPS
 };
 
-int wcn36xx_pmc_init(struct wcn36xx *wcn);
 int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn,
 				 struct ieee80211_vif *vif);
 int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn,

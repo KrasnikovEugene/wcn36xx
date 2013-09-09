@@ -230,7 +230,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_smd_stop;
 	}
 
-	wcn36xx_pmc_init(wcn);
 	wcn36xx_debugfs_init(wcn);
 
 	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
@@ -319,7 +318,8 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			   struct ieee80211_key_conf *key_conf)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn36xx_sta *sta_priv = NULL;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+	struct wcn36xx_sta *sta_priv = vif_priv->sta;
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 
@@ -330,20 +330,19 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "KEY: ",
 			 key_conf->key,
 			 key_conf->keylen);
-	sta_priv = sta ? (struct wcn36xx_sta *)sta->drv_priv : wcn->sta;
 
 	switch (key_conf->cipher) {
 	case WLAN_CIPHER_SUITE_WEP40:
-		wcn->encrypt_type = WCN36XX_HAL_ED_WEP40;
+		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
 		break;
 	case WLAN_CIPHER_SUITE_WEP104:
-		wcn->encrypt_type = WCN36XX_HAL_ED_WEP40;
+		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
 		break;
 	case WLAN_CIPHER_SUITE_CCMP:
-		wcn->encrypt_type = WCN36XX_HAL_ED_CCMP;
+		vif_priv->encrypt_type = WCN36XX_HAL_ED_CCMP;
 		break;
 	case WLAN_CIPHER_SUITE_TKIP:
-		wcn->encrypt_type = WCN36XX_HAL_ED_TKIP;
+		vif_priv->encrypt_type = WCN36XX_HAL_ED_TKIP;
 		break;
 	default:
 		wcn36xx_err("Unsupported key type 0x%x\n",
@@ -354,7 +353,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 
 	switch (cmd) {
 	case SET_KEY:
-		if (WCN36XX_HAL_ED_TKIP == wcn->encrypt_type) {
+		if (WCN36XX_HAL_ED_TKIP == vif_priv->encrypt_type) {
 			/*
 			 * Supplicant is sending key in the wrong order:
 			 * Temporal Key (16 b) - TX MIC (8 b) - RX MIC (8 b)
@@ -380,14 +379,14 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 						       true);
 
 			wcn36xx_smd_set_stakey(wcn,
-				wcn->encrypt_type,
+				vif_priv->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key,
 				get_sta_index(vif, sta_priv));
 		} else {
 			wcn36xx_smd_set_bsskey(wcn,
-				wcn->encrypt_type,
+				vif_priv->encrypt_type,
 				key_conf->keyidx,
 				key_conf->keylen,
 				key);
@@ -395,7 +394,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 			    (WLAN_CIPHER_SUITE_WEP104 == key_conf->cipher)) {
 				sta_priv->is_data_encrypted = true;
 				wcn36xx_smd_set_stakey(wcn,
-					wcn->encrypt_type,
+					vif_priv->encrypt_type,
 					key_conf->keyidx,
 					key_conf->keylen,
 					key,
@@ -406,14 +405,14 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	case DISABLE_KEY:
 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
 			wcn36xx_smd_remove_bsskey(wcn,
-				wcn->encrypt_type,
+				vif_priv->encrypt_type,
 				key_conf->keyidx);
 		} else {
 			sta_priv->is_data_encrypted = false;
 			/* do not remove key if disassociated */
 			if (sta_priv->aid)
 				wcn36xx_smd_remove_stakey(wcn,
-					wcn->encrypt_type,
+					vif_priv->encrypt_type,
 					key_conf->keyidx,
 					get_sta_index(vif, sta_priv));
 		}
@@ -494,7 +493,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
-	wcn->current_vif = vif_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x\n",
 		    vif, changed);
@@ -523,14 +521,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			    bss_conf->bssid);
 
 		if (!is_zero_ether_addr(bss_conf->bssid)) {
-			wcn->is_joining = true;
+			vif_priv->is_joining = true;
 			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       bss_conf->bssid, false);
 		} else {
-			wcn->is_joining = false;
+			vif_priv->is_joining = false;
 			wcn36xx_smd_delete_bss(wcn, vif);
 		}
 	}
@@ -541,12 +539,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "ssid ",
 				 bss_conf->ssid, bss_conf->ssid_len);
 
-		wcn->ssid.length = bss_conf->ssid_len;
-		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+		vif_priv->ssid.length = bss_conf->ssid_len;
+		memcpy(&vif_priv->ssid.ssid,
+		       bss_conf->ssid,
+		       bss_conf->ssid_len);
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
-		wcn->is_joining = false;
+		vif_priv->is_joining = false;
 		if (bss_conf->assoc) {
 			struct ieee80211_sta *sta;
 			struct wcn36xx_sta *sta_priv;
@@ -572,7 +572,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 				vif->addr,
 				WCN36XX_HAL_LINK_POSTASSOC_STATE);
-			wcn->sta = sta_priv;
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
 					       true);
@@ -670,7 +669,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
-	wcn->current_vif = vif_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
 		    vif, vif->type);
@@ -699,8 +697,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
 		    vif, sta->addr);
 
-	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
-	vif_priv->sta = (struct wcn36xx_sta *)sta->drv_priv;
+	vif_priv->sta = sta_priv;
+	sta_priv->vif = vif_priv;
 	/*
 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
 	 * at this stage AID is not available yet.
@@ -725,6 +723,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 
 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
 	vif_priv->sta = NULL;
+	sta_priv->vif = NULL;
 	return 0;
 }
 

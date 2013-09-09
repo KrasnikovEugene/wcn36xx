@@ -265,6 +265,8 @@ struct wcn36xx_dxe_mem_pool {
 	void		*virt_addr;
 	dma_addr_t	phy_addr;
 };
+
+struct wcn36xx_vif;
 int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn);
 void wcn36xx_dxe_rx_frame(struct wcn36xx *wcn);
@@ -274,6 +276,7 @@ int wcn36xx_dxe_init(struct wcn36xx *wcn);
 void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
 int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
 int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+			 struct wcn36xx_vif *vif_priv,
 			 struct sk_buff *skb,
 			 bool is_low);
 void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status);

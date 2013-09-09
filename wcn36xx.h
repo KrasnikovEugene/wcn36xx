@@ -117,6 +117,13 @@ struct wcn36xx_vif {
 	struct list_head list;
 	struct wcn36xx_sta *sta;
 	u8 dtim_period;
+	enum ani_ed_type encrypt_type;
+	bool is_joining;
+	struct wcn36xx_hal_mac_ssid ssid;
+
+	/* Power management */
+	enum wcn36xx_power_state pw_state;
+
 	u8 bss_index;
 	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
@@ -147,6 +154,7 @@ struct wcn36xx_vif {
  * |______________|_____________|_______________|
  */
 struct wcn36xx_sta {
+	struct wcn36xx_vif *vif;
 	u16 aid;
 	u16 tid;
 	u8 sta_index;
@@ -160,11 +168,7 @@ struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct device		*dev;
 	struct mac_address	addresses;
-	struct wcn36xx_hal_mac_ssid ssid;
 	struct list_head	vif_list;
-	struct wcn36xx_vif	*current_vif;
-	struct wcn36xx_sta	*sta;
-	enum ani_ed_type	encrypt_type;
 
 	u8			fw_revision;
 	u8			fw_version;
@@ -197,8 +201,6 @@ struct wcn36xx {
 	struct mutex		hal_ind_mutex;
 	struct list_head	hal_ind_queue;
 
-	bool			is_joining;
-
 	/* DXE channels */
 	struct wcn36xx_dxe_ch	dxe_tx_l_ch;	/* TX low */
 	struct wcn36xx_dxe_ch	dxe_tx_h_ch;	/* TX high */
@@ -214,9 +216,6 @@ struct wcn36xx {
 	struct wcn36xx_dxe_mem_pool data_mem_pool;
 
 	struct sk_buff		*tx_ack_skb;
-
-	/* Power management */
-	enum wcn36xx_power_state     pw_state;
 
 #ifdef CONFIG_WCN36XX_DEBUGFS
 	/* Debug file system entry */
