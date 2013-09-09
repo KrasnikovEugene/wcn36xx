@@ -319,7 +319,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
-	struct wcn36xx_sta *sta_priv = NULL;
+	struct wcn36xx_sta *sta_priv = vif_priv->sta;
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 
@@ -330,7 +330,6 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 	wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "KEY: ",
 			 key_conf->key,
 			 key_conf->keylen);
-	sta_priv = sta ? (struct wcn36xx_sta *)sta->drv_priv : wcn->sta;
 
 	switch (key_conf->cipher) {
 	case WLAN_CIPHER_SUITE_WEP40:
@@ -571,7 +570,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid,
 				vif->addr,
 				WCN36XX_HAL_LINK_POSTASSOC_STATE);
-			wcn->sta = sta_priv;
 			wcn36xx_smd_config_bss(wcn, vif, sta,
 					       bss_conf->bssid,
 					       true);
@@ -697,7 +695,6 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
 		    vif, sta->addr);
 
-	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
 	vif_priv->sta = sta_priv;
 	sta_priv->vif = vif_priv;
 	/*
