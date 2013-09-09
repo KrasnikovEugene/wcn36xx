@@ -119,6 +119,7 @@ struct wcn36xx_vif {
 	u8 dtim_period;
 	enum ani_ed_type encrypt_type;
 	bool is_joining;
+	struct wcn36xx_hal_mac_ssid ssid;
 
 	/* Power management */
 	enum wcn36xx_power_state pw_state;
@@ -167,7 +168,6 @@ struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct device		*dev;
 	struct mac_address	addresses;
-	struct wcn36xx_hal_mac_ssid ssid;
 	struct list_head	vif_list;
 
 	u8			fw_revision;

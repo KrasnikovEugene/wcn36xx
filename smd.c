@@ -1170,8 +1170,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	wcn36xx_smd_set_sta_params(wcn, vif, sta, sta_params);
 
 	/* wcn->ssid is only valid in AP and IBSS mode */
-	bss->ssid.length = wcn->ssid.length;
-	memcpy(bss->ssid.ssid, wcn->ssid.ssid, wcn->ssid.length);
+	bss->ssid.length = vif_priv->ssid.length;
+	memcpy(bss->ssid.ssid, vif_priv->ssid.ssid, vif_priv->ssid.length);
 
 	bss->obss_prot_enabled = 0;
 	bss->rmf = 0;
