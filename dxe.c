@@ -577,6 +577,7 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
 }
 
 int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+			 struct wcn36xx_vif *vif_priv,
 			 struct sk_buff *skb,
 			 bool is_low)
 {
@@ -655,7 +656,7 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
 	 * mode and writing to the register will not wake up the chip. Instead
 	 * notify chip about new frame through SMSM bus.
 	 */
-	if (wcn->pw_state == WCN36XX_BMPS) {
+	if (is_low &&  vif_priv->pw_state == WCN36XX_BMPS) {
 		wcn->ctrl_ops->smsm_change_state(
 				  0,
 				  WCN36XX_SMSM_WLAN_TX_ENABLE);

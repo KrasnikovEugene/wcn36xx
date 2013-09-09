@@ -96,23 +96,42 @@ static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
 	bd->pdu.tid = tid;
 }
 
+static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
+						  u8 *addr)
+{
+	struct wcn36xx_vif *vif_priv = NULL;
+	struct ieee80211_vif *vif = NULL;
+	list_for_each_entry(vif_priv, &wcn->vif_list, list) {
+			vif = container_of((void *)vif_priv,
+				   struct ieee80211_vif,
+				   drv_priv);
+			if (memcmp(vif->addr, addr, ETH_ALEN) == 0)
+				return vif_priv;
+	}
+	wcn36xx_warn("vif %pM not found\n", addr);
+	return NULL;
+}
 static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 				struct wcn36xx *wcn,
+				struct wcn36xx_vif **vif_priv,
 				struct wcn36xx_sta *sta_priv,
 				struct ieee80211_hdr *hdr,
 				bool bcast)
 {
-	struct ieee80211_vif *vif = container_of((void *)wcn->current_vif,
-						 struct ieee80211_vif,
-						 drv_priv);
+	struct ieee80211_vif *vif = NULL;
+	struct wcn36xx_vif *__vif_priv = NULL;
 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
-	bd->dpu_sign = wcn->current_vif->ucast_dpu_signature;
 
 	/*
 	 * For not unicast frames mac80211 will not set sta pointer so use
 	 * self_sta_index instead.
 	 */
 	if (sta_priv) {
+		__vif_priv = sta_priv->vif;
+		vif = container_of((void *)__vif_priv,
+				   struct ieee80211_vif,
+				   drv_priv);
+
 		if (vif->type == NL80211_IFTYPE_STATION) {
 			bd->sta_index = sta_priv->bss_sta_index;
 			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
@@ -123,9 +142,12 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
 		}
 	} else {
-		bd->sta_index = wcn->current_vif->self_sta_index;
-		bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
+		__vif_priv = get_vif_by_addr(wcn, hdr->addr2);
+		bd->sta_index = __vif_priv->self_sta_index;
+		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
 	}
+
+	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
 
 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
 	   (sta_priv && !sta_priv->is_data_encrypted))
@@ -135,15 +157,19 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 		bd->ub = 1;
 		bd->ack_policy = 1;
 	}
+	*vif_priv = __vif_priv;
 }
 
 static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 				struct wcn36xx *wcn,
+				struct wcn36xx_vif **vif_priv,
 				struct ieee80211_hdr *hdr,
 				bool bcast)
 {
-	bd->sta_index = wcn->current_vif->self_sta_index;
-	bd->dpu_desc_idx = wcn->current_vif->self_dpu_desc_index;
+	struct wcn36xx_vif *__vif_priv =
+		get_vif_by_addr(wcn, hdr->addr2);
+	bd->sta_index = __vif_priv->self_sta_index;
+	bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
 	bd->dpu_ne = 1;
 
 	/* default rate for unicast */
@@ -160,7 +186,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 	 * In joining state trick hardware that probe is sent as
 	 * unicast even if address is broadcast.
 	 */
-	if (wcn->is_joining &&
+	if (__vif_priv->is_joining &&
 	    ieee80211_is_probe_req(hdr->frame_control))
 		bcast = false;
 
@@ -172,6 +198,7 @@ static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
 		bd->queue_id = WCN36XX_TX_B_WQ_ID;
 	} else
 		bd->queue_id = WCN36XX_TX_U_WQ_ID;
+	*vif_priv = __vif_priv;
 }
 
 int wcn36xx_start_tx(struct wcn36xx *wcn,
@@ -179,6 +206,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 		     struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+	struct wcn36xx_vif *vif_priv = NULL;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	unsigned long flags;
 	bool is_low = ieee80211_is_data(hdr->frame_control);
@@ -233,7 +261,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 
 	/* Data frames served first*/
 	if (is_low) {
-		wcn36xx_set_tx_data(bd, wcn, sta_priv, hdr, bcast);
+		wcn36xx_set_tx_data(bd, wcn, &vif_priv, sta_priv, hdr, bcast);
 		wcn36xx_set_tx_pdu(bd,
 			   ieee80211_is_data_qos(hdr->frame_control) ?
 			   sizeof(struct ieee80211_qos_hdr) :
@@ -241,7 +269,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 			   skb->len, sta_priv ? sta_priv->tid : 0);
 	} else {
 		/* MGMT and CTRL frames are handeld here*/
-		wcn36xx_set_tx_mgmt(bd, wcn, hdr, bcast);
+		wcn36xx_set_tx_mgmt(bd, wcn, &vif_priv, hdr, bcast);
 		wcn36xx_set_tx_pdu(bd,
 			   ieee80211_is_data_qos(hdr->frame_control) ?
 			   sizeof(struct ieee80211_qos_hdr) :
@@ -252,5 +280,5 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
 	bd->tx_bd_sign = 0xbdbdbdbd;
 
-	return wcn36xx_dxe_tx_frame(wcn, skb, is_low);
+	return wcn36xx_dxe_tx_frame(wcn, vif_priv, skb, is_low);
 }
