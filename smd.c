@@ -851,11 +851,14 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
 	v1->sta_index = orig->sta_index;
 }
 
-static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
+static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
+				      struct ieee80211_sta *sta,
+				      void *buf,
 				      size_t len)
 {
 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
 	struct config_sta_rsp_params *params;
+	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -869,11 +872,8 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn, void *buf,
 		return -EIO;
 	}
 
-	if (wcn->sta) {
-		wcn->sta->sta_index = params->sta_index;
-		wcn->sta->dpu_desc_index = params->dpu_index;
-		wcn->sta = NULL;
-	}
+	sta_priv->sta_index = params->sta_index;
+	sta_priv->dpu_desc_index = params->dpu_index;
 
 	wcn36xx_dbg(WCN36XX_DBG_HAL,
 		    "hal config sta rsp status %d sta_index %d bssid_index %d p2p %d\n",
@@ -935,7 +935,10 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		wcn36xx_err("Sending hal_config_sta failed\n");
 		goto out;
 	}
-	ret = wcn36xx_smd_config_sta_rsp(wcn, wcn->hal_buf, wcn->hal_rsp_len);
+	ret = wcn36xx_smd_config_sta_rsp(wcn,
+					 sta,
+					 wcn->hal_buf,
+					 wcn->hal_rsp_len);
 	if (ret) {
 		wcn36xx_err("hal_config_sta response failed err=%d\n", ret);
 		goto out;
@@ -1085,9 +1088,9 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 
 	priv_vif->bss_index = params->bss_index;
 
-	if (wcn->sta) {
-		wcn->sta->bss_sta_index =  params->bss_sta_index;
-		wcn->sta->bss_dpu_desc_index = params->dpu_desc_index;
+	if (priv_vif->sta) {
+		priv_vif->sta->bss_sta_index =  params->bss_sta_index;
+		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
 	}
 
 	priv_vif->ucast_dpu_signature = params->ucast_dpu_signature;
