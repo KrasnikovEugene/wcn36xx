@@ -153,6 +153,7 @@ struct wcn36xx_vif {
  * |______________|_____________|_______________|
  */
 struct wcn36xx_sta {
+	struct wcn36xx_vif *vif;
 	u16 aid;
 	u16 tid;
 	u8 sta_index;
