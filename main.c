@@ -161,6 +161,18 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
+	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
+};
+
+static const struct ieee80211_iface_combination if_comb = {
+	.limits = if_limits,
+	.n_limits = ARRAY_SIZE(if_limits),
+	.max_interfaces = 2,
+	.num_different_channels = 1,
+};
+
 #ifdef CONFIG_PM
 
 static const struct wiphy_wowlan_support wowlan_support = {
