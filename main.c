@@ -700,7 +700,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		    vif, sta->addr);
 
 	wcn->sta = (struct wcn36xx_sta *)sta->drv_priv;
-	vif_priv->sta = (struct wcn36xx_sta *)sta->drv_priv;
+	vif_priv->sta = sta_priv;
+	sta_priv->vif = vif_priv;
 	/*
 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
 	 * at this stage AID is not available yet.
@@ -725,6 +726,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 
 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
 	vif_priv->sta = NULL;
+	sta_priv->vif = NULL;
 	return 0;
 }
 
