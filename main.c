@@ -539,8 +539,10 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		wcn36xx_dbg_dump(WCN36XX_DBG_MAC, "ssid ",
 				 bss_conf->ssid, bss_conf->ssid_len);
 
-		wcn->ssid.length = bss_conf->ssid_len;
-		memcpy(&wcn->ssid.ssid, bss_conf->ssid, bss_conf->ssid_len);
+		vif_priv->ssid.length = bss_conf->ssid_len;
+		memcpy(&vif_priv->ssid.ssid,
+		       bss_conf->ssid,
+		       bss_conf->ssid_len);
 	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
