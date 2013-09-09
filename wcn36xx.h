@@ -169,7 +169,6 @@ struct wcn36xx {
 	struct mac_address	addresses;
 	struct wcn36xx_hal_mac_ssid ssid;
 	struct list_head	vif_list;
-	struct wcn36xx_vif	*current_vif;
 	struct wcn36xx_sta	*sta;
 
 	u8			fw_revision;

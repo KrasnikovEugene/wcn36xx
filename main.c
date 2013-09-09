@@ -494,7 +494,6 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	u16 tim_off, tim_len;
 	enum wcn36xx_hal_link_state link_state;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
-	wcn->current_vif = vif_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x\n",
 		    vif, changed);
@@ -670,7 +669,6 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
-	wcn->current_vif = vif_priv;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac add interface vif %p type %d\n",
 		    vif, vif->type);
