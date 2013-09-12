@@ -161,18 +161,6 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
-static const struct ieee80211_iface_limit if_limits[] = {
-	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION) },
-	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
-};
-
-static const struct ieee80211_iface_combination if_comb = {
-	.limits = if_limits,
-	.n_limits = ARRAY_SIZE(if_limits),
-	.max_interfaces = 2,
-	.num_different_channels = 1,
-};
-
 #ifdef CONFIG_PM
 
 static const struct wiphy_wowlan_support wowlan_support = {
@@ -286,6 +274,8 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct ieee80211_vif *vif = NULL;
+	struct wcn36xx_vif *tmp = NULL;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x\n", changed);
 
@@ -293,7 +283,15 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 		int ch = WCN36XX_HW_CHANNEL(wcn);
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d\n",
 			    ch);
-		wcn36xx_smd_switch_channel(wcn, ch);
+
+		list_for_each_entry(tmp, &wcn->vif_list, list) {
+			wcn36xx_dbg(WCN36XX_DBG_HAL, "beacon missed bss_index %d\n",
+				    tmp->bss_index);
+			vif = container_of((void *)tmp,
+						 struct ieee80211_vif,
+						 drv_priv);
+			wcn36xx_smd_switch_channel(wcn, vif, ch);
+		}
 	}
 
 	return 0;
@@ -444,7 +442,7 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
-	wcn36xx_smd_init_scan(wcn);
+	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN);
 	wcn36xx_smd_start_scan(wcn);
 }
 
@@ -453,7 +451,7 @@ static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_end_scan(wcn);
-	wcn36xx_smd_finish_scan(wcn);
+	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN);
 }
 
 static void wcn36xx_update_allowed_rates(struct wcn36xx *wcn,
@@ -506,8 +504,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	enum wcn36xx_hal_link_state link_state;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x\n",
-		    vif, changed);
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x type=%d\n",
+		    vif, changed, vif->type);
 
 	if (changed & BSS_CHANGED_BEACON_INFO) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -607,7 +605,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 
-	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
+	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && (!vif_priv->is_p2p) && (false)) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp\n");
 		skb = ieee80211_proberesp_get(hw, vif);
 		if (!skb) {
@@ -627,16 +625,13 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		if (bss_conf->enable_beacon) {
 			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       wcn->addresses.addr, false);
+					       vif->addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
 				wcn36xx_err("failed to alloc beacon skb\n");
 				goto out;
 			}
-			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
-			dev_kfree_skb(skb);
-
 			if (vif->type == NL80211_IFTYPE_ADHOC ||
 			    vif->type == NL80211_IFTYPE_MESH_POINT)
 				link_state = WCN36XX_HAL_LINK_IBSS_STATE;
@@ -645,6 +640,9 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						link_state);
+			wcn36xx_smd_send_beacon(wcn, vif, skb, tim_off, 0);
+			dev_kfree_skb(skb);
+
 		} else {
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						WCN36XX_HAL_LINK_IDLE_STATE);
@@ -697,6 +695,20 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	list_add(&vif_priv->list, &wcn->vif_list);
 	wcn36xx_smd_add_sta_self(wcn, vif);
 
+	return 0;
+}
+
+static int wcn36xx_change_interface(struct ieee80211_hw *hw,
+				struct ieee80211_vif *vif,
+				enum nl80211_iftype new_type, bool p2p)
+{
+	struct wcn36xx *wcn = hw->priv;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac wcn36xx_change_interface vif %pM type %d, new_type=%d, p2p=%d\n",
+		    vif->addr, vif->type, new_type, p2p);
+	vif_priv->is_p2p = p2p;
+	wcn36xx_smd_delete_sta_self(wcn, vif->addr);
+	wcn36xx_smd_add_sta_self(wcn, vif);
 	return 0;
 }
 
@@ -809,12 +821,50 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 
 	return 0;
 }
+static void wcn36xx_disable_roc_work(struct work_struct *work)
+{
+	struct wcn36xx *wcn = container_of(work, struct wcn36xx, hw_roc_disable_work.work);
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_disable_roc_work\n");
+	ieee80211_remain_on_channel_expired(wcn->hw);
+}
+static int wcn36xx_remain_on_channel(struct ieee80211_hw *hw,
+				 struct ieee80211_vif *vif,
+				 struct ieee80211_channel *chan,
+				 int duration,
+				 enum ieee80211_roc_type type)
+{
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_remain_on_channel vif %pM type %d chan=%d duration=%d\n",
+		    vif->addr, vif->type, chan->center_freq, duration);
+	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SUSPEND_LINK);
+	wcn36xx_smd_switch_channel(wcn, vif, chan->hw_value);
+	wcn36xx_smd_set_link_st(wcn, vif->addr,
+				vif->addr,
+				WCN36XX_HAL_LINK_LISTEN_STATE);
+	ieee80211_ready_on_channel(hw);
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "ieee80211_ready_on_channel\n");
+	//schedule_delayed_work(&wcn->hw_roc_disable_work, duration);
+	ieee80211_remain_on_channel_expired(wcn->hw);
+	return 0;
+}
+static int wcn36xx_cancel_remain_on_channel(struct ieee80211_hw *hw)
+{
+	struct wcn36xx *wcn = hw->priv;
+	wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_cancel_remain_on_channel \n");
+	cancel_delayed_work_sync(&wcn->hw_roc_disable_work);
+	wcn36xx_smd_set_link_st(wcn, wcn->addresses.addr,
+				wcn->addresses.addr,
+				WCN36XX_HAL_LINK_IDLE_STATE);
+	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SUSPEND_LINK);
+	return 0;
+}
 
 static const struct ieee80211_ops wcn36xx_ops = {
 	.start			= wcn36xx_start,
 	.stop			= wcn36xx_stop,
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface	= wcn36xx_remove_interface,
+	.change_interface	= wcn36xx_change_interface,
 #ifdef CONFIG_PM
 	.suspend		= wcn36xx_suspend,
 	.resume			= wcn36xx_resume,
@@ -830,12 +880,30 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.sta_add		= wcn36xx_sta_add,
 	.sta_remove		= wcn36xx_sta_remove,
 	.ampdu_action		= wcn36xx_ampdu_action,
+	.remain_on_channel	= wcn36xx_remain_on_channel,
+	.cancel_remain_on_channel = wcn36xx_cancel_remain_on_channel,
+
 };
+
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ .max = 3, .types = BIT(NL80211_IFTYPE_STATION) },
+	{ .max = 3, .types = BIT(NL80211_IFTYPE_AP) },
+	{ .max = 3, .types = BIT(NL80211_IFTYPE_P2P_CLIENT) },
+	{ .max = 3, .types = BIT(NL80211_IFTYPE_P2P_GO) },
+};
+
+static const struct ieee80211_iface_combination if_comb = {
+	.limits = if_limits,
+	.n_limits = ARRAY_SIZE(if_limits),
+	.max_interfaces = 3,
+	.num_different_channels = 1,
+};
+
 
 static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 {
 	int ret = 0;
-
+	
 	static const u32 cipher_suites[] = {
 		WLAN_CIPHER_SUITE_WEP40,
 		WLAN_CIPHER_SUITE_WEP104,
@@ -853,10 +921,12 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_ADHOC) |
-		BIT(NL80211_IFTYPE_MESH_POINT);
+		BIT(NL80211_IFTYPE_MESH_POINT) |
+		BIT(NL80211_IFTYPE_P2P_CLIENT) |
+		BIT(NL80211_IFTYPE_P2P_GO);
 
-	wcn->hw->wiphy->iface_combinations = &if_comb;
-	wcn->hw->wiphy->n_iface_combinations = 1;
+	//wcn->hw->wiphy->iface_combinations = &if_comb;
+	//wcn->hw->wiphy->n_iface_combinations = 1;
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
@@ -864,14 +934,36 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->cipher_suites = cipher_suites;
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 
-	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
-
+	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD | WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+	wcn->hw->wiphy->max_remain_on_channel_duration = 500;
 #ifdef CONFIG_PM
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	wcn->hw->wiphy->n_addresses = 1;
-	wcn->hw->wiphy->addresses = &wcn->addresses;
+	wcn->addresses2[0].addr[0] = 0x30;
+	wcn->addresses2[0].addr[1] = 0x39;
+	wcn->addresses2[0].addr[2] = 0x26;
+	wcn->addresses2[0].addr[3] = 0x0e;
+	wcn->addresses2[0].addr[4] = 0xf4;
+	wcn->addresses2[0].addr[5] = 0x9e;
+
+	wcn->addresses2[1].addr[0] = 0x30;
+	wcn->addresses2[1].addr[1] = 0x39;
+	wcn->addresses2[1].addr[2] = 0x26;
+	wcn->addresses2[1].addr[3] = 0x0b;
+	wcn->addresses2[1].addr[4] = 0x8b;
+	wcn->addresses2[1].addr[5] = 0xb4;
+
+	wcn->addresses2[2].addr[0] = 0x30;
+	wcn->addresses2[2].addr[1] = 0x39;
+	wcn->addresses2[2].addr[2] = 0x26;
+	wcn->addresses2[2].addr[3] = 0x0b;
+	wcn->addresses2[2].addr[4] = 0x8b;
+	wcn->addresses2[2].addr[5] = 0xb5;
+
+	wcn->hw->wiphy->n_addresses = 3;
+	wcn->hw->wiphy->addresses = wcn->addresses2;
+	SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses2[0].addr);
 
 	wcn->hw->max_listen_interval = 200;
 
@@ -969,7 +1061,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
 
 	if (!wcn->ctrl_ops->get_hw_mac(wcn->addresses.addr)) {
 		wcn36xx_info("mac address: %pM\n", wcn->addresses.addr);
-		SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses.addr);
+		//SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses.addr);
 	}
 
 	ret = wcn36xx_platform_get_resources(wcn, pdev);
@@ -981,6 +1073,7 @@ static int wcn36xx_probe(struct platform_device *pdev)
 	if (ret)
 		goto out_unmap;
 
+	INIT_DELAYED_WORK(&wcn->hw_roc_disable_work, wcn36xx_disable_roc_work);
 	return 0;
 
 out_unmap:

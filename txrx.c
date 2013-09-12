@@ -121,12 +121,14 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 	struct ieee80211_vif *vif = NULL;
 	struct wcn36xx_vif *__vif_priv = NULL;
 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
+	//wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data bcast=%d\n", bcast);
 
 	/*
 	 * For not unicast frames mac80211 will not set sta pointer so use
 	 * self_sta_index instead.
 	 */
 	if (sta_priv) {
+		//wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data sta is ava\n");
 		__vif_priv = sta_priv->vif;
 		vif = container_of((void *)__vif_priv,
 				   struct ieee80211_vif,
@@ -142,6 +144,7 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
 		}
 	} else {
+		//wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data no sta\n");
 		__vif_priv = get_vif_by_addr(wcn, hdr->addr2);
 		bd->sta_index = __vif_priv->self_sta_index;
 		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
@@ -150,13 +153,22 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
 
 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
-	   (sta_priv && !sta_priv->is_data_encrypted))
+	   (sta_priv && !sta_priv->is_data_encrypted)) {
+		wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data now queue is 6 tid _6 res2 sta index 3\n");
+		bd->queue_id = 6;
 		bd->dpu_ne = 1;
+		bd->pdu.reserved3 = 2;
+		bd->pdu.tid = 6;
+		bd->tx_comp = 0;
+		//bd->sta_index = 3;
+	}
 
 	if (bcast) {
+		//wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data broadcast\n");
 		bd->ub = 1;
 		bd->ack_policy = 1;
 	}
+	//wcn36xx_dbg(WCN36XX_DBG_TX, "wcn36xx_set_tx_data ub=%d, ack_policy=%d, dpu_sign=%d\n", bd->ub, bd->ack_policy, bd->dpu_sign);
 	*vif_priv = __vif_priv;
 }
 
@@ -239,6 +251,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
 
 	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
+	//bd->tx_comp = 0;
 	if (bd->tx_comp) {
 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
 		spin_lock_irqsave(&wcn->dxe_lock, flags);
@@ -261,12 +274,13 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
 
 	/* Data frames served first*/
 	if (is_low) {
-		wcn36xx_set_tx_data(bd, wcn, &vif_priv, sta_priv, hdr, bcast);
 		wcn36xx_set_tx_pdu(bd,
 			   ieee80211_is_data_qos(hdr->frame_control) ?
 			   sizeof(struct ieee80211_qos_hdr) :
 			   sizeof(struct ieee80211_hdr_3addr),
 			   skb->len, sta_priv ? sta_priv->tid : 0);
+		wcn36xx_set_tx_data(bd, wcn, &vif_priv, sta_priv, hdr, bcast);
+		
 	} else {
 		/* MGMT and CTRL frames are handeld here*/
 		wcn36xx_set_tx_mgmt(bd, wcn, &vif_priv, hdr, bcast);

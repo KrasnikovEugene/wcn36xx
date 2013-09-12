@@ -71,7 +71,7 @@ enum wcn36xx_debug_mask {
 	if (debug_mask & mask)					\
 		print_hex_dump(KERN_DEBUG, pr_fmt(prefix_str),	\
 			       DUMP_PREFIX_OFFSET, 32, 1,	\
-			       buf, len, false);		\
+			       buf, len > 32? len:len, false);		\
 } while (0)
 
 #define WCN36XX_HW_CHANNEL(__wcn) (__wcn->hw->conf.chandef.chan->hw_value)
@@ -120,6 +120,7 @@ struct wcn36xx_vif {
 	enum ani_ed_type encrypt_type;
 	bool is_joining;
 	struct wcn36xx_hal_mac_ssid ssid;
+	bool is_p2p;
 
 	/* Power management */
 	enum wcn36xx_power_state pw_state;
@@ -168,8 +169,9 @@ struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct device		*dev;
 	struct mac_address	addresses;
+	struct mac_address	addresses2[3];
 	struct list_head	vif_list;
-
+	struct delayed_work	hw_roc_disable_work;
 	u8			fw_revision;
 	u8			fw_version;
 	u8			fw_minor;
