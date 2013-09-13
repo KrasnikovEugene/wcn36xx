@@ -522,7 +522,8 @@ static int wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
 	return ret;
 }
 
-int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch)
+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
+			       struct ieee80211_vif *vif, int ch)
 {
 	struct wcn36xx_hal_switch_channel_req_msg msg_body;
 	int ret = 0;
@@ -533,7 +534,7 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch)
 	msg_body.channel_number = (u8)ch;
 	msg_body.tx_mgmt_power = 0xbf;
 	msg_body.max_tx_power = 0xbf;
-	memcpy(msg_body.self_sta_mac_addr, wcn->addresses.addr, ETH_ALEN);
+	memcpy(msg_body.self_sta_mac_addr, vif->addr, ETH_ALEN);
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
@@ -1118,7 +1119,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 
 	memcpy(&bss->bssid, bssid, ETH_ALEN);
 
-	memcpy(&bss->self_mac_addr, &wcn->addresses, ETH_ALEN);
+	memcpy(bss->self_mac_addr, vif->addr, ETH_ALEN);
 
 	if (vif->type == NL80211_IFTYPE_STATION) {
 		bss->bss_type = WCN36XX_HAL_INFRASTRUCTURE_MODE;
@@ -1258,8 +1259,9 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
-			    u16 tim_off, u16 p2p_off)
+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+			    struct sk_buff *skb_beacon, u16 tim_off,
+			    u16 p2p_off)
 {
 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
 	int ret = 0;
@@ -1279,7 +1281,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
 			      msg_body.beacon_length);
 		return -ENOMEM;
 	}
-	memcpy(&msg_body.bssid, &wcn->addresses, ETH_ALEN);
+	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
 
 	/* TODO need to find out why this is needed? */
 	msg_body.tim_ie_offset = tim_off+4;
@@ -1305,7 +1307,9 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
+				      struct ieee80211_vif *vif,
+				      struct sk_buff *skb)
 {
 	struct wcn36xx_hal_send_probe_resp_req_msg msg;
 	int ret = 0;
@@ -1322,7 +1326,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb)
 	msg.probe_resp_template_len = skb->len;
 	memcpy(&msg.probe_resp_template, skb->data, skb->len);
 
-	memcpy(&msg.bssid, &wcn->addresses, ETH_ALEN);
+	memcpy(msg.bssid, vif->addr, ETH_ALEN);
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg);
 

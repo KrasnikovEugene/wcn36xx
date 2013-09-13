@@ -76,10 +76,14 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif);
 int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta);
-int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct sk_buff *skb_beacon,
-			    u16 tim_off, u16 p2p_off);
-int wcn36xx_smd_switch_channel(struct wcn36xx *wcn, int ch);
-int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn, struct sk_buff *skb);
+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+			    struct sk_buff *skb_beacon, u16 tim_off,
+			    u16 p2p_off);
+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
+			       struct ieee80211_vif *vif, int ch);
+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
+				      struct ieee80211_vif *vif,
+				      struct sk_buff *skb);
 int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
 			   enum ani_ed_type enc_type,
 			   u8 keyidx,

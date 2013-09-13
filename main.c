@@ -274,6 +274,8 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 {
 	struct wcn36xx *wcn = hw->priv;
+	struct ieee80211_vif *vif = NULL;
+	struct wcn36xx_vif *tmp;
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac config changed 0x%08x\n", changed);
 
@@ -281,7 +283,12 @@ static int wcn36xx_config(struct ieee80211_hw *hw, u32 changed)
 		int ch = WCN36XX_HW_CHANNEL(wcn);
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "wcn36xx_config channel switch=%d\n",
 			    ch);
-		wcn36xx_smd_switch_channel(wcn, ch);
+		list_for_each_entry(tmp, &wcn->vif_list, list) {
+			vif = container_of((void *)tmp,
+					   struct ieee80211_vif,
+					   drv_priv);
+			wcn36xx_smd_switch_channel(wcn, vif, ch);
+		}
 	}
 
 	return 0;
@@ -603,7 +610,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			goto out;
 		}
 
-		wcn36xx_smd_update_proberesp_tmpl(wcn, skb);
+		wcn36xx_smd_update_proberesp_tmpl(wcn, vif, skb);
 		dev_kfree_skb(skb);
 	}
 
@@ -615,14 +622,14 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		if (bss_conf->enable_beacon) {
 			vif_priv->bss_index = 0xff;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-					       wcn->addresses.addr, false);
+					       vif->addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
 						       &tim_len);
 			if (!skb) {
 				wcn36xx_err("failed to alloc beacon skb\n");
 				goto out;
 			}
-			wcn36xx_smd_send_beacon(wcn, skb, tim_off, 0);
+			wcn36xx_smd_send_beacon(wcn, vif, skb, tim_off, 0);
 			dev_kfree_skb(skb);
 
 			if (vif->type == NL80211_IFTYPE_ADHOC ||
