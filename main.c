@@ -439,7 +439,7 @@ static void wcn36xx_sw_scan_start(struct ieee80211_hw *hw)
 {
 	struct wcn36xx *wcn = hw->priv;
 
-	wcn36xx_smd_init_scan(wcn);
+	wcn36xx_smd_init_scan(wcn, HAL_SYS_MODE_SCAN);
 	wcn36xx_smd_start_scan(wcn);
 }
 
@@ -448,7 +448,7 @@ static void wcn36xx_sw_scan_complete(struct ieee80211_hw *hw)
 	struct wcn36xx *wcn = hw->priv;
 
 	wcn36xx_smd_end_scan(wcn);
-	wcn36xx_smd_finish_scan(wcn);
+	wcn36xx_smd_finish_scan(wcn, HAL_SYS_MODE_SCAN);
 }
 
 static void wcn36xx_update_allowed_rates(struct wcn36xx *wcn,

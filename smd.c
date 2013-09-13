@@ -389,7 +389,7 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
+int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode)
 {
 	struct wcn36xx_hal_init_scan_req_msg msg_body;
 	int ret = 0;
@@ -397,7 +397,7 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn)
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ);
 
-	msg_body.mode = HAL_SYS_MODE_SCAN;
+	msg_body.mode = mode;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
@@ -478,7 +478,8 @@ out:
 	return ret;
 }
 
-int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
+			    enum wcn36xx_hal_sys_mode mode)
 {
 	struct wcn36xx_hal_finish_scan_req_msg msg_body;
 	int ret = 0;
@@ -486,7 +487,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn)
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ);
 
-	msg_body.mode = HAL_SYS_MODE_SCAN;
+	msg_body.mode = mode;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
