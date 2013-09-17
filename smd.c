@@ -1145,6 +1145,8 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		/* Work around here to make sure beaconing happend in mesh */
 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
 		bss->oper_mode = 0;
+		/* Set the self STA in bss config to support HT */
+		sta_params->ht_capable = 1;
 	} else {
 		wcn36xx_warn("Unknown type for bss config: %d\n", vif->type);
 	}
