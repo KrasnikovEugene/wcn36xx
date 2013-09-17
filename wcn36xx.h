@@ -169,7 +169,6 @@ struct wcn36xx_dxe_ch;
 struct wcn36xx {
 	struct ieee80211_hw	*hw;
 	struct device		*dev;
-	struct mac_address	addresses;
 	struct list_head	vif_list;
 
 	u8			fw_revision;

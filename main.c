@@ -890,9 +890,6 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->wowlan = &wowlan_support;
 #endif
 
-	wcn->hw->wiphy->n_addresses = 1;
-	wcn->hw->wiphy->addresses = &wcn->addresses;
-
 	wcn->hw->max_listen_interval = 200;
 
 	wcn->hw->queues = 4;
@@ -947,6 +944,8 @@ static int wcn36xx_probe(struct platform_device *pdev)
 	struct ieee80211_hw *hw;
 	struct wcn36xx *wcn;
 	int ret;
+	u8 addr[ETH_ALEN];
+
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe\n");
 
 	hw = ieee80211_alloc_hw(sizeof(struct wcn36xx), &wcn36xx_ops);
@@ -963,9 +962,9 @@ static int wcn36xx_probe(struct platform_device *pdev)
 
 	mutex_init(&wcn->hal_mutex);
 
-	if (!wcn->ctrl_ops->get_hw_mac(wcn->addresses.addr)) {
-		wcn36xx_info("mac address: %pM\n", wcn->addresses.addr);
-		SET_IEEE80211_PERM_ADDR(wcn->hw, wcn->addresses.addr);
+	if (!wcn->ctrl_ops->get_hw_mac(addr)) {
+		wcn36xx_info("mac address: %pM\n", addr);
+		SET_IEEE80211_PERM_ADDR(wcn->hw, addr);
 	}
 
 	ret = wcn36xx_platform_get_resources(wcn, pdev);
