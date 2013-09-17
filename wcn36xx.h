@@ -162,6 +162,8 @@ struct wcn36xx_sta {
 	u8 bss_sta_index;
 	u8 bss_dpu_desc_index;
 	bool is_data_encrypted;
+	/* Rates */
+	struct wcn36xx_hal_supported_rates supported_rates;
 };
 struct wcn36xx_dxe_ch;
 struct wcn36xx {
@@ -183,9 +185,6 @@ struct wcn36xx {
 	int			tx_irq;
 	int			rx_irq;
 	void __iomem		*mmio;
-
-	/* Rates */
-	struct wcn36xx_hal_supported_rates supported_rates;
 
 	struct wcn36xx_platform_ctrl_ops *ctrl_ops;
 	/*
@@ -235,5 +234,6 @@ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
 		wcn->fw_version == version &&
 		wcn->fw_revision == revision);
 }
+void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates);
 
 #endif	/* _WCN36XX_H_ */
