@@ -2,7 +2,7 @@
 # make it possible to set/override android variables in .config
 -include .config
 
-CROSS_COMPILE=$(ARM_EABI_TOOLCHAIN)/arm-eabi-
+CROSS_COMPILE?=$(ARM_EABI_TOOLCHAIN)/arm-eabi-
 
 ifneq ($(KERNELRELEASE),)
 	wcn36xx-objs		+= \
