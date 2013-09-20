@@ -153,9 +153,6 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	sta_params->bssid_index = priv_vif->bss_index;
 	sta_params->p2p = 0;
 
-	memcpy(&sta_params->supported_rates, &wcn->supported_rates,
-		sizeof(wcn->supported_rates));
-
 	if (sta) {
 		priv_sta = (struct wcn36xx_sta *)sta->drv_priv;
 		if (NL80211_IFTYPE_STATION == vif->type)
@@ -166,6 +163,10 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		sta_params->max_sp_len = sta->max_sp;
 		sta_params->aid = priv_sta->aid;
 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
+		memcpy(&sta_params->supported_rates, &priv_sta->supported_rates,
+			sizeof(priv_sta->supported_rates));
+	} else {
+		wcn36xx_set_default_rates(&sta_params->supported_rates);
 	}
 }
 
