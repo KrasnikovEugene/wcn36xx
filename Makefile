@@ -15,11 +15,11 @@ ifneq ($(KERNELRELEASE),)
 
 	obj-m := wcn36xx.o
 else
-	KLIB    := $(ANDROID_PRODUCT_OUT)/obj/KERNEL_OBJ/
+	KLIB_BUILD := $(ANDROID_PRODUCT_OUT)/obj/KERNEL_OBJ/
 	PWD	:= $(shell pwd)
 
 default:
-	$(MAKE) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) -C $(KLIB) SUBDIRS=$(PWD) modules
+	$(MAKE) ARCH=arm CROSS_COMPILE=$(CROSS_COMPILE) -C $(KLIB_BUILD) SUBDIRS=$(PWD) modules
 
 clean:
 	rm -rf  *.ko *.mod.* *.o .*.o.d .*.cmd .tmp_versions Module.symvers *.order \
