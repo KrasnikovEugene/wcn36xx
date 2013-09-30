@@ -11,6 +11,7 @@ ifneq ($(KERNELRELEASE),)
 				txrx.o \
 				smd.o \
 				pmc.o \
+				p2p.o \
 				debug.o
 
 	obj-m := wcn36xx.o

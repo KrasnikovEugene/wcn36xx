@@ -20,6 +20,7 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include "wcn36xx.h"
+#include "p2p.h"
 
 unsigned int debug_mask;
 module_param(debug_mask, uint, 0644);
@@ -162,6 +163,21 @@ static struct ieee80211_supported_band wcn_band_5ghz = {
 	}
 };
 
+static const struct ieee80211_iface_limit if_limits[] = {
+	{ .max = 3, .types = BIT(NL80211_IFTYPE_STATION) |
+	  BIT(NL80211_IFTYPE_AP) |
+	  BIT(NL80211_IFTYPE_P2P_CLIENT) |
+	  BIT(NL80211_IFTYPE_P2P_GO) },
+	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
+};
+
+static const struct ieee80211_iface_combination if_comb = {
+	.limits = if_limits,
+	.n_limits = ARRAY_SIZE(if_limits),
+	.max_interfaces = 3,
+	.num_different_channels = 1,
+};
+
 #ifdef CONFIG_PM
 
 static const struct wiphy_wowlan_support wowlan_support = {
@@ -176,6 +192,23 @@ static inline u8 get_sta_index(struct ieee80211_vif *vif,
 	return NL80211_IFTYPE_STATION == vif->type ?
 	       sta_priv->bss_sta_index :
 	       sta_priv->sta_index;
+}
+
+
+static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
+						  u8 *addr)
+{
+	struct wcn36xx_vif *vif_priv = NULL;
+	struct ieee80211_vif *vif = NULL;
+	list_for_each_entry(vif_priv, &wcn->vif_list, list) {
+			vif = container_of((void *)vif_priv,
+				   struct ieee80211_vif,
+				   drv_priv);
+			if (memcmp(vif->addr, addr, ETH_ALEN) == 0)
+				return vif_priv;
+	}
+	wcn36xx_warn("vif %pM not found\n", addr);
+	return NULL;
 }
 
 static int wcn36xx_start(struct ieee80211_hw *hw)
@@ -231,6 +264,7 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
 		goto out_smd_stop;
 	}
 
+	wcn36xx_p2p_init(wcn);
 	wcn36xx_debugfs_init(wcn);
 
 	if (!wcn36xx_is_fw_version(wcn, 1, 2, 2, 24)) {
@@ -262,6 +296,7 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop\n");
 
 	wcn36xx_debugfs_exit(wcn);
+	wcn36xx_p2p_deinit(wcn);
 	wcn36xx_smd_stop(wcn);
 	wcn36xx_dxe_deinit(wcn);
 	wcn36xx_smd_close(wcn);
@@ -529,8 +564,9 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 	enum wcn36xx_hal_link_state link_state;
 	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
 
-	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%08x\n",
-		    vif, changed);
+	wcn36xx_dbg(WCN36XX_DBG_MAC,
+		    "mac bss info changed vif %p changed 0x%08x type=%d\n",
+		    vif, changed, vif->type);
 
 	if (changed & BSS_CHANGED_BEACON_INFO) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
@@ -630,7 +666,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		}
 	}
 
-	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
+	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && (!vif_priv->is_p2p)) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss changed ap probe resp\n");
 		skb = ieee80211_proberesp_get(hw, vif);
 		if (!skb) {
@@ -678,6 +714,22 @@ out:
 	return;
 }
 
+static int wcn36xx_change_interface(struct ieee80211_hw *hw,
+				    struct ieee80211_vif *vif,
+				    enum nl80211_iftype new_type, bool p2p)
+{
+	struct wcn36xx *wcn = hw->priv;
+	struct wcn36xx_vif *vif_priv = (struct wcn36xx_vif *)vif->drv_priv;
+
+	wcn36xx_dbg(WCN36XX_DBG_MAC,
+		    "mac %s vif %pM type %d, new_type=%d, p2p=%d\n",
+		    __func__, vif->addr, vif->type, new_type, p2p);
+	vif_priv->is_p2p = p2p;
+	wcn36xx_smd_delete_sta_self(wcn, vif->addr);
+	wcn36xx_smd_add_sta_self(wcn, vif);
+	return 0;
+}
+
 /* this is required when using IEEE80211_HW_HAS_RATE_CONTROL */
 static int wcn36xx_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 {
@@ -711,7 +763,8 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
 	if (!(NL80211_IFTYPE_STATION == vif->type ||
 	      NL80211_IFTYPE_AP == vif->type ||
 	      NL80211_IFTYPE_ADHOC == vif->type ||
-	      NL80211_IFTYPE_MESH_POINT == vif->type)) {
+	      NL80211_IFTYPE_MESH_POINT == vif->type ||
+	      NL80211_IFTYPE_P2P_DEVICE == vif->type)) {
 		wcn36xx_warn("Unsupported interface type requested: %d\n",
 			     vif->type);
 		return -EOPNOTSUPP;
@@ -839,10 +892,13 @@ static const struct ieee80211_ops wcn36xx_ops = {
 	.stop			= wcn36xx_stop,
 	.add_interface		= wcn36xx_add_interface,
 	.remove_interface	= wcn36xx_remove_interface,
+	.change_interface	= wcn36xx_change_interface,
 #ifdef CONFIG_PM
 	.suspend		= wcn36xx_suspend,
 	.resume			= wcn36xx_resume,
 #endif
+	.remain_on_channel	= wcn36xx_remain_on_channel,
+	.cancel_remain_on_channel = wcn36xx_cancel_remain_on_channel,
 	.config			= wcn36xx_config,
 	.configure_filter       = wcn36xx_configure_filter,
 	.tx			= wcn36xx_tx,
@@ -877,7 +933,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_ADHOC) |
-		BIT(NL80211_IFTYPE_MESH_POINT);
+		BIT(NL80211_IFTYPE_MESH_POINT) |
+		BIT(NL80211_IFTYPE_P2P_CLIENT) |
+		BIT(NL80211_IFTYPE_P2P_GO) |
+		BIT(NL80211_IFTYPE_P2P_DEVICE);
 
 	wcn->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wcn_band_2ghz;
 	wcn->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wcn_band_5ghz;
@@ -885,7 +944,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
 	wcn->hw->wiphy->cipher_suites = cipher_suites;
 	wcn->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 
-	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
+	wcn->hw->wiphy->max_remain_on_channel_duration = 500;
+	wcn->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
+		WIPHY_FLAG_OFFCHAN_TX |
+		WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
 
 #ifdef CONFIG_PM
 	wcn->hw->wiphy->wowlan = &wowlan_support;
