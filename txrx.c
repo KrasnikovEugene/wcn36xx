@@ -142,6 +142,11 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 			bd->sta_index = sta_priv->sta_index;
 			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
 		}
+		/* Fixme P2P workaround need change to the correctly idx */
+		if (__vif_priv->is_p2p) {
+			bd->sta_index = __vif_priv->self_sta_index;
+			bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
+		}
 	} else {
 		__vif_priv = get_vif_by_addr(wcn, hdr->addr2);
 		bd->sta_index = __vif_priv->self_sta_index;
@@ -149,9 +154,8 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
 	}
 
 	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
-
 	if (ieee80211_is_nullfunc(hdr->frame_control) ||
-	   (sta_priv && !sta_priv->is_data_encrypted))
+	    (sta_priv && !sta_priv->is_data_encrypted))
 		bd->dpu_ne = 1;
 
 	if (bcast) {

@@ -122,6 +122,7 @@ struct wcn36xx_vif {
 	bool is_joining;
 	struct wcn36xx_hal_mac_ssid ssid;
 
+	bool is_p2p;
 	/* Power management */
 	enum wcn36xx_power_state pw_state;
 
@@ -217,6 +218,9 @@ struct wcn36xx {
 	struct wcn36xx_dxe_mem_pool data_mem_pool;
 
 	struct sk_buff		*tx_ack_skb;
+
+	/* P2P */
+	struct delayed_work	 roc_complete_work;
 
 #ifdef CONFIG_WCN36XX_DEBUGFS
 	/* Debug file system entry */
