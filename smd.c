@@ -60,6 +60,10 @@ static void wcn36xx_smd_set_bss_nw_type(struct wcn36xx *wcn,
 		bss_params->nw_type = WCN36XX_HAL_11B_NW_TYPE;
 }
 
+static inline u8 is_cap_supported(unsigned long caps, unsigned long flag)
+{
+	return caps & flag ? 1 : 0;
+}
 static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
 		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_bss_params *bss_params)
@@ -67,10 +71,11 @@ static void wcn36xx_smd_set_bss_ht_params(struct ieee80211_vif *vif,
 	if (sta && sta->ht_cap.ht_supported) {
 		unsigned long caps = sta->ht_cap.cap;
 		bss_params->ht = sta->ht_cap.ht_supported;
-		bss_params->tx_channel_width_set =
-			test_bit(IEEE80211_HT_CAP_SUP_WIDTH_20_40, &caps);
+		bss_params->tx_channel_width_set = is_cap_supported(caps,
+			IEEE80211_HT_CAP_SUP_WIDTH_20_40);
 		bss_params->lsig_tx_op_protection_full_support =
-			test_bit(IEEE80211_HT_CAP_LSIG_TXOP_PROT, &caps);
+			is_cap_supported(caps,
+					 IEEE80211_HT_CAP_LSIG_TXOP_PROT);
 
 		bss_params->ht_oper_mode = vif->bss_conf.ht_operation_mode;
 		bss_params->lln_non_gf_coexist =
@@ -89,25 +94,25 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
 	if (sta->ht_cap.ht_supported) {
 		unsigned long caps = sta->ht_cap.cap;
 		sta_params->ht_capable = sta->ht_cap.ht_supported;
-		sta_params->tx_channel_width_set =
-			test_bit(IEEE80211_HT_CAP_SUP_WIDTH_20_40, &caps);
-		sta_params->lsig_txop_protection =
-			test_bit(IEEE80211_HT_CAP_LSIG_TXOP_PROT, &caps);
+		sta_params->tx_channel_width_set = is_cap_supported(caps,
+			IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+		sta_params->lsig_txop_protection = is_cap_supported(caps,
+			IEEE80211_HT_CAP_LSIG_TXOP_PROT);
 
 		sta_params->max_ampdu_size = sta->ht_cap.ampdu_factor;
 		sta_params->max_ampdu_density = sta->ht_cap.ampdu_density;
-		sta_params->max_amsdu_size =
-			test_bit(IEEE80211_HT_CAP_MAX_AMSDU, &caps);
-		sta_params->sgi_20Mhz =
-			test_bit(IEEE80211_HT_CAP_SGI_20, &caps);
-		sta_params->sgi_40mhz =
-			test_bit(IEEE80211_HT_CAP_SGI_40, &caps);
-		sta_params->green_field_capable =
-			test_bit(IEEE80211_HT_CAP_GRN_FLD, &caps);
-		sta_params->delayed_ba_support =
-			test_bit(IEEE80211_HT_CAP_DELAY_BA, &caps);
-		sta_params->dsss_cck_mode_40mhz =
-			test_bit(IEEE80211_HT_CAP_DSSSCCK40, &caps);
+		sta_params->max_amsdu_size = is_cap_supported(caps,
+			IEEE80211_HT_CAP_MAX_AMSDU);
+		sta_params->sgi_20Mhz = is_cap_supported(caps,
+			IEEE80211_HT_CAP_SGI_20);
+		sta_params->sgi_40mhz =	is_cap_supported(caps,
+			IEEE80211_HT_CAP_SGI_40);
+		sta_params->green_field_capable = is_cap_supported(caps,
+			IEEE80211_HT_CAP_GRN_FLD);
+		sta_params->delayed_ba_support = is_cap_supported(caps,
+			IEEE80211_HT_CAP_DELAY_BA);
+		sta_params->dsss_cck_mode_40mhz = is_cap_supported(caps,
+			IEEE80211_HT_CAP_DSSSCCK40);
 	}
 }
 
