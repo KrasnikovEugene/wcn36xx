@@ -1898,8 +1898,8 @@ static int wcn36xx_smd_missed_beacon_ind(struct wcn36xx *wcn,
 						 struct ieee80211_vif,
 						 drv_priv);
 			ieee80211_connection_loss(vif);
-			return 0;
 		}
+		return 0;
 	}
 
 	if (len != sizeof(*rsp)) {
