@@ -25,13 +25,6 @@
 
 #ifdef CONFIG_WCN36XX_DEBUGFS
 
-static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
-{
-	file->private_data = inode->i_private;
-
-	return 0;
-}
-
 static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
 				   size_t count, loff_t *ppos)
 {
@@ -104,7 +97,7 @@ static ssize_t write_file_bool_bmps(struct file *file,
 }
 
 static const struct file_operations fops_wcn36xx_bmps = {
-	.open  =       wcn36xx_debugfs_open,
+	.open  =       simple_open,
 	.read  =       read_file_bool_bmps,
 	.write =       write_file_bool_bmps,
 };
@@ -146,7 +139,7 @@ static ssize_t write_file_dump(struct file *file,
 }
 
 static const struct file_operations fops_wcn36xx_dump = {
-	.open  =       wcn36xx_debugfs_open,
+	.open  =       simple_open,
 	.write =       write_file_dump,
 };
 
