@@ -21,8 +21,8 @@
 #include <linux/platform_device.h>
 #include "wcn36xx.h"
 
-unsigned int debug_mask;
-module_param(debug_mask, uint, 0644);
+unsigned int wcn36xx_dbg_mask;
+module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
 MODULE_PARM_DESC(debug_mask, "Debugging mask");
 
 #define CHAN2G(_freq, _idx) { \
