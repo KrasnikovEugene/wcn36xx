@@ -33,7 +33,7 @@
 #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
 #define WCN36XX_AGGR_BUFFER_SIZE 64
 
-extern unsigned int debug_mask;
+extern unsigned int wcn36xx_dbg_mask;
 
 enum wcn36xx_debug_mask {
 	WCN36XX_DBG_DXE		= 0x00000001,
@@ -64,12 +64,12 @@ enum wcn36xx_debug_mask {
 	printk(KERN_INFO pr_fmt(fmt), ##arg)
 
 #define wcn36xx_dbg(mask, fmt, arg...) do {			\
-	if (debug_mask & mask)					\
+	if (wcn36xx_dbg_mask & mask)				\
 		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
 } while (0)
 
 #define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
-	if (debug_mask & mask)					\
+	if (wcn36xx_dbg_mask & mask)				\
 		print_hex_dump(KERN_DEBUG, pr_fmt(prefix_str),	\
 			       DUMP_PREFIX_OFFSET, 32, 1,	\
 			       buf, len, false);		\
