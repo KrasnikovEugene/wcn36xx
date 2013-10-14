@@ -1,0 +1,12 @@
+*.o
+*~
+.*.ko.cmd
+*.ko
+.*.o.cmd
+/.config
+/.tmp_versions
+/Module.symvers
+/cscope.out
+/modules.order
+/wcn36xx_msm.ko
+/wcn36xx_msm.mod.c
