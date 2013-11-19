@@ -1141,12 +1141,17 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 		/* AP */
 		bss->oper_mode = 0;
 		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
-	} else if (vif->type == NL80211_IFTYPE_ADHOC ||
-		   vif->type == NL80211_IFTYPE_MESH_POINT) {
+	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
 
 		/* STA */
 		bss->oper_mode = 1;
+	} else if (vif->type == NL80211_IFTYPE_MESH_POINT) {
+		/* Work around here to make sure beaconing happend in mesh */
+		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
+		bss->oper_mode = 0;
+		/* Set the self STA in bss config to support HT */
+		sta_params->ht_capable = 1;
 	} else {
 		wcn36xx_warn("Unknown type for bss config: %d\n", vif->type);
 	}
@@ -1292,7 +1297,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
 
 	/* TODO need to find out why this is needed? */
-	msg_body.tim_ie_offset = tim_off+4;
+	if (vif->type == NL80211_IFTYPE_MESH_POINT)
+		/* Word around for mesh, we don't need this */
+		msg_body.tim_ie_offset = 256;
+	else
+		msg_body.tim_ie_offset = tim_off+4;
 	msg_body.p2p_ie_offset = p2p_off;
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 

@@ -127,7 +127,8 @@ static struct ieee80211_supported_band wcn_band_2ghz = {
 		.cap =	IEEE80211_HT_CAP_GRN_FLD |
 			IEEE80211_HT_CAP_SGI_20 |
 			IEEE80211_HT_CAP_DSSSCCK40 |
-			IEEE80211_HT_CAP_LSIG_TXOP_PROT,
+			IEEE80211_HT_CAP_LSIG_TXOP_PROT |
+			IEEE80211_HT_CAP_SUP_WIDTH_20_40,
 		.ht_supported = true,
 		.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K,
 		.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
@@ -642,7 +643,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 		dev_kfree_skb(skb);
 	}
 
-	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+	if (changed & BSS_CHANGED_BEACON_ENABLED ||
+	    changed & BSS_CHANGED_BEACON) {
 		wcn36xx_dbg(WCN36XX_DBG_MAC,
 			    "mac bss changed beacon enabled %d\n",
 			    bss_conf->enable_beacon);
@@ -669,9 +671,12 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
 						link_state);
 		} else {
-			wcn36xx_smd_set_link_st(wcn, vif->addr, vif->addr,
+			if (vif->type != NL80211_IFTYPE_MESH_POINT) {
+				wcn36xx_smd_set_link_st(wcn, vif->addr,
+						vif->addr,
 						WCN36XX_HAL_LINK_IDLE_STATE);
-			wcn36xx_smd_delete_bss(wcn, vif);
+				wcn36xx_smd_delete_bss(wcn, vif);
+			}
 		}
 	}
 out:
