@@ -22,6 +22,7 @@
 #include <linux/wcnss_wlan.h>
 #include <linux/workqueue.h>
 #include <mach/msm_smd.h>
+#include <mach/msm_smsm.h>
 #include "../wcn36xx.h"
 
 #define MAC_ADDR_0 "wlan/macaddr0"

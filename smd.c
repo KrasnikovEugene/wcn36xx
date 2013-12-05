@@ -1635,12 +1635,12 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
 
 	ret = wcn36xx_smd_send_and_wait(wcn, msg_body.header.len);
 	if (ret) {
-		wcn36xx_err("Sending hal_exit_bmps failed\n");
+		wcn36xx_err("Sending hal_keep_alive failed\n");
 		goto out;
 	}
 	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
 	if (ret) {
-		wcn36xx_err("hal_exit_bmps response failed err=%d\n", ret);
+		wcn36xx_err("hal_keep_alive response failed err=%d\n", ret);
 		goto out;
 	}
 out:
@@ -1680,8 +1680,7 @@ out:
 	return ret;
 }
 
-static inline void set_feat_caps(u32 *bitmap,
-				 enum place_holder_in_cap_bitmap cap)
+void set_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
 {
 	int arr_idx, bit_idx;
 
@@ -1695,8 +1694,7 @@ static inline void set_feat_caps(u32 *bitmap,
 	bitmap[arr_idx] |= (1 << bit_idx);
 }
 
-static inline int get_feat_caps(u32 *bitmap,
-				enum place_holder_in_cap_bitmap cap)
+int get_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
 {
 	int arr_idx, bit_idx;
 	int ret = 0;
@@ -1712,8 +1710,7 @@ static inline int get_feat_caps(u32 *bitmap,
 	return ret;
 }
 
-static inline void clear_feat_caps(u32 *bitmap,
-				enum place_holder_in_cap_bitmap cap)
+void clear_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
 {
 	int arr_idx, bit_idx;
 
@@ -1729,8 +1726,9 @@ static inline void clear_feat_caps(u32 *bitmap,
 
 int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
 {
-	struct wcn36xx_hal_feat_caps_msg msg_body;
-	int ret = 0;
+	struct wcn36xx_hal_feat_caps_msg msg_body, *rsp;
+
+	int ret = 0, i;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_REQ);
@@ -1744,12 +1742,16 @@ int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
 		wcn36xx_err("Sending hal_feature_caps_exchange failed\n");
 		goto out;
 	}
-	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-	if (ret) {
-		wcn36xx_err("hal_feature_caps_exchange response failed err=%d\n",
-			    ret);
+
+	if (wcn->hal_rsp_len != sizeof(*rsp)) {
+		wcn36xx_err("Invalid hal_feature_caps_exchange response");
 		goto out;
 	}
+
+	rsp = (struct wcn36xx_hal_feat_caps_msg *) wcn->hal_buf;
+
+	for (i = 0; i < WCN36XX_HAL_CAPS_SIZE; i++)
+		wcn->fw_feat_caps[i] = rsp->feat_caps[i];
 out:
 	mutex_unlock(&wcn->hal_mutex);
 	return ret;
