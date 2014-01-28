@@ -196,9 +196,11 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 {
 	int ret = 0;
+	unsigned long start;
 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "HAL >>> ", wcn->hal_buf, len);
 
 	init_completion(&wcn->hal_rsp_compl);
+	start = jiffies;
 	ret = wcn->ctrl_ops->tx(wcn->hal_buf, len);
 	if (ret) {
 		wcn36xx_err("HAL TX failed\n");
@@ -206,10 +208,13 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 	}
 	if (wait_for_completion_timeout(&wcn->hal_rsp_compl,
 		msecs_to_jiffies(HAL_MSG_TIMEOUT)) <= 0) {
-		wcn36xx_err("Timeout while waiting SMD response\n");
+		wcn36xx_err("Timeout! No SMD response in %dms\n",
+			    HAL_MSG_TIMEOUT);
 		ret = -ETIME;
 		goto out;
 	}
+	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms",
+		    jiffies_to_msecs(jiffies - start));
 out:
 	return ret;
 }
@@ -247,21 +252,22 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
 
 int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 {
-	const struct firmware *nv;
 	struct nv_data *nv_d;
 	struct wcn36xx_hal_nv_img_download_req_msg msg_body;
 	int fw_bytes_left;
 	int ret;
 	u16 fm_offset = 0;
 
-	ret = request_firmware(&nv, WLAN_NV_FILE, wcn->dev);
-	if (ret) {
-		wcn36xx_err("Failed to load nv file %s: %d\n",
-			      WLAN_NV_FILE, ret);
-		goto out_free_nv;
+	if (!wcn->nv) {
+		ret = request_firmware(&wcn->nv, WLAN_NV_FILE, wcn->dev);
+		if (ret) {
+			wcn36xx_err("Failed to load nv file %s: %d\n",
+				      WLAN_NV_FILE, ret);
+			goto out;
+		}
 	}
 
-	nv_d = (struct nv_data *)nv->data;
+	nv_d = (struct nv_data *)wcn->nv->data;
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DOWNLOAD_NV_REQ);
 
 	msg_body.header.len += WCN36XX_NV_FRAGMENT_SIZE;
@@ -271,7 +277,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 	mutex_lock(&wcn->hal_mutex);
 
 	do {
-		fw_bytes_left = nv->size - fm_offset - 4;
+		fw_bytes_left = wcn->nv->size - fm_offset - 4;
 		if (fw_bytes_left > WCN36XX_NV_FRAGMENT_SIZE) {
 			msg_body.last_fragment = 0;
 			msg_body.nv_img_buffer_size = WCN36XX_NV_FRAGMENT_SIZE;
@@ -309,10 +315,7 @@ int wcn36xx_smd_load_nv(struct wcn36xx *wcn)
 
 out_unlock:
 	mutex_unlock(&wcn->hal_mutex);
-out_free_nv:
-	release_firmware(nv);
-
-	return ret;
+out:	return ret;
 }
 
 static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
