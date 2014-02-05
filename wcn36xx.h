@@ -126,10 +126,10 @@ struct wcn36xx_vif {
 	enum wcn36xx_power_state pw_state;
 
 	u8 bss_index;
-	u8 ucast_dpu_signature;
 	/* Returned from WCN36XX_HAL_ADD_STA_SELF_RSP */
 	u8 self_sta_index;
 	u8 self_dpu_desc_index;
+	u8 self_ucast_dpu_sign;
 };
 
 /**
@@ -160,6 +160,7 @@ struct wcn36xx_sta {
 	u16 tid;
 	u8 sta_index;
 	u8 dpu_desc_index;
+	u8 ucast_dpu_sign;
 	u8 bss_sta_index;
 	u8 bss_dpu_desc_index;
 	bool is_data_encrypted;
