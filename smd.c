@@ -213,7 +213,7 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 		ret = -ETIME;
 		goto out;
 	}
-	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms",
+	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms\n",
 		    jiffies_to_msecs(jiffies - start));
 out:
 	return ret;
