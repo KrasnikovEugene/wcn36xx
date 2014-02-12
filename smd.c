@@ -137,7 +137,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		struct ieee80211_sta *sta,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
 	struct wcn36xx_sta *priv_sta = NULL;
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
@@ -161,7 +161,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	else
 		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
 
-	sta_params->encrypt_type = priv_vif->encrypt_type;
+	sta_params->encrypt_type = vif_priv->encrypt_type;
 	sta_params->short_preamble_supported =
 		!(WCN36XX_FLAGS(wcn) &
 		  IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE);
@@ -172,7 +172,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	sta_params->uapsd = 0;
 	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
 	sta_params->max_ampdu_duration = 0;
-	sta_params->bssid_index = priv_vif->bss_index;
+	sta_params->bssid_index = vif_priv->bss_index;
 	sta_params->p2p = 0;
 
 	if (sta) {
@@ -644,7 +644,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 					size_t len)
 {
 	struct wcn36xx_hal_add_sta_self_rsp_msg *rsp;
-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -661,8 +661,8 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
 		    "hal add sta self status %d self_sta_index %d dpu_index %d\n",
 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
 
-	priv_vif->self_sta_index = rsp->self_sta_index;
-	priv_vif->self_dpu_desc_index = rsp->dpu_index;
+	vif_priv->self_sta_index = rsp->self_sta_index;
+	vif_priv->self_dpu_desc_index = rsp->dpu_index;
 
 	return 0;
 }
@@ -1093,7 +1093,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 {
 	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
 	struct wcn36xx_hal_config_bss_rsp_params *params;
-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -1116,14 +1116,14 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 		    params->bss_bcast_sta_idx, params->mac,
 		    params->tx_mgmt_power, params->ucast_dpu_signature);
 
-	priv_vif->bss_index = params->bss_index;
+	vif_priv->bss_index = params->bss_index;
 
-	if (priv_vif->sta) {
-		priv_vif->sta->bss_sta_index =  params->bss_sta_index;
-		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
+	if (vif_priv->sta) {
+		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
+		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
 	}
 
-	priv_vif->self_ucast_dpu_sign = params->ucast_dpu_signature;
+	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
 
 	return 0;
 }
@@ -1261,13 +1261,13 @@ out:
 int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
 {
 	struct wcn36xx_hal_delete_bss_req_msg msg_body;
-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
 	int ret = 0;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
 
-	msg_body.bss_index = priv_vif->bss_index;
+	msg_body.bss_index = vif_priv->bss_index;
 
 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 
