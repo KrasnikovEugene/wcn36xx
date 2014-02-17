@@ -213,7 +213,7 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
 		ret = -ETIME;
 		goto out;
 	}
-	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms",
+	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms\n",
 		    jiffies_to_msecs(jiffies - start));
 out:
 	return ret;
@@ -1293,25 +1293,41 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 			    u16 p2p_off)
 {
 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
-	int ret = 0;
+	int ret = 0, pad, pvm_len;
 
 	mutex_lock(&wcn->hal_mutex);
 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
 
-	/* TODO need to find out why this is needed? */
-	msg_body.beacon_length = skb_beacon->len + 6;
+	pvm_len = skb_beacon->data[tim_off + 1] - 3;
+	pad = TIM_MIN_PVM_SIZE - pvm_len;
+	msg_body.beacon_length = skb_beacon->len + pad;
+	/* TODO need to find out why + 6 is needed */
+	msg_body.beacon_length6 = msg_body.beacon_length + 6;
 
-	if (BEACON_TEMPLATE_SIZE > msg_body.beacon_length) {
-		memcpy(&msg_body.beacon, &skb_beacon->len, sizeof(u32));
-		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
-		       skb_beacon->len);
-	} else {
+	if (msg_body.beacon_length > BEACON_TEMPLATE_SIZE) {
 		wcn36xx_err("Beacon is to big: beacon size=%d\n",
 			      msg_body.beacon_length);
 		ret = -ENOMEM;
 		goto out;
 	}
+	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
+
+	if (pad > 0) {
+		/*
+		 * The wcn36xx FW has a fixed size for the PVM in the TIM. If
+		 * given the beacon template from mac80211 with a PVM shorter
+		 * than the FW expectes it will overwrite the data after the
+		 * TIM.
+		 */
+		wcn36xx_dbg(WCN36XX_DBG_HAL, "Pad TIM PVM. %d bytes at %d\n",
+			    pad, pvm_len);
+		memmove(&msg_body.beacon[tim_off + 5 + pvm_len + pad],
+			&msg_body.beacon[tim_off + 5 + pvm_len],
+			skb_beacon->len - (tim_off + 5 + pvm_len));
+		memset(&msg_body.beacon[tim_off + 5 + pvm_len], 0, pad);
+		msg_body.beacon[tim_off + 1] += pad;
+	}
 
 	/* TODO need to find out why this is needed? */
 	if (vif->type == NL80211_IFTYPE_MESH_POINT)
