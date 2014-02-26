@@ -372,7 +372,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
 	struct wcn36xx_sta *sta_priv = NULL;
 
 	if (control->sta)
-		sta_priv = (struct wcn36xx_sta *)control->sta->drv_priv;
+		sta_priv = wcn36xx_sta_to_priv(control->sta);
 
 	if (wcn36xx_start_tx(wcn, sta_priv, skb))
 		ieee80211_free_txskb(wcn->hw, skb);
@@ -385,7 +385,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-	struct wcn36xx_sta *sta_priv = vif_priv->sta;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 	int ret = 0;
 	u8 key[WLAN_MAX_KEY_LEN];
 
@@ -515,7 +515,7 @@ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
 {
 	int i, size;
 	u16 *rates_table;
-	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 	u32 rates = sta->supp_rates[band];
 
 	memset(&sta_priv->supported_rates, 0,
@@ -615,7 +615,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (!is_zero_ether_addr(bss_conf->bssid)) {
 			vif_priv->is_joining = true;
-			vif_priv->bss_index = 0xff;
+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
 			wcn36xx_smd_join(wcn, bss_conf->bssid,
 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
@@ -658,7 +658,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 				rcu_read_unlock();
 				goto out;
 			}
-			sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+			sta_priv = wcn36xx_sta_to_priv(sta);
 
 			wcn36xx_update_allowed_rates(sta, WCN36XX_BAND(wcn));
 
@@ -708,7 +708,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
 
 		if (bss_conf->enable_beacon) {
 			vif_priv->dtim_period = bss_conf->dtim_period;
-			vif_priv->bss_index = 0xff;
+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
 			wcn36xx_smd_config_bss(wcn, vif, NULL,
 					       vif->addr, false);
 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
@@ -788,11 +788,10 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 {
 	struct wcn36xx *wcn = hw->priv;
 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
 		    vif, sta->addr);
 
-	vif_priv->sta = sta_priv;
 	sta_priv->vif = vif_priv;
 	/*
 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
@@ -811,14 +810,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
 			      struct ieee80211_sta *sta)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
 		    vif, sta->addr, sta_priv->sta_index);
 
 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
-	vif_priv->sta = NULL;
 	sta_priv->vif = NULL;
 	return 0;
 }
@@ -856,12 +853,10 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
 		    u8 buf_size)
 {
 	struct wcn36xx *wcn = hw->priv;
-	struct wcn36xx_sta *sta_priv = NULL;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 
 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d\n",
 		    action, tid);
-
-	sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
 
 	switch (action) {
 	case IEEE80211_AMPDU_RX_START:

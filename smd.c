@@ -138,12 +138,12 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 		struct wcn36xx_hal_config_sta_params *sta_params)
 {
 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
-	struct wcn36xx_sta *priv_sta = NULL;
+	struct wcn36xx_sta *sta_priv = NULL;
 	if (vif->type == NL80211_IFTYPE_ADHOC ||
 	    vif->type == NL80211_IFTYPE_AP ||
 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
 		sta_params->type = 1;
-		sta_params->sta_index = 0xFF;
+		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
 	} else {
 		sta_params->type = 0;
 		sta_params->sta_index = 1;
@@ -176,17 +176,17 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
 	sta_params->p2p = 0;
 
 	if (sta) {
-		priv_sta = (struct wcn36xx_sta *)sta->drv_priv;
+		sta_priv = wcn36xx_sta_to_priv(sta);
 		if (NL80211_IFTYPE_STATION == vif->type)
 			memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
 		else
 			memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
 		sta_params->wmm_enabled = sta->wme;
 		sta_params->max_sp_len = sta->max_sp;
-		sta_params->aid = priv_sta->aid;
+		sta_params->aid = sta_priv->aid;
 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
-		memcpy(&sta_params->supported_rates, &priv_sta->supported_rates,
-			sizeof(priv_sta->supported_rates));
+		memcpy(&sta_params->supported_rates, &sta_priv->supported_rates,
+			sizeof(sta_priv->supported_rates));
 	} else {
 		wcn36xx_set_default_rates(&sta_params->supported_rates);
 		wcn36xx_smd_set_sta_default_ht_params(sta_params);
@@ -887,7 +887,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
 {
 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
 	struct config_sta_rsp_params *params;
-	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
 
 	if (len < sizeof(*rsp))
 		return -EINVAL;
@@ -1088,6 +1088,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
 
 static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 				      struct ieee80211_vif *vif,
+				      struct ieee80211_sta *sta,
 				      void *buf,
 				      size_t len)
 {
@@ -1118,9 +1119,10 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
 
 	vif_priv->bss_index = params->bss_index;
 
-	if (vif_priv->sta) {
-		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
-		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
+	if (sta) {
+		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+		sta_priv->bss_sta_index = params->bss_sta_index;
+		sta_priv->bss_dpu_desc_index = params->dpu_desc_index;
 	}
 
 	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
@@ -1247,6 +1249,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
 	}
 	ret = wcn36xx_smd_config_bss_rsp(wcn,
 					 vif,
+					 sta,
 					 wcn->hal_buf,
 					 wcn->hal_rsp_len);
 	if (ret) {
@@ -1971,25 +1974,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
 {
 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
 	struct wcn36xx_vif *tmp;
-	struct ieee80211_sta *sta = NULL;
+	struct ieee80211_sta *sta;
 
 	if (len != sizeof(*rsp)) {
 		wcn36xx_warn("Corrupted delete sta indication\n");
 		return -EIO;
 	}
 
+	wcn36xx_dbg(WCN36XX_DBG_HAL, "delete station indication %pM index %d\n",
+		    rsp->addr2, rsp->sta_id);
+
 	list_for_each_entry(tmp, &wcn->vif_list, list) {
-		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
-			sta = container_of((void *)tmp->sta,
-						 struct ieee80211_sta,
-						 drv_priv);
-			wcn36xx_dbg(WCN36XX_DBG_HAL,
-				    "delete station indication %pM index %d\n",
-				    rsp->addr2,
-				    rsp->sta_id);
+		rcu_read_lock();
+		sta = ieee80211_find_sta(wcn36xx_priv_to_vif(tmp), rsp->addr2);
+		if (sta)
 			ieee80211_report_low_ack(sta, 0);
+		rcu_read_unlock();
+		if (sta)
 			return 0;
-		}
 	}
 
 	wcn36xx_warn("STA with addr %pM and index %d not found\n",
